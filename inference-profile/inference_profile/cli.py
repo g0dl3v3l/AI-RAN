@@ -43,7 +43,8 @@ def build_parser() -> argparse.ArgumentParser:
         "bootstrap-env",
         help=_SUBCOMMAND_HELP["bootstrap-env"],
     )
-    bootstrap_parser.set_defaults(func=_handle_placeholder)
+    bootstrap_parser.add_argument("--output-root", type=Path, required=True)
+    bootstrap_parser.set_defaults(func=_handle_bootstrap_env)
 
     inspect_parser = subparsers.add_parser(
         "inspect-model",
@@ -123,19 +124,24 @@ def build_parser() -> argparse.ArgumentParser:
         "simulate",
         help=_SUBCOMMAND_HELP["simulate"],
     )
-    simulate_parser.set_defaults(func=_handle_placeholder)
+    simulate_parser.add_argument("--run-root", type=Path, required=True)
+    simulate_parser.add_argument("--output-root", type=Path, required=True)
+    simulate_parser.set_defaults(func=_handle_simulate)
 
     report_parser = subparsers.add_parser(
         "report",
         help=_SUBCOMMAND_HELP["report"],
     )
-    report_parser.set_defaults(func=_handle_placeholder)
+    report_parser.add_argument("--run-root", type=Path, required=True)
+    report_parser.add_argument("--output-root", type=Path, required=True)
+    report_parser.set_defaults(func=_handle_report)
 
     verify_parser = subparsers.add_parser(
         "verify-bundle",
         help=_SUBCOMMAND_HELP["verify-bundle"],
     )
-    verify_parser.set_defaults(func=_handle_placeholder)
+    verify_parser.add_argument("--run-root", type=Path, required=True)
+    verify_parser.set_defaults(func=_handle_verify_bundle)
 
     run_all_parser = subparsers.add_parser(
         "run-all",
@@ -150,6 +156,16 @@ def _handle_placeholder(args: argparse.Namespace) -> int:
     raise NotImplementedError(
         f"Subcommand {args.command!r} is scaffolded but not implemented yet."
     )
+
+
+def _handle_bootstrap_env(args: argparse.Namespace) -> int:
+    from inference_profile.bootstrap import bootstrap_environment
+
+    try:
+        bootstrap_environment(output_root=args.output_root)
+    except Exception as exc:
+        raise CliUserError(_exception_message(exc)) from None
+    return 0
 
 
 def _handle_inspect_model(args: argparse.Namespace) -> int:
@@ -196,6 +212,48 @@ def _handle_profile(args: argparse.Namespace) -> int:
         if not result.success:
             raise CliUserError("Profiling stage failed")
     except (KeyError, ValueError, RuntimeError) as exc:
+        raise CliUserError(_exception_message(exc)) from None
+    return 0
+
+
+def _handle_simulate(args: argparse.Namespace) -> int:
+    from inference_profile.simulator import run_deterministic_simulation
+
+    try:
+        run_deterministic_simulation(run_root=args.run_root)
+    except (KeyError, ValueError) as exc:
+        raise CliUserError(_exception_message(exc)) from None
+    return 0
+
+
+def _handle_report(args: argparse.Namespace) -> int:
+    from inference_profile.plots import generate_profiling_plots
+    from inference_profile.report import generate_run_report
+
+    try:
+        generate_profiling_plots(run_root=args.run_root)
+        generate_run_report(run_root=args.run_root)
+    except (KeyError, ValueError) as exc:
+        raise CliUserError(_exception_message(exc)) from None
+    return 0
+
+
+def _handle_verify_bundle(args: argparse.Namespace) -> int:
+    try:
+        # Verify required files exist
+        run_root = Path(args.run_root)
+        required_files = [
+            run_root / "raw" / "prefill_events.csv",
+            run_root / "raw" / "decode_events.csv",
+            run_root / "raw" / "pcie_events.csv",
+            run_root / "derived" / "prefill_summary.csv",
+            run_root / "derived" / "decode_summary.csv",
+            run_root / "derived" / "pcie_summary.csv",
+        ]
+        missing = [f for f in required_files if not f.exists()]
+        if missing:
+            raise CliUserError(f"Missing required files: {missing}")
+    except (KeyError, ValueError) as exc:
         raise CliUserError(_exception_message(exc)) from None
     return 0
 
