@@ -125,7 +125,6 @@ def build_parser() -> argparse.ArgumentParser:
         help=_SUBCOMMAND_HELP["simulate"],
     )
     simulate_parser.add_argument("--run-root", type=Path, required=True)
-    simulate_parser.add_argument("--output-root", type=Path, required=True)
     simulate_parser.set_defaults(func=_handle_simulate)
 
     report_parser = subparsers.add_parser(
@@ -133,7 +132,6 @@ def build_parser() -> argparse.ArgumentParser:
         help=_SUBCOMMAND_HELP["report"],
     )
     report_parser.add_argument("--run-root", type=Path, required=True)
-    report_parser.add_argument("--output-root", type=Path, required=True)
     report_parser.set_defaults(func=_handle_report)
 
     verify_parser = subparsers.add_parser(
