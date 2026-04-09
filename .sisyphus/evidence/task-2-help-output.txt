@@ -1,0 +1,30 @@
+usage: download_opt_models.py [-h]
+                              [--model {opt-125m,opt-350m,opt-1.3b,opt-6.7b,opt-13b,opt-30b,opt-66b}]
+                              [--all] [--cache-dir CACHE_DIR]
+                              [--force-redownload]
+
+Download OPT models from HuggingFace Hub
+
+options:
+  -h, --help            show this help message and exit
+  --model {opt-125m,opt-350m,opt-1.3b,opt-6.7b,opt-13b,opt-30b,opt-66b}
+                        Specific OPT model to download
+  --all                 Download all available OPT models
+  --cache-dir CACHE_DIR
+                        Cache directory for downloads (default:
+                        ~/.cache/huggingface)
+  --force-redownload    Force re-download even if model is cached
+
+Examples:
+  # Download a specific model
+  python download_opt_models.py --model opt-125m
+
+  # Download all OPT models
+  python download_opt_models.py --all
+
+  # Use custom cache directory
+  python download_opt_models.py --model opt-6.7b --cache-dir ./my_cache
+
+  # Force re-download
+  python download_opt_models.py --model opt-13b --force-redownload
+        

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inference-profile"
+version = "0.1.0"
+description = "Standalone scaffold for remote RAN inference profiling."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "gpu_smoke: mark tests as GPU smoke coverage",
+    "remote_mock: mark tests as remote-mocked coverage",
+]

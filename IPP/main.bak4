@@ -1,0 +1,336 @@
+%==========================================================
+%  Modern Informatics Research Review LaTeX Template
+%==========================================================
+
+\documentclass[a4paper,11pt]{article}
+
+%-------------------- Packages ----------------------------
+\usepackage[utf8]{inputenc}        % UTF-8 encoding
+\usepackage[T1]{fontenc}           % Font encoding
+\usepackage{lmodern}               % Clean, scalable fonts
+\usepackage[pdftex]{graphicx}      % Graphics support
+\usepackage{url}                   % Better URL handling
+\usepackage{datetime}               % Custom date formatting
+\usepackage{pgfgantt}               % Gantt charts
+\usepackage{xcolor}                 % Color definitions
+\usepackage{geometry}               % Page margins
+\usepackage{fancyhdr}               % Headers and footers
+\usepackage{titlesec}               % Custom section titles
+\usepackage{booktabs}               % Cleaner tables
+\usepackage[colorinlistoftodos, textsize=tiny]{todonotes} % Added for \todo commands
+
+%-------------------- Page Setup --------------------------
+\geometry{a4paper, left=25mm, right=25mm, top=25mm, bottom=25mm}
+\parindent=0pt                      % No paragraph indentation
+\parskip=6pt                        % Space between paragraphs
+\Urlmuskip=0mu plus 1mu             % Better URL line breaks
+
+%-------------------- Colors -----------------------------
+\definecolor{mainblue}{RGB}{51,102,204}
+\definecolor{accentblue}{RGB}{153,204,254}
+
+%-------------------- Date Format -------------------------
+\newdateformat{monthyeardate}{\monthname[\THEMONTH] \THEYEAR}
+
+%-------------------- Header & Footer --------------------
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\textbf{Informatics Project Proposal 20}}
+\rhead{\thepage}
+\lfoot{\small School of Informatics}
+\rfoot{\monthyeardate\today}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+%-------------------- Section Styles ----------------------
+\titleformat{\section}{\Large\bfseries\color{mainblue}}{\thesection.}{1em}{}
+\titleformat{\subsection}{\large\bfseries\color{mainblue}}{\thesubsection.}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{mainblue}}{\thesubsubsection.}{1em}{}
+
+%-------------------- Title Page Info ---------------------
+\newcommand{\examnumber}{[Insert Student UID]}
+\newcommand{\field}{Multi-Tenant Scheduling Architecture for Latency-Critical AI Inference on Shared RAN Infrastructure}
+\newcommand{\tutor}{[Insert Tutor Name]}
+\newcommand{\supervisor}{[Insert Supervisor Name]}
+
+%==========================================================
+\begin{document}
+
+%-------------------- Title Page --------------------------
+\begin{titlepage}
+	\begin{center}
+		\vspace*{2cm}
+		% \includegraphics[width=40mm]{crest.png}\\[1cm] % Uncomment if you have the university crest image
+
+		{\Huge\bf School of Informatics}\\[1.5cm]
+
+		{\LARGE\bf Informatics Project Proposal}\\[0.5cm]
+		{\Large\bf \field}\\[2cm]
+
+		{\large \textbf{UID:} \examnumber}\\[0.5cm]
+		{\large \textbf{Date:} \monthyeardate\today}\\[2cm]
+
+		{\large \textbf{Tutor:} \tutor\\[0.2cm]
+		\textbf{Supervisor:} \supervisor}
+		\vfill
+	\end{center}
+
+	\textit{I give permission for future Informatics Project Proposal classes to read an anonymous version of this document.}
+
+	\textit{This page does not count towards the page limit.}
+\end{titlepage}
+
+%-------------------- Abstract & Declaration ----------------------------
+\begin{titlepage}
+	\begin{abstract}
+		The evolution toward 6G mobile networks has catalyzed the AI-RAN paradigm, envisioning a profound convergence of Radio Access Network (RAN) infrastructure and artificial intelligence workloads. Modern GPU-accelerated base stations frequently exhibit significant, temporally bursty spare compute capacity. The central challenge addressed in this research is how to safely harness this underutilized edge compute for latency-critical AI inference tasks without compromising the stringent Service Level Agreements (SLAs) of primary telecommunication functions. This project proposes the design and evaluation of a cloud-native, multi-tenant scheduling architecture. Adopting a strict ``RAN-first'' operational philosophy, it utilizes advanced workload isolation to dynamically multiplex containerized AI inference into the distributed unit (DU), guaranteeing zero degradation to network reliability.
+	\end{abstract}
+
+	\vspace*{2cm}
+
+	\section*{Declaration of Own Work}
+
+	I hereby declare that the work presented in this document is my own. The use of Generative AI to assist in the formatting and structuring of this proposal has been fully acknowledged.
+	\vfill
+	\noindent\textit{This page does not count towards the page limit.}
+\end{titlepage}
+
+%==========================================================
+% Chapter 1 -> Section 1
+\section{Motivation}
+\label{sec:motivation}
+
+\subsection{Problem Statement}
+\label{subsec:problem_statement}
+
+As telecommunications networks move toward 6G, recent AI-RAN work frames the RAN as more than a communications substrate: it is increasingly presented as a cloud-native, distributed platform that can host both primary Radio Access Network (RAN) functions and selected AI workloads on shared infrastructure \cite{beyond,airan,openairan}. A compelling use case within this convergence is latency-sensitive edge inference, where placing model execution close to the radio path can reduce transport delay and keep demanding AI workloads off user devices \cite{beyond,cora,slaairan}.
+
+RAN infrastructure is also provisioned for peak demand, which leaves meaningful spare capacity outside worst-case conditions \cite{beyond,airan}. Recent profiling from \textit{Weaver} makes this point concrete: even in a pessimistic four-DU peak-load setting, about 40\% spare compute remains, and production-trace replays show that spare SM capacity can still be around 85\% during peak daytime periods across six cell sites from three operators \cite{weaver}. The same study shows that this headroom is bursty within a site but complementary across sites, which makes it valuable yet difficult to harvest with static sharing policies \cite{weaver}.
+
+The central challenge, then, is safe coexistence between workloads with very different timing contracts. DU processing follows tight slot-level deadlines, while edge inference must meet service latency targets without degrading the primary radio function \cite{beyond,weaver,cora}. Existing GPU-sharing mechanisms expose the trade-off: hardware partitioning such as NVIDIA's Multi-Instance GPU (MIG) offers strong isolation and is therefore a useful hard-isolation option or comparison baseline, but static partitions are a poor fit for bursty millisecond-scale spare cycles; more elastic sharing can expose more headroom, but makes deadline protection harder to guarantee \cite{weaver,slaairan}. This creates a clear need for a scheduling architecture that keeps a strict ``RAN-first'' policy while still exposing usable spare compute to multi-tenant edge AI services.
+
+
+\subsection{Research Hypothesis and Objectives}
+\label{subsec:hypothesis_objectives}
+
+\subsubsection{Research Hypothesis}
+Recent profiling of accelerated RAN infrastructure, especially in \textit{Weaver}, shows why AI \textit{training} is a comparatively favorable co-located workload: LDPC-heavy RAN processing is bandwidth-dominated, while foundation-model training is more compute-dominated, giving the two workloads a degree of resource complementarity \cite{weaver}. \textit{Weaver} also shows that stabilizing bursty spare compute can raise training throughput from about 54 TFLOPs to about 142 TFLOPs under similar average SM availability, highlighting how strongly workload performance depends on the temporal shape of spare capacity \cite{weaver}.
+
+Deploying AI \textit{inference} is harder because inference is not a single resource profile. Request transport, model execution, and response delivery stress different parts of the system, and the most latency-sensitive phases leave much less room for contention with primary RAN functions \cite{cora,weaver,slaairan}. Furthermore, enabling this as an edge service requires multi-tenancy. \textit{Paradrop} showed that lightweight, containerized services can be placed at the extreme edge, but it did not need the sub-millisecond priority handling expected in a DU-adjacent RAN environment \cite{paradrop}.
+
+Therefore, the core \textbf{Research Hypothesis} of this proposal is:
+\textit{By employing a hierarchical scheduling architecture that combines a slow-timescale, cloud-native orchestration layer for multi-tenant isolation with a fast-timescale, ``RAN-first'' local MAC scheduler, it is possible to dynamically multiplex latency-critical AI inference workloads onto the spare compute capacity of GPU-accelerated RAN Distributed Units (DUs). We hypothesize that this architecture can satisfy the real-time latency bounds of edge inference while guaranteeing zero Service Level Agreement (SLA) violations for primary telecommunications workloads.}
+
+\subsubsection{Objectives}
+To test this hypothesis and realize the proposed architecture, this research will pursue the following specific objectives, categorized by architectural layer:
+
+\begin{enumerate}
+	\item \textbf{Design a Cloud-Native, Multi-Tenant Orchestration Layer (Macro-level):}
+	      Extend extreme-edge orchestration principles, such as those explored in \textit{Paradrop}, to the 6G RAN environment. This involves designing a slow-timescale (seconds to minutes) management plane responsible for tenant onboarding, containerized workload isolation, and SLA-class assignment across the O-Cloud \cite{paradrop,beyond,openairan}.
+
+	\item \textbf{Develop a ``RAN-first'' Micro-Scheduler (Micro-level):}
+	      Design a fast-timescale (sub-10 millisecond) scheduling algorithm residing at the DU. This scheduler will dynamically allocate bursty spare GPU cycles to inference tasks and compare hard-isolation options such as MIG against more elastic sharing mechanisms to determine which choices best protect baseband deadlines while still exposing useful spare capacity \cite{weaver,slaairan}.
+
+	\item \textbf{Implement End-to-End Latency Coordination:}
+	      Adapt the end-to-end budgeting logic exemplified by \textit{CORA} so that overall service delay is apportioned across uplink transport, edge execution, and downlink delivery, with the compute budget refined further when different inference phases exhibit different runtime behavior \cite{cora}.
+
+	\item \textbf{System Evaluation and Profiling:}
+	      Evaluate the proposed hierarchical architecture within a simulated or physical AI-RAN testbed. The primary metrics for success will be demonstrating 0\% SLA violations for the primary RAN workload under heavy load, alongside acceptable inference latency and increased overall GPU utilization.
+\end{enumerate}
+
+
+\subsection{Timeliness, Novelty, and Significance}
+\label{subsec:timeliness_novelty}
+
+\subsubsection{Timeliness}
+The timing is favorable because AI-RAN is moving from broad vision to concrete, cloud-native architectural proposals and deployment workflows \cite{beyond,airan,openairan}. At the same time, large-scale RAN experimentation and latency-critical cellular inference are becoming more concrete through public-cloud emulation platforms such as \textit{CHRONOS} and end-to-end coordination frameworks such as \textit{CORA} \cite{chronos,cora}. Recent device-RAN-cloud inference work further suggests that SLA-aware placement is becoming a practical systems question rather than a purely conceptual one \cite{slaairan}.
+
+\subsubsection{Novelty and Relation to Prior Work}
+Prior work addresses important pieces of this problem, but not the full combination required here. \textit{Beyond Connectivity} and related AI-RAN architecture efforts describe the orchestration substrate for shared AI and RAN infrastructure \cite{beyond,airan,openairan}. \textit{Paradrop} demonstrates lightweight multi-tenancy at the extreme edge \cite{paradrop}. \textit{CORA} coordinates uplink, compute, and downlink for latency-critical inference \cite{cora}. \textit{Weaver} shows how to expose RAN-safe spare GPU capacity, but its target workload is foundation model training rather than latency-critical inference \cite{weaver}. \textit{SLA-Aware Distributed LLM Inference Across Device-RAN-Cloud} further suggests that strict SLAs may require hard isolation or carefully selected model variants, which makes MIG a useful comparison point rather than a universal answer \cite{slaairan}.
+
+The novelty of this research lies in combining these strands into one scheduling problem: determining which inference workloads can share DU-adjacent compute, under what isolation contract, and with what end-to-end latency budget. The project therefore focuses on phase-aware inference profiling, DU-local coexistence control, and multi-tenant orchestration that joins \textit{Weaver}-style spare-compute harvesting with \textit{CORA}-style latency coordination and \textit{Paradrop}-style lifecycle management \cite{weaver,cora,paradrop}.
+
+\subsubsection{Significance}
+This research has the potential to fundamentally alter the economics and operational capabilities of next-generation telecommunications. By proving that multi-tenant edge inference can be executed natively on RAN infrastructure with zero degradation to network reliability, this work unlocks a ubiquitous, ``free'' compute substrate for AI services. For network operators, it provides a blueprint to monetize idle GPU cycles without deploying new hardware. For end-users and device manufacturers, it guarantees the low-latency edge compute necessary to power lightweight, battery-efficient mobile devices. Ultimately, this research provides a critical technical foundation for making AI services an integral, native component of 6G networks.
+
+\subsection{Feasibility}
+\label{subsec:Feasibility}
+% Details on feasibility constraints, datasets, hardware requirements, and timeline manageability.
+
+\subsection{Beneficiaries}
+\label{subsec:Beneficiaries}
+% Outline the key academic, industrial, and societal beneficiaries of this research outcome.
+
+
+%==========================================================
+% Chapter 2 -> Section 2
+\section{Background and Related Work}
+\label{sec:background_related_work}
+
+This section provides the foundational context necessary to understand the proposed scheduling architecture. It first outlines the evolution of cloud-native telecommunications and edge AI, before critically reviewing the existing literature on GPU sharing, edge multi-tenancy, and RAN-aware scheduling to highlight the specific gaps this research will address.
+
+\subsection{Background}
+\label{subsec:background}
+
+\subsubsection{Cloud-Native O-RAN Architecture}
+Historically, cellular network deployments relied heavily on monolithic, proprietary hardware appliances characterized by strict vendor lock-in and rigid operational paradigms. The Open RAN (O-RAN) standard initiated a fundamental shift in this ecosystem by promoting the disaggregation of traditional baseband functions and the adoption of standardized, open interfaces \todo[inline, color=orange!40]{Cite: open\&airan.pdf}. A central tenet of the O-RAN specification is the defined functional split—most notably Split 7.2—which cleanly divides Physical (PHY) layer processing \todo[inline, color=orange!40]{Cite: open\&airan.pdf}. Under this architecture, the lower PHY functions reside at the Radio Unit (O-RU), while the computationally intensive upper PHY operations are handled by the Distributed Unit (O-DU) \todo[inline, color=orange!40]{Cite: open\&airan.pdf}.
+
+Crucially, O-RAN transitions these disaggregated components away from specialized telecommunications equipment toward a highly flexible, cloud-native architecture \todo[inline, color=orange!40]{Cite: beyond.pdf}. In a virtualized RAN (vRAN) deployment, network functions are completely decoupled from the underlying physical hardware and are instead deployed as containerized microservices \todo[inline, color=orange!40]{Cite: beyond.pdf}. These virtualized workloads run on Commercial Off-The-Shelf (COTS) servers, which collectively form the computing substrate known as the O-Cloud. To manage this distributed environment, the architecture introduces the Service Management and Orchestration (SMO) framework \todo[inline, color=orange!40]{Cite: beyond.pdf}. The SMO leverages standard IT cloud orchestration principles to handle the lifecycle management, dynamic scaling, and deployment of virtualized network functions across the O-Cloud, ensuring multi-vendor interoperability and programmatic control \todo[inline, color=orange!40]{Cite: beyond.pdf}. Furthermore, O-RAN integrates AI/ML-driven network automation into the architecture, enabling intelligent orchestration of both computational and communication resources \todo[inline, color=orange!40]{Cite: AIRAN.pdf}.
+
+However, realizing this cloud-native flexibility introduces severe execution challenges, primarily due to the stringent, deterministic nature of cellular telecommunications. RAN functions demand substantial compute and network resources. The network operates in a strict time-slotted fashion, with slot durations ranging from hundreds of microseconds to just one millisecond \todo[inline, color=orange!40]{Cite: CHRONOS.pdf}. During a single slot, the system must execute radio resource allocation in the control plane and process user packets in the data plane (e.g., segmentation, header attachment, and retransmissions) \todo[inline, color=orange!40]{Cite: CHRONOS.pdf}.
+
+Executing these slot-level tasks on standard cloud infrastructure is demanding. CHRONOS shows that VM interruption and network latency can consume a large share of the slot budget, so faithful cloud execution depends on tight release synchrony and careful control of timing jitter \cite{chronos}. This timing pressure helps explain why recent O-RAN and AI-RAN work places disaggregated DU/CU software, O-Cloud resources, and accelerator support within a common cloud-native operating model, rather than treating real-time RAN functions as fixed-purpose appliances \cite{openairan,beyond,airan}.
+
+
+\subsubsection{The AI-RAN Paradigm}
+As cellular systems move toward 6G, the RAN is increasingly framed as both a communications system and a distributed compute platform. The AI-RAN literature describes this convergence as a joint evolution of infrastructure, control, and services, where AI capabilities are embedded into the RAN stack and coordinated across edge and cloud resources \cite{beyond,airan,openairan}.
+
+The recent literature organizes this convergence into three closely related pillars \cite{airan,openairan}:
+\begin{itemize}
+	\item \textbf{AI-for-RAN (Network Optimization):} This pillar applies AI to improve internal network functions, including scheduling, beam management, traffic steering, energy saving, and anomaly handling \cite{airan,openairan}. Here, AI remains subordinate to the primary telecommunications service.
+	\item \textbf{AI-on-RAN (Native AI Services):} This pillar treats the RAN and its edge compute continuum as a native platform for AI services, especially distributed learning and low-latency inference placed close to DU/CU resources \cite{airan}.
+	\item \textbf{AI-and-RAN (Infrastructure Multiplexing):} This pillar asks when spare O-Cloud or AI-RAN compute can host secondary AI workloads without breaking primary radio deadlines \cite{airan,weaver,beyond}.
+\end{itemize}
+
+This research proposal focuses strictly on the \textbf{AI-and-RAN} pillar. Relative to the broader AI-for-RAN literature, it remains at an earlier stage of system design and validation, even though it offers a clear economic reason to reuse AI-RAN infrastructure beyond peak radio demand periods \cite{airan,weaver,beyond}.
+
+In practice, that reuse depends on turning spare DU or O-Cloud compute into a controlled edge service substrate while preserving the primacy of RAN timing and reliability requirements \cite{beyond,weaver,chronos}. The central systems question is therefore not whether AI workloads can be injected in the abstract, but how to admit and coordinate only those workloads that remain compatible with the underlying radio deadlines \cite{airan,weaver}.
+
+
+\subsubsection{The Anatomy of Latency-Critical Inference Workloads}
+Latency-sensitive edge AI workloads are also part of this background. CORA models their end-to-end service time as a joint uplink, compute, and downlink problem, while recent device-RAN-cloud measurements show that strict edge feasibility depends on workload variant and placement rather than on accelerator presence alone \cite{cora,slaairan}.
+
+As a result, edge inference is a multi-resource scheduling problem whose bottleneck can shift with channel quality, traffic load, and input/output size \cite{cora}. For generative services, this difficulty is amplified by the fact that different stages of inference place different demands on the platform \cite{slaairan}.
+
+The first stage is the \textbf{Prefill Phase} (or prompt processing). In this stage, the model processes the prompt in parallel and establishes the time-to-first-token budget. This phase is typically more compute-heavy than later generation, which is why TTFT becomes a useful operational signal under strict edge SLAs \cite{slaairan}.
+
+The second stage is the \textbf{Autoregressive Decoding Phase}. Modern serving systems consistently distinguish it from prefill: prefill is prompt-parallel and typically compute-dense, so it dominates time-to-first-token, whereas decoding is token-serial and advances one token at a time \cite{slaairan,sarathiserve,distserve}. Because each decode step must reuse the accumulated KV cache while doing comparatively little arithmetic, its bottleneck is usually memory movement and KV-cache management rather than raw ALU saturation \cite{pagedattention,sarathiserve}. This is why steady per-token latency or throughput behaves differently from TTFT under strict edge SLAs \cite{slaairan}.
+
+This phase split is also visible in the design of current serving engines. PagedAttention/vLLM shows that the KV cache is large, dynamically sized, and easily wasted by fragmentation or duplication, so explicit KV-cache memory management directly affects feasible batch size and serving throughput \cite{pagedattention}. Sarathi-Serve shows that although batching decodes is throughput-efficient, naive interleaving of prefills and decodes creates interference; its chunked-prefill scheduler is designed to admit new requests without stalling ongoing decodes \cite{sarathiserve}. DistServe goes further and shows that under tight TTFT and per-token latency constraints, colocating both phases can couple their resource-allocation plans badly enough that some systems explicitly disaggregate prefill and decoding onto different GPUs \cite{distserve}.
+
+For AI-RAN, this means GPU ``spare capacity'' cannot be inferred from utilization counters alone. During decoding, low SM or ALU utilization can coexist with high pressure on HBM, caches, and KV-state traffic, so a scheduler that interprets low compute utilization as safe headroom can admit RAN work precisely when contention risk remains high \cite{pagedattention,sarathiserve,distserve}. CORA and recent device--RAN--cloud evidence reinforce that this risk is end-to-end: feasibility depends on model variant, placement, channel quality, and queueing across the uplink--compute--downlink path, not on accelerator presence alone \cite{cora,slaairan}.
+
+
+\subsubsection{Strict RAN Service Level Agreements (SLAs) vs. IT Workloads}
+Sharing this cloud-native hardware introduces a severe clash of operational philosophies. In standard IT cloud environments, schedulers optimize for fairness. Conversely, the RAN operates under unforgiving Service Level Agreements (SLAs). The network operates in a time-slotted fashion, with each slot having a duration in the order of hundreds of microseconds up to a millisecond \todo[inline, color=orange!40]{Cite: CHRONOS.pdf}. During each slot, the MAC scheduler must perform radio resource allocation for both uplink and downlink, and the data plane must process the actual packets (segmentation, adding headers, retransmissions) \todo[inline, color=orange!40]{Cite: CHRONOS.pdf}. Both control and data plane operations must conclude within the exact slot duration; failure to do so results in packet drops, user detaches, or catastrophic RAN crashes \todo[inline, color=orange!40]{Cite: CHRONOS.pdf}. Therefore, coexistence requires a strict ``RAN-first'' priority model where the telecommunications workload is unconditionally protected.
+
+
+\subsubsection{The Hardware Dichotomy: Training vs. Inference}
+Within the AI domain, different workloads stress the GPU in fundamentally different ways. Foundation model training is one of the most compute-intensive workloads available \todo[inline, color=orange!40]{Cite: weaver.pdf}. However, training is elastic; it is a background task that can adapt to dynamic resource availability and be safely paused when RAN traffic spikes \todo[inline, color=orange!40]{Cite: weaver.pdf}. Inference presents a radically different hardware profile. Edge inference is inherently user-centric, interactive, and latency-critical \todo[inline, color=orange!40]{Cite: CORA.pdf}. Furthermore, LLM and Vision-Language Model (VLM) inference is heavily memory-bound, highly sensitive to cache contention, and requires strict SLA latency budgets \todo[inline, color=orange!40]{Cite: SLA.pdf}. A scheduling architecture designed to safely multiplex elastic training workloads cannot be naively applied to inference.
+
+
+\subsection{Related Work}
+\label{subsec:related_work}
+
+\subsubsection{Hardware-Level GPU Sharing Mechanisms}
+To realize AI-and-RAN, the GPU must be shared between the RAN DU and the LLM inference engine. Existing GPU sharing mechanisms fail to meet RAN's stringent SLAs. Spatial partitioning techniques, such as NVIDIA's Multi-Instance GPU (MIG) evaluated in systems like \textit{CAORA}, provide excellent workload isolation but force static resource allocation and incur massive reconfiguration penalties ($\sim$7 seconds) \todo[inline, color=orange!40]{Cite: weaver.pdf}. This makes them too rigid to capture bursty spare compute. Conversely, temporal sharing mechanisms like Multi-Process Service (MPS), evaluated in \textit{YinYangRAN}, allow dynamic sharing but incur a non-negligible reconfiguration overhead ($\sim$0.3 seconds) during which the GPU is not usable and all workloads must fall back to CPUs \todo[inline, color=orange!40]{Cite: weaver.pdf}. Neither approach provides the sub-millisecond hardware preemption required to guarantee RAN baseband processing priority.
+
+\subsubsection{Edge Multi-Tenancy and Orchestration}
+Providing AI inference as a multi-tenant service requires robust macro-level orchestration. Foundational systems like \textit{Paradrop} successfully demonstrated how to enable lightweight multi-tenancy at the network's extreme edge by deploying isolated, containerized environments \todo[inline, color=orange!40]{Cite: edge\_ran\_inference\_research\_matrix.md}. While Paradrop validates the cloud-to-edge multi-tenancy concept, cellular 6G architectures propose extending the O-RAN Service Management and Orchestration (SMO) layer into an ``AI-RAN Orchestrator'' to enable integrated resource allocation across RAN and AI workloads \todo[inline, color=orange!40]{Cite: beyond.pdf}. However, these high-level orchestration planes must be paired with low-level execution engines to guarantee isolation on shared GPUs.
+
+\subsubsection{End-to-End Latency Coordination}
+Inference latency encompasses the time required to upload data (Uplink), process it (Compute), and return the result (Downlink) \todo[inline, color=orange!40]{Cite: CORA.pdf}. In the cellular domain, the \textit{CORA} framework advanced this concept by demonstrating end-to-end latency coordination. CORA explicitly models separate uplink, compute, and downlink latency budgets, deriving Resource Block (RB) demand from I/O size and channel quality, and Streaming Multiprocessor (SM) demand from a speedup model \todo[inline, color=orange!40]{Cite: edge\_ran\_inference\_research\_matrix.md}. It dynamically adjusts these budgets across stages based on each DNN task’s characteristics to mitigate contention \todo[inline, color=orange!40]{Cite: CORA.pdf}. However, while CORA excellently manages macro-level coordination, it abstracts away the micro-level hardware contention on the base station's GPU.
+
+\subsubsection{RAN-Aware Co-scheduling}
+Addressing micro-level hardware contention, the \textit{Weaver} framework represents the state-of-the-art in RAN-safe GPU sharing. Weaver introduced a RAN-centric spare compute controller embedded directly inside the MAC scheduler, utilizing NVIDIA Green Contexts to achieve sub-millisecond elasticity without violating RAN deadlines \todo[inline, color=orange!40]{Cite: weaver.pdf}. Their analysis revealed that GPU-accelerated RAN systems possess substantial underutilized compute resources (40–85\%) that are temporally bursty within a single cell site \todo[inline, color=orange!40]{Cite: weaver.pdf}. However, Weaver was explicitly designed and evaluated for foundation model training.
+
+
+\subsection{Summary of Research Gap}
+\label{subsec:research_gap}
+The synthesis of the current literature reveals a distinct architectural gap. While cloud-native O-RAN provides the infrastructure, frameworks like CORA solve macro-level latency routing, and Paradrop enables containerized edge multi-tenancy, there is no existing micro-level scheduling solution capable of safely multiplexing \textit{latency-critical inference} onto shared RAN GPUs. Because LLM inference is highly memory-bound and cannot be arbitrarily paused like training workloads, it requires a novel scheduling approach. This research bridges this gap by adapting Weaver's sub-millisecond elasticity protocols to accommodate the strict latency bounds and memory profiles of edge inference, integrated within a multi-tenant orchestration pipeline.
+
+
+%==========================================================
+% Chapter 3 -> Section 3
+\section{Methodology}
+\label{sec:methodology}
+
+To test the core hypothesis and develop the proposed multi-tenant AI-RAN architecture, this research will adopt a phased, systems-engineering methodology.
+
+\textbf{Phase 1: Workload Profiling and Contention Analysis.}\\
+Before a scheduler can be designed, the exact resource demands of both workloads must be established. We will profile standard 5G DU baseband processing alongside a suite of edge AI models (LLMs/VLMs) to establish their precise compute-bound versus memory-bound characteristics. Co-locating these workloads will identify exactly which hardware resources (L2 Cache, memory bandwidth, PCIe bus) cause RAN SLA violations.
+
+\textbf{Phase 2: Micro-Level Scheduler Design.}\\
+Based on profiling data, a dynamic MAC-layer scheduler will be developed. Instead of relying on static partitioning, it will adapt NVIDIA Green Contexts and sub-millisecond preemption protocols to safely inject memory-bound inference tasks into RAN idle slots without compromising the primary telecommunication deadline.
+
+\textbf{Phase 3: Macro-Level Orchestration Integration.}\\
+The scheduler will be integrated into a broader cloud-native framework to achieve multi-tenancy. This involves extending standard orchestration principles (such as Kubernetes pods or Paradrop-style isolated environments) to handle tenant isolation and implement the decoupled end-to-end latency planning mechanism.
+
+
+%==========================================================
+% Chapter 4 -> Section 4
+\section{Project Plan and Timeline}
+\label{sec:project_plan}
+
+\textit{This section does not count towards the page limit.}
+
+\begin{figure}[htbp]
+	\centering
+	\begin{ganttchart}[
+			y unit title=0.4cm,
+			y unit chart=0.5cm,
+			vgrid,hgrid,
+			x unit=1.55mm,
+			time slot format=isodate,
+			title/.append style={draw=none, fill=accentblue},
+			title label font=\sffamily\bfseries\color{white},
+			bar/.append style={draw=none, fill=mainblue},
+			bar height=.6,
+			bar label font=\normalsize\color{black!50},
+			bar incomplete/.append style={fill=green}
+		]{2026-05-15}{2026-08-15}
+		\gantttitlecalendar{month=name}\\
+		\ganttbar[progress=100]{Literature Review}{2026-05-15}{2026-05-31} \\
+		\ganttgroup{Work Package 1: Profiling}{2026-06-01}{2026-06-21} \\
+		\ganttbar[progress=0]{RAN Profiling}{2026-06-01}{2026-06-10} \\
+		\ganttlinkedbar{LLM Contention Tests}{2026-06-11}{2026-06-21} \\
+		\ganttgroup{Work Package 2: Scheduling}{2026-06-22}{2026-07-20} \\
+		\ganttbar[progress=0]{Micro-scheduler Dev}{2026-06-22}{2026-07-10} \\
+		\ganttlinkedbar{Macro-Integration}{2026-07-11}{2026-07-20} \\
+		\ganttgroup{Dissertation}{2026-07-21}{2026-08-15} \\
+		\ganttbar{Writing \& Revisions}{2026-07-21}{2026-08-15}
+	\end{ganttchart}
+	\caption{Gantt Chart of anticipated MSc dissertation activities.}
+	\label{fig:gantt}
+\end{figure}
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{@{}ccc@{}}
+		\toprule
+		\textbf{Milestone} & \textbf{Week} & \textbf{Description}                                                    \\
+		\midrule
+		$M_1$              & 3             & Completion of baseline hardware profiling and bottleneck identification \\
+		$M_2$              & 6             & Micro-scheduler logic implementation and initial testing                \\
+		$M_3$              & 9             & Full system evaluation and data collection completed                    \\
+		$M_4$              & 12            & Submission of final dissertation                                        \\
+		\bottomrule
+	\end{tabular}
+	\caption{Project milestones.}
+	\label{fig:milestones}
+\end{table}
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{@{}ccc@{}}
+		\toprule
+		\textbf{Deliverable} & \textbf{Week} & \textbf{Description}                                    \\
+		\midrule
+		$D_1$                & 4             & Interim report on hardware contention limits            \\
+		$D_2$                & 8             & Codebase: Simulated hierarchical scheduling environment \\
+		$D_3$                & 12            & Final Dissertation                                      \\
+		\bottomrule
+	\end{tabular}
+	\caption{Project deliverables.}
+	\label{fig:deliverables}
+\end{table}
+
+%-------------------- References -------------------------
+\bibliographystyle{unsrt}
+
+{\small
+	\bibliography{main}
+	\textit{This section does not count towards the page limit. References should include embedded DOI links.}
+}
+
+\end{document}

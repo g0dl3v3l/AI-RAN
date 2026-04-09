@@ -1,0 +1,45 @@
+2026-04-02 16:18:22,562 - INFO - Using cache directory: /tmp/test_opt_cache
+2026-04-02 16:18:22,562 - INFO - Downloading opt-125m...
+2026-04-02 16:18:22,729 - INFO - HTTP Request: GET https://huggingface.co/api/models/facebook/opt-125m/revision/main "HTTP/1.1 200 OK"
+Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]2026-04-02 16:18:22,846 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/.gitattributes "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:22,865 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/.gitattributes "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,872 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:22,873 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:22,876 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:22,879 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/pytorch_model.bin "HTTP/1.1 302 Found"
+2026-04-02 16:18:22,879 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/merges.txt "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:22,882 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/flax_model.msgpack "HTTP/1.1 302 Found"
+2026-04-02 16:18:22,883 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/.gitattributes "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,895 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/LICENSE.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:22,895 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/README.md "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,896 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/generation_config.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,896 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/config.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,902 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/merges.txt "HTTP/1.1 200 OK"
+Fetching 12 files:   8%|▊         | 1/12 [00:00<00:01,  6.39it/s]2026-04-02 16:18:22,913 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/LICENSE.md "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,917 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/generation_config.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,920 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/README.md "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,944 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/config.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,946 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/LICENSE.md "HTTP/1.1 200 OK"
+2026-04-02 16:18:22,946 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/merges.txt "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,000 - INFO - HTTP Request: GET https://huggingface.co/api/models/facebook/opt-125m/xet-read-token/27dcfa74d334bc871f3234de431e71c6eeba5dd6 "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,002 - INFO - HTTP Request: GET https://huggingface.co/api/models/facebook/opt-125m/xet-read-token/27dcfa74d334bc871f3234de431e71c6eeba5dd6 "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,028 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:23,040 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:23,045 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,047 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/tf_model.h5 "HTTP/1.1 302 Found"
+2026-04-02 16:18:23,049 - INFO - HTTP Request: HEAD https://huggingface.co/facebook/opt-125m/resolve/27dcfa74d334bc871f3234de431e71c6eeba5dd6/vocab.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-02 16:18:23,056 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,062 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,067 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/vocab.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,073 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-04-02 16:18:23,086 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/facebook/opt-125m/27dcfa74d334bc871f3234de431e71c6eeba5dd6/vocab.json "HTTP/1.1 200 OK"
+Fetching 12 files:  42%|████▏     | 5/12 [00:08<00:11,  1.71s/it]Fetching 12 files: 100%|██████████| 12/12 [00:08<00:00,  1.49it/s]
+2026-04-02 16:18:30,818 - INFO - Download complete: /tmp/test_opt_cache/models--facebook--opt-125m/snapshots/27dcfa74d334bc871f3234de431e71c6eeba5dd6
+2026-04-02 16:18:30,976 - INFO - ✓ Checksum verification passed
+2026-04-02 16:18:30,976 - INFO - ✓ opt-125m ready at /tmp/test_opt_cache/models--facebook--opt-125m/snapshots/27dcfa74d334bc871f3234de431e71c6eeba5dd6
+2026-04-02 16:18:30,976 - INFO - 
+Download Summary:
+2026-04-02 16:18:30,976 - INFO -   Successful: 1
+2026-04-02 16:18:30,976 - INFO -   Failed: 0
+2026-04-02 16:18:30,976 - INFO - All models downloaded successfully!
+Exit code: 0

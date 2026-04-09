@@ -1,0 +1,78 @@
+\begin{thebibliography}{10}
+
+\bibitem{beyond}
+Michele Polese, Niloofar Mohamadi, Salvatore D'Oro, Leonardo Bonati, and
+  Tommaso Melodia.
+\newblock {Beyond Connectivity: An Open Architecture for AI-RAN Convergence in
+  6G}.
+\newblock {\em arXiv preprint arXiv:2507.06911}, 2025.
+
+\bibitem{airan}
+Chenyuan Feng, Howard~H. Yang, Kun Guo, Wenchao Xia, Chenxi Liu, and Tony Q.~S.
+  Quek.
+\newblock {AI-RAN: The pathway to future wireless networks}.
+\newblock {\em Journal of Information and Intelligence}, 4(1):5--22, 2026.
+
+\bibitem{openairan}
+{\em {Proceedings of the 2025 2nd ACM Workshop on Open and AI RAN}}, Hong Kong,
+  China, 2025. Association for Computing Machinery.
+\newblock Part of MobiCom '25.
+
+\bibitem{cora}
+Sunghyun Jin, Serae Kim, Sangtae Ha, and Kyunghan Lee.
+\newblock {End-to-End Coordination of RAN and Edge Server for Latency-Critical
+  Inference Serving over Cellular Networks}.
+\newblock {\em Proceedings of the ACM on Networking}, 3(CoNEXT4):1--23, 2025.
+\newblock Article 40.
+
+\bibitem{slaairan}
+Hariz Yet, Nguyen~Thanh Tam, Mao~V. Ngo, Lim~Yi Shen, Lin Wei, Jihong Park,
+  Binbin Chen, and Tony Q.~S. Quek.
+\newblock {SLA-Aware Distributed LLM Inference Across Device-RAN-Cloud}.
+\newblock In {\em {IEEE INFOCOM Workshops 2026 (6G AI-RAN 2026)}}, 2026.
+\newblock Preprint on arXiv:2602.23722.
+
+\bibitem{weaver}
+{Weaver: Foundation Model Training over AI-RAN Compute Infrastructure}, 2026.
+\newblock Local ACM-formatted manuscript dated March 2026.
+
+\bibitem{paradrop}
+Peng Liu, Dale Willis, and Suman Banerjee.
+\newblock {Paradrop: Enabling Lightweight Multi-tenancy at the Network's
+  Extreme Edge}.
+\newblock In {\em {IEEE/ACM Symposium on Edge Computing (SEC)}}, pages 1--13,
+  2016.
+
+\bibitem{chronos}
+Ujjwal Pawar, Andrew~E. Ferguson, Yuto Takano, Jon Larrea, Xenofon Foukas,
+  Mahesh~K. Marina, and Bozidar Radunovic.
+\newblock {Towards Scalable and Cost-Effective RAN Emulation Leveraging the
+  Public Cloud}.
+\newblock In {\em Proceedings of the 26th International Workshop on Mobile
+  Computing Systems and Applications}, HotMobile '25, pages 43--48, 2025.
+
+\bibitem{sarathiserve}
+Amey Agrawal, Nitin Kedia, Ashish Panwar, Jayashree Mohan, Nipun Kwatra,
+  Bhargav~S. Gulavani, Alexey Tumanov, and Ramachandran Ramjee.
+\newblock {Taming Throughput-Latency Tradeoff in LLM Inference with
+  Sarathi-Serve}.
+\newblock {\em arXiv preprint arXiv:2403.02310}, 2024.
+
+\bibitem{distserve}
+Yinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu, Yibo Zhu, Xuanzhe Liu, Xin
+  Jin, and Hao Zhang.
+\newblock {DistServe: Disaggregating Prefill and Decoding for Goodput-optimized
+  Large Language Model Serving}.
+\newblock In {\em 18th USENIX Symposium on Operating Systems Design and
+  Implementation (OSDI 24)}, pages 193--210, Santa Clara, CA, 2024. USENIX
+  Association.
+
+\bibitem{pagedattention}
+Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu,
+  Joseph~E. Gonzalez, Hao Zhang, and Ion Stoica.
+\newblock {Efficient Memory Management for Large Language Model Serving with
+  PagedAttention}.
+\newblock {\em arXiv preprint arXiv:2309.06180}, 2023.
+\newblock SOSP 2023.
+
+\end{thebibliography}

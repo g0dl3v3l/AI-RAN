@@ -52,20 +52,9 @@ def orchestrate_profile_run(
 
     # Load or initialize manifest
     manifest_path = run_root / "run_manifest.json"
-    if manifest_path.exists():
-        manifest = manifests.load_manifest(manifest_path)
-    else:
-        manifest = manifests.initialize_run_manifest(run_root)
+    manifest = manifests.load_run_manifest(manifest_path)
 
     try:
-        # Update status to in-progress
-        manifest = manifests.update_stage_status(
-            manifest,
-            stage_name="profile",
-            public_status="in_progress",
-        )
-        manifests.write_manifest(manifest_path, manifest)
-
         # Resolve models
         normalized_models = tuple(opt_assets.normalize_model_id(m) for m in models)
 
@@ -128,26 +117,25 @@ def orchestrate_profile_run(
         reduction_result = profile_reducer.reduce_profile_events(run_root=run_root)
 
         # Update manifest with results
-        manifest = manifests.update_stage_status(
-            manifest,
-            stage_name="profile",
-            public_status="success",
-        )
-        manifest["profile_statistics"] = {
-            "models_profiled": len(normalized_models),
-            "prefill_rows": total_prefill_rows,
-            "decode_rows": total_decode_rows,
-            "pcie_rows": total_pcie_rows,
-            "prefill_failed": failed_prefill,
-            "decode_failed": failed_decode,
-            "pcie_failed": failed_pcie,
-            "summary_rows": {
-                "prefill": reduction_result.prefill_row_count,
-                "decode": reduction_result.decode_row_count,
-                "pcie": reduction_result.pcie_row_count,
+        manifests.update_stage_status(
+            manifest_path,
+            stage="profile",
+            status="success",
+            details={
+                "models_profiled": len(normalized_models),
+                "prefill_rows": total_prefill_rows,
+                "decode_rows": total_decode_rows,
+                "pcie_rows": total_pcie_rows,
+                "prefill_failed": failed_prefill,
+                "decode_failed": failed_decode,
+                "pcie_failed": failed_pcie,
+                "summary_rows": {
+                    "prefill": reduction_result.prefill_row_count,
+                    "decode": reduction_result.decode_row_count,
+                    "pcie": reduction_result.pcie_row_count,
+                },
             },
-        }
-        manifests.write_manifest(manifest_path, manifest)
+        )
 
         return ProfileOrchestratorResult(
             run_root=run_root,
@@ -160,12 +148,11 @@ def orchestrate_profile_run(
         )
 
     except Exception as exc:
-        manifest = manifests.update_stage_status(
-            manifest,
-            stage_name="profile",
-            public_status="profile_failed",
+        manifests.update_stage_status(
+            manifest_path,
+            stage="profile",
+            status="profile_failed",
         )
-        manifests.write_manifest(manifest_path, manifest)
         raise
 
 

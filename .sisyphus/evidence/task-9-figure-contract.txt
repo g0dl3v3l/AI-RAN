@@ -1,0 +1,7 @@
+micro_architecture_opt-1.3b_layer11.pdf True 20846
+micro_architecture_opt-1.3b_layer11.png True 32941
+compute_scaling_acu_vs_single_layer_params.pdf True 24387
+compute_scaling_acu_vs_single_layer_params.png True 57862
+memory_scaling_gbu_vs_single_layer_params.pdf True 24013
+memory_scaling_gbu_vs_single_layer_params.png True 55742
+extra_files= []

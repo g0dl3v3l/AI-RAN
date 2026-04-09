@@ -1,0 +1,1 @@
+{'max_threads_per_sm': 1536, 'max_regs_per_sm': 65536, 'max_smem_per_sm': 102400, 'max_blocks_per_sm': 24, 'total_sms': 64, 'peak_bw_gbs': 768, 'l2_cache_bytes': 6291456, 'peak_fp32_tflops': 27.8, 'peak_fp16_tflops': 55.6, 'peak_bf16_tflops': 55.6}

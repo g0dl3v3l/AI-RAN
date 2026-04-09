@@ -1,0 +1,4 @@
+time_slot_sched_ns,ran_state
+1000000,grant
+1500000,hold
+2000000,grant
