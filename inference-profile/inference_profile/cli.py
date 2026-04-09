@@ -296,20 +296,30 @@ def _handle_report(args: argparse.Namespace) -> int:
 
 
 def _handle_verify_bundle(args: argparse.Namespace) -> int:
+    from inference_profile.verify_bundle import verify_bundle
+    
     try:
-        # Verify required files exist
         run_root = Path(args.run_root)
-        required_files = [
-            run_root / "raw" / "prefill_events.csv",
-            run_root / "raw" / "decode_events.csv",
-            run_root / "raw" / "pcie_events.csv",
-            run_root / "derived" / "prefill_summary.csv",
-            run_root / "derived" / "decode_summary.csv",
-            run_root / "derived" / "pcie_summary.csv",
-        ]
-        missing = [f for f in required_files if not f.exists()]
-        if missing:
-            raise CliUserError(f"Missing required files: {missing}")
+        result = verify_bundle(run_root)
+        
+        if result["status"] != "success":
+            # Build error message
+            missing_files = [
+                f for f, exists in result["completeness_results"].items() 
+                if not exists
+            ]
+            checksum_failures = [
+                f for f, check in result["checksum_results"].items() 
+                if not check.get("match", True)
+            ]
+            
+            error_msg = "Bundle verification failed:"
+            if missing_files:
+                error_msg += f" Missing files: {missing_files}."
+            if checksum_failures:
+                error_msg += f" Checksum failures: {checksum_failures}."
+            
+            raise CliUserError(error_msg)
     except (KeyError, ValueError) as exc:
         raise CliUserError(_exception_message(exc)) from None
     return 0
