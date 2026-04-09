@@ -147,7 +147,64 @@ def build_parser() -> argparse.ArgumentParser:
         "run-all",
         help=_SUBCOMMAND_HELP["run-all"],
     )
-    run_all_parser.set_defaults(func=_handle_placeholder)
+    run_all_parser.add_argument(
+        "--run-root",
+        type=Path,
+        required=True,
+        help="Root directory for run outputs",
+    )
+    run_all_parser.add_argument(
+        "--ldpc-trace",
+        type=Path,
+        required=True,
+        help="Path to LDPC trace file",
+    )
+    run_all_parser.add_argument(
+        "--ran-ctrl-trace",
+        type=Path,
+        required=True,
+        help="Path to RAN control trace file",
+    )
+    run_all_parser.add_argument(
+        "--models",
+        nargs="+",
+        required=True,
+        help="Model IDs to profile",
+    )
+    run_all_parser.add_argument(
+        "--chunk-sizes",
+        type=int,
+        nargs="+",
+        required=True,
+        help="Chunk sizes for profiling",
+    )
+    run_all_parser.add_argument(
+        "--sequence-lengths",
+        type=int,
+        nargs="+",
+        required=True,
+        help="Sequence lengths for profiling",
+    )
+    run_all_parser.add_argument(
+        "--gpu-id",
+        type=int,
+        default=0,
+        help="GPU ID to use (default: 0)",
+    )
+    run_all_parser.add_argument(
+        "--cache-root",
+        type=Path,
+        default=None,
+        help="Cache root for models",
+    )
+    run_all_parser.add_argument(
+        "--resume-from",
+        choices=["bootstrap-env", "validate-traces", "profile", "simulate", "report", "verify-bundle"],
+        default=None,
+        help="Resume from a specific stage",
+    )
+    run_all_parser.set_defaults(func=_handle_run_all)
+
 
     return parser
 
@@ -257,6 +314,29 @@ def _handle_verify_bundle(args: argparse.Namespace) -> int:
         raise CliUserError(_exception_message(exc)) from None
     return 0
 
+
+
+
+def _handle_run_all(args: argparse.Namespace) -> int:
+    from inference_profile.run_orchestrator import run_orchestrator
+    
+    try:
+        manifest = run_orchestrator(
+            run_root=args.run_root,
+            ldpc_trace=args.ldpc_trace,
+            ran_ctrl_trace=args.ran_ctrl_trace,
+            models=args.models,
+            chunk_sizes=args.chunk_sizes,
+            sequence_lengths=args.sequence_lengths,
+            gpu_id=args.gpu_id,
+            cache_root=args.cache_root,
+            resume_from=args.resume_from,
+        )
+        if manifest.get("status") != "success":
+            raise CliUserError(f"Run failed with status: {manifest.get('status')}")
+    except (KeyError, ValueError, RuntimeError) as exc:
+        raise CliUserError(_exception_message(exc)) from None
+    return 0
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
