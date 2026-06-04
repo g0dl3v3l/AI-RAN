@@ -1,0 +1,27 @@
+# V0 environment probe configuration (skeleton)
+#
+# Task 1 note: this repo currently only provides the package/test scaffold.
+# Probe/orchestrator logic will be implemented in later tasks.
+
+experiment_id: v0_env_probe
+version: v0
+
+# Runtime/model fields are placeholders for later tasks.
+runtime: vllm
+model: null
+
+# V0 starts as an environment + capability classifier.
+arm: env_probe
+
+workload: {}
+
+preemption_policy:
+  mode: none
+
+resource_delta: {}
+telemetry: {}
+
+# Results are generated under this directory (gitignored except .gitkeep).
+output_dir: experiments/results
+
+seed: 0
