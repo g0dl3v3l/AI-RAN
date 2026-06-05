@@ -41,3 +41,10 @@
 - Task-6 CUDA probing is configurable via probe/CLI image parameter, but its default image is fixed to `nvidia/cuda:12.4.1-base-ubuntu22.04` so the command contract stays stable without modifying `experiments/configs/v0_env_probe.yaml`.
 - Task-6 MPS probing defaults to `mode: read_only`; lifecycle mutation is gated behind `allow_start_stop=True`, and even then the probe refuses start/stop if a pre-existing `/tmp/nvidia-mps/control` pipe is present.
 - Both new CLIs follow the Task-5 output-dir contract: reuse an existing target directory when present, otherwise create the requested exact path via `ensure_run_dir` before writing `cuda_check.json` or `mps_check.json`.
+
+
+## 2026-06-05 00:34:56Z
+
+- Task-7 runtime config is intentionally minimal and mapping-based until the later orchestrator/config task lands: `external_server.base_url` is enough to use an existing server, while `docker_server.enabled` is the explicit opt-in gate for starting an experiment-owned vLLM container.
+- Docker vLLM startup binds only `127.0.0.1:<port>:8000` on the host while serving on `0.0.0.0` inside the container, preserving localhost-only exposure without blocking OpenAI-compatible requests from the smoke client.
+- Non-runnable runtime states are converted immediately into smoke-validation records in the adapter layer: `skipped -> smoke_not_attempted`, `unsupported -> smoke_not_supported`, `error -> smoke_runtime_failed`, and `timeout -> smoke_hung`.
