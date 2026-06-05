@@ -21,8 +21,8 @@ where = ["experiments/src"]
 addopts = "--strict-markers"
 testpaths = ["experiments/tests"]
 markers = [
-    "integration: integration tests (opt-in; may require Docker/host tools)",
-    "gpu: GPU tests (opt-in; requires CUDA-capable hardware)",
+    "integration: integration tests (opt-in with AI_EDGE_RUN_INTEGRATION=1; may require Docker/host tools)",
+    "gpu: GPU tests (opt-in with AI_EDGE_RUN_GPU=1; may require CUDA-capable hardware)",
 ]
 
 [tool.pyright]
