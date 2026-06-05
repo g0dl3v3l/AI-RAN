@@ -83,7 +83,10 @@ def _build_runtime_config(args: argparse.Namespace) -> dict[str, object]:
     if args.container_name:
         docker_server["container_name"] = args.container_name
     return {
-        "external_server": {"base_url": args.base_url},
+        "external_server": {
+            "enabled": bool(str(args.base_url).strip()),
+            "base_url": args.base_url,
+        },
         "docker_server": docker_server,
     }
 

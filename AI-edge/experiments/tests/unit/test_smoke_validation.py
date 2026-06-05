@@ -194,3 +194,78 @@ def test_replayed_outcome_without_successful_response_after_restore_is_not_attem
     assert record["status"] == "skipped"
     assert record["classification"] == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
     assert "after restore completion" in record["details"]["reason"]
+
+
+
+def test_restored_preemption_without_request_started_before_checkpoint_is_not_attempted():
+    from ai_runtime_experiments.validation import classify_smoke_validation
+
+    record = classify_smoke_validation(
+        run_id="task-8",
+        runtime_session=_runtime_session(),
+        smoke_preemption=make_probe_result(
+            run_id="task-8",
+            component="smoke_preemption",
+            status=ProbeStatus.OK,
+            details={
+                "reason": "checkpoint and restore completed",
+                "outcome": "restored",
+                "smoke": {
+                    "attempted": True,
+                    "request_monotonic_ns": 250,
+                    "response_monotonic_ns": 400,
+                },
+                "checkpoint": {
+                    "attempted": True,
+                    "start_monotonic_ns": 200,
+                },
+                "restore": {
+                    "attempted": True,
+                    "end_monotonic_ns": 300,
+                },
+            },
+        ),
+        smoke_response={"status": ProbeStatus.OK.value, "monotonic_ns": 400},
+        request_id="req-started-too-late",
+    )
+
+    assert record["status"] == "skipped"
+    assert record["classification"] == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
+    assert "request was not observed before checkpoint" in record["details"]["reason"]
+
+
+
+def test_restored_preemption_with_request_before_checkpoint_and_response_after_restore_succeeds():
+    from ai_runtime_experiments.validation import classify_smoke_validation
+
+    record = classify_smoke_validation(
+        run_id="task-8",
+        runtime_session=_runtime_session(),
+        smoke_preemption=make_probe_result(
+            run_id="task-8",
+            component="smoke_preemption",
+            status=ProbeStatus.OK,
+            details={
+                "reason": "checkpoint and restore completed",
+                "outcome": "restored",
+                "smoke": {
+                    "attempted": True,
+                    "request_monotonic_ns": 100,
+                    "response_monotonic_ns": 400,
+                },
+                "checkpoint": {
+                    "attempted": True,
+                    "start_monotonic_ns": 200,
+                },
+                "restore": {
+                    "attempted": True,
+                    "end_monotonic_ns": 300,
+                },
+            },
+        ),
+        smoke_response={"status": ProbeStatus.OK.value, "monotonic_ns": 400},
+        request_id="req-post-restore",
+    )
+
+    assert record["status"] == "ok"
+    assert record["classification"] == SmokeClassification.SMOKE_COMPLETED_AFTER_RESTORE.value

@@ -166,10 +166,20 @@ def _smoke_response_evidence(
     *,
     smoke_preemption: Mapping[str, Any] | None,
     smoke_response: Mapping[str, Any] | None,
+    smoke_request: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     preemption_details = dict((smoke_preemption or {}).get("details") or {})
     smoke_details = preemption_details.get("smoke")
+    checkpoint_details = preemption_details.get("checkpoint")
     restore_details = preemption_details.get("restore")
+
+    request_status_raw = None
+    request_monotonic_ns = None
+    if isinstance(smoke_request, Mapping):
+        request_status_raw = smoke_request.get("status")
+        raw_request_monotonic_ns = smoke_request.get("monotonic_ns")
+        if isinstance(raw_request_monotonic_ns, int):
+            request_monotonic_ns = raw_request_monotonic_ns
 
     response_status_raw = None
     response_status = None
@@ -181,9 +191,19 @@ def _smoke_response_evidence(
         if isinstance(raw_monotonic_ns, int):
             response_monotonic_ns = raw_monotonic_ns
 
+    request_started_before_checkpoint = False
     response_completed_before_restore = False
     response_completed_after_restore = False
     if isinstance(smoke_details, Mapping):
+        if request_status_raw is None:
+            request_status_raw = smoke_details.get("request_status")
+        if request_monotonic_ns is None:
+            raw_request_monotonic_ns = smoke_details.get("request_monotonic_ns")
+            if isinstance(raw_request_monotonic_ns, int):
+                request_monotonic_ns = raw_request_monotonic_ns
+        request_started_before_checkpoint = bool(
+            smoke_details.get("request_started_before_checkpoint")
+        )
         if response_status_raw is None:
             response_status_raw = smoke_details.get("response_status")
         if response_monotonic_ns is None:
@@ -197,6 +217,12 @@ def _smoke_response_evidence(
             smoke_details.get("response_completed_after_restore")
         )
 
+    checkpoint_start_monotonic_ns = None
+    if isinstance(checkpoint_details, Mapping):
+        raw_checkpoint_start_monotonic_ns = checkpoint_details.get("start_monotonic_ns")
+        if isinstance(raw_checkpoint_start_monotonic_ns, int):
+            checkpoint_start_monotonic_ns = raw_checkpoint_start_monotonic_ns
+
     restore_start_monotonic_ns = None
     restore_end_monotonic_ns = None
     if isinstance(restore_details, Mapping):
@@ -207,6 +233,12 @@ def _smoke_response_evidence(
         if isinstance(raw_restore_end_monotonic_ns, int):
             restore_end_monotonic_ns = raw_restore_end_monotonic_ns
 
+    if isinstance(request_monotonic_ns, int):
+        if isinstance(checkpoint_start_monotonic_ns, int):
+            request_started_before_checkpoint = request_monotonic_ns <= checkpoint_start_monotonic_ns
+        elif isinstance(restore_start_monotonic_ns, int):
+            request_started_before_checkpoint = request_monotonic_ns <= restore_start_monotonic_ns
+
     if response_status == ProbeStatus.OK and isinstance(response_monotonic_ns, int):
         if isinstance(restore_start_monotonic_ns, int):
             response_completed_before_restore = response_monotonic_ns < restore_start_monotonic_ns
@@ -214,6 +246,9 @@ def _smoke_response_evidence(
             response_completed_after_restore = response_monotonic_ns >= restore_end_monotonic_ns
 
     return {
+        "request_status": request_status_raw,
+        "request_monotonic_ns": request_monotonic_ns,
+        "request_started_before_checkpoint": request_started_before_checkpoint,
         "status": response_status_raw,
         "monotonic_ns": response_monotonic_ns,
         "completed_before_restore": response_completed_before_restore,
@@ -229,6 +264,7 @@ def classify_smoke_validation(
     smoke_preemption: Mapping[str, Any] | None,
     request_id: str | None = None,
     smoke_response: Mapping[str, Any] | None = None,
+    smoke_request: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     if runtime_session is not None and runtime_session.smoke_validation is not None:
         return _with_request_id(runtime_session.smoke_validation, request_id=request_id)
@@ -247,6 +283,7 @@ def classify_smoke_validation(
     response_evidence = _smoke_response_evidence(
         smoke_preemption=smoke_preemption,
         smoke_response=smoke_response,
+        smoke_request=smoke_request,
     )
     validation_details = {
         "reason": reason,
@@ -309,6 +346,17 @@ def classify_smoke_validation(
 
     if not response_evidence["completed_after_restore"]:
         timing_reason = "successful smoke response after restore completion was not observed"
+        timing_details = dict(validation_details)
+        timing_details["reason"] = timing_reason
+        return make_smoke_not_attempted_validation(
+            run_id=run_id,
+            request_id=request_id,
+            reason=timing_reason,
+            details=timing_details,
+        )
+
+    if not response_evidence["request_started_before_checkpoint"]:
+        timing_reason = "request was not observed before checkpoint or restore timing"
         timing_details = dict(validation_details)
         timing_details["reason"] = timing_reason
         return make_smoke_not_attempted_validation(
