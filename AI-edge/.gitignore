@@ -16,3 +16,14 @@ experiments/traces/**
 experiments/checkpoints/**
 experiments/logs/**
 experiments/models/**
+
+# Local V0 harness scratch directories
+/checkpoints/
+/logs/
+/models/
+
+# Local Python build/package artifacts
+/build/
+/dist/
+*.egg-info/
+/pip-wheel-metadata/

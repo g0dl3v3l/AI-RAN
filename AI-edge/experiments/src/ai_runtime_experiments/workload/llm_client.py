@@ -75,16 +75,62 @@ def _status_from_exception(error: Exception) -> ProbeStatus:
 
 
 
+def _smoke_request_summary(payload: Mapping[str, Any]) -> dict[str, Any]:
+    raw_messages = payload.get("messages")
+    message_count = 0
+    if isinstance(raw_messages, Sequence) and not isinstance(raw_messages, (str, bytes, bytearray)):
+        message_count = len(raw_messages)
+
+    return {
+        "model": payload.get("model"),
+        "message_count": message_count,
+        "temperature": payload.get("temperature"),
+        "max_tokens": payload.get("max_tokens"),
+    }
+
+
+
+def _smoke_response_summary(response: Mapping[str, Any] | None) -> dict[str, Any]:
+    if response is None:
+        return {
+            "id": None,
+            "model": None,
+            "choice_count": 0,
+        }
+
+    raw_choices = response.get("choices")
+    choice_count = 0
+    if isinstance(raw_choices, Sequence) and not isinstance(raw_choices, (str, bytes, bytearray)):
+        choice_count = len(raw_choices)
+
+    return {
+        "id": response.get("id"),
+        "model": response.get("model"),
+        "choice_count": choice_count,
+    }
+
+
+
 def _smoke_record_details(
     *,
     runtime: str,
     base_url: str,
+    request_url: str,
+    request_summary: Mapping[str, Any],
+    response_summary: Mapping[str, Any] | None = None,
+    extracted: Mapping[str, Any] | None = None,
     reason: str | None = None,
 ) -> dict[str, Any]:
     details: dict[str, Any] = {
         "runtime": runtime,
         "base_url": base_url,
+        "request_url": request_url,
+        "request": dict(request_summary),
     }
+    if response_summary is not None:
+        details["response"] = dict(response_summary)
+    if extracted is not None:
+        details["extracted"] = dict(extracted)
     if reason is not None:
         details["reason"] = reason
     return details
@@ -142,12 +188,14 @@ class LLMSmokeClient:
     ) -> dict[str, Any]:
         request_identifier = request_id or uuid.uuid4().hex
         normalized_base_url = _normalize_base_url(base_url)
+        request_url = _chat_completions_url(normalized_base_url)
         payload = {
             "model": model,
             "messages": _coerce_messages(prompt=prompt, messages=messages),
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        request_summary = _smoke_request_summary(payload)
         request_record = {
             "schema_version": SCHEMA_VERSION,
             "run_id": run_id,
@@ -162,17 +210,20 @@ class LLMSmokeClient:
             "details": _smoke_record_details(
                 runtime=runtime,
                 base_url=normalized_base_url,
+                request_url=request_url,
+                request_summary=request_summary,
             ),
         }
         append_jsonl(Path(output_dir) / "smoke_request.jsonl", request_record)
 
         try:
             response_payload = self.transport(
-                url=_chat_completions_url(normalized_base_url),
+                url=request_url,
                 payload=payload,
                 timeout_s=self.timeout_s,
                 api_key=self.api_key,
             )
+            assistant_text = _extract_assistant_text(response_payload)
             response_record = {
                 "schema_version": SCHEMA_VERSION,
                 "run_id": run_id,
@@ -185,11 +236,15 @@ class LLMSmokeClient:
                 "monotonic_ns": monotonic_ns(),
                 "response": response_payload,
                 "extracted": {
-                    "assistant_text": _extract_assistant_text(response_payload),
+                    "assistant_text": assistant_text,
                 },
                 "details": _smoke_record_details(
                     runtime=runtime,
                     base_url=normalized_base_url,
+                    request_url=request_url,
+                    request_summary=request_summary,
+                    response_summary=_smoke_response_summary(response_payload),
+                    extracted={"assistant_text": assistant_text},
                 ),
             }
         except Exception as error:  # pragma: no cover - exercised in tests via fake transport
@@ -209,6 +264,10 @@ class LLMSmokeClient:
                 "details": _smoke_record_details(
                     runtime=runtime,
                     base_url=normalized_base_url,
+                    request_url=request_url,
+                    request_summary=request_summary,
+                    response_summary=_smoke_response_summary(None),
+                    extracted={"assistant_text": None},
                     reason=str(error),
                 ),
                 "error_type": type(error).__name__,
