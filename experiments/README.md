@@ -60,7 +60,7 @@ PY
 
 ### 2. Bring up a temporary live vLLM session and check the endpoints
 
-The committed config is safe by default. It keeps `runtime_options.vllm.external_server.enabled: false`, `runtime_options.vllm.docker_server.enabled: false`, and `model: null`, so it will classify the runtime as skipped. For the reproducible live vLLM path on this host, create a copied config that keeps the external-server path disabled, turns on the Docker runtime, and uses a small public model.
+The committed config is safe by default. It keeps `runtime_options.vllm.external_server.enabled: false`, `runtime_options.vllm.docker_server.enabled: false`, and `model: null`, so it will classify the runtime as skipped. For the reproducible live vLLM path on this host, create a copied config that keeps the external-server path disabled, turns on the Docker runtime, and uses a small public model. The chosen localhost port must be free on the host.
 
 ```bash
 export V0_MODEL="Qwen/Qwen2-0.5B-Instruct"
@@ -76,7 +76,8 @@ config['model'] = config['runtime_options']['vllm']['docker_server']['model'] = 
 config['runtime_options']['vllm']['external_server']['enabled'] = False
 config['runtime_options']['vllm']['external_server']['base_url'] = None
 config['runtime_options']['vllm']['docker_server']['enabled'] = True
-config['probe_options']['runtime']['timeout_s'] = 300.0
+config['runtime_options']['vllm']['docker_server']['port'] = 8013
+config['probe_options']['runtime']['timeout_s'] = 180.0
 config['output_dir'] = '/tmp/ai-edge-v0-verify-real'
 dst.write_text(yaml.safe_dump(config, sort_keys=False), encoding='utf-8')
 print(dst)
@@ -111,9 +112,9 @@ PY
 In shell B, verify both the model listing and a real chat completion against the live server.
 
 ```bash
-curl -sS http://localhost:8000/v1/models | python -m json.tool
+curl -sS http://localhost:8013/v1/models | python -m json.tool
 
-curl -sS http://localhost:8000/v1/chat/completions \
+curl -sS http://localhost:8013/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer EMPTY' \
   -d "$(python - <<'PY'
