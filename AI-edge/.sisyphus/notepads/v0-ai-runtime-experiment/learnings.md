@@ -35,3 +35,10 @@
 - Added a dedicated `docker_criu` probe package that keeps CRIU presence checks separate from Docker checkpoint integration results while still sharing the Task-2 probe artifact contract.
 - Real-host verification showed `docker checkpoint --help` can succeed even when `docker checkpoint create` is still unsupported because the daemon lacks experimental checkpoint support; the integration artifact now classifies that case as `unsupported` instead of crashing.
 - The CPU-only smoke path safely removed its own experiment-labelled BusyBox container after the unsupported checkpoint attempt, confirming the cleanup gate works for owned containers only.
+
+
+## 2026-06-05 00:17:35Z
+
+- Added Task-6 CUDA and MPS probes that keep per-command metadata under `details.commands` and extract lightweight runtime facts (`driver_version`, `cuda_version`, MPS binary/control-pipe presence) for downstream orchestration.
+- Real-host verification showed the CUDA probe can pull and run `nvidia/cuda:12.4.1-base-ubuntu22.04` successfully on this host, producing `cuda_check.json.status == "ok"` with extracted driver `580.159.04` and CUDA `13.0`.
+- The default MPS CLI path stays strictly read-only: it records `nvidia-cuda-mps-control` availability and control-pipe state without attempting daemon start/stop unless explicitly opted in.

@@ -34,3 +34,10 @@
 - Task-5 component names follow artifact filenames: the CRIU presence probe writes component `criu_check`, and the Docker integration smoke writes component `docker_criu_integration`.
 - Destructive Docker actions in Task 5 require both the `ai-edge-v0-criu-` name prefix and the labels `ai-edge-experiment=v0`, `ai-edge-component=docker-criu`, and a non-empty `ai-edge-run-id`; failing that gate returns an error record and skips checkpoint/remove.
 - `check_docker_criu.py` reuses the requested output directory directly when it already exists and otherwise creates that exact path via Task-3 `ensure_run_dir`, so the CLI keeps the expected artifact location while still using the shared path utility.
+
+
+## 2026-06-05 00:17:35Z
+
+- Task-6 CUDA probing is configurable via probe/CLI image parameter, but its default image is fixed to `nvidia/cuda:12.4.1-base-ubuntu22.04` so the command contract stays stable without modifying `experiments/configs/v0_env_probe.yaml`.
+- Task-6 MPS probing defaults to `mode: read_only`; lifecycle mutation is gated behind `allow_start_stop=True`, and even then the probe refuses start/stop if a pre-existing `/tmp/nvidia-mps/control` pipe is present.
+- Both new CLIs follow the Task-5 output-dir contract: reuse an existing target directory when present, otherwise create the requested exact path via `ensure_run_dir` before writing `cuda_check.json` or `mps_check.json`.
