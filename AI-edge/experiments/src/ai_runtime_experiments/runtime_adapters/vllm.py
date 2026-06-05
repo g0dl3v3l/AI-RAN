@@ -236,8 +236,9 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
 
     def start(self, *, run_id: str) -> RuntimeSession:
         external_config = _mapping(self.config.get("external_server"))
+        external_enabled = bool(external_config.get("enabled"))
         external_base_url = _normalize_base_url(external_config.get("base_url"))
-        if external_base_url is not None:
+        if external_enabled and external_base_url is not None:
             return self._resolve_ready_session(
                 run_id=run_id,
                 mode="external_server",

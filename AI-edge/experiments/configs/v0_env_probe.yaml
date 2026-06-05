@@ -23,6 +23,7 @@ seed: 0
 runtime_options:
   vllm:
     external_server:
+      enabled: false
       base_url: null
     docker_server:
       enabled: false

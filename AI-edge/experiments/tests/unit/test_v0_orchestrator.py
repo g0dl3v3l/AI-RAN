@@ -31,6 +31,7 @@ def _write_config(path: Path, *, output_dir: Path, external_base_url: str | None
         runtime_options:
           vllm:
             external_server:
+              enabled: {'true' if external_base_url else 'false'}
               base_url: {external_base_url or 'null'}
             docker_server:
               enabled: false

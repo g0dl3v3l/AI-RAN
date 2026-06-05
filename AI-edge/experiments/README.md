@@ -60,10 +60,10 @@ PY
 
 ### 2. Bring up a temporary live vLLM session and check the endpoints
 
-The committed config is safe by default. It keeps `runtime_options.vllm.docker_server.enabled: false` and `model: null`, so it will classify the runtime as skipped. For a real vLLM check, create a copied config that turns on the Docker runtime and sets a concrete model.
+The committed config is safe by default. It keeps `runtime_options.vllm.external_server.enabled: false`, `runtime_options.vllm.docker_server.enabled: false`, and `model: null`, so it will classify the runtime as skipped. For the reproducible live vLLM path on this host, create a copied config that keeps the external-server path disabled, turns on the Docker runtime, and uses a small public model.
 
 ```bash
-export V0_MODEL="meta-llama/Meta-Llama-3-8B-Instruct"
+export V0_MODEL="Qwen/Qwen2-0.5B-Instruct"
 
 python - <<'PY'
 from pathlib import Path
@@ -73,12 +73,16 @@ src = Path('experiments/configs/v0_env_probe.yaml')
 dst = Path('/tmp/v0_env_probe.real.yaml')
 config = yaml.safe_load(src.read_text(encoding='utf-8'))
 config['model'] = config['runtime_options']['vllm']['docker_server']['model'] = __import__('os').environ['V0_MODEL']
+config['runtime_options']['vllm']['external_server']['enabled'] = False
+config['runtime_options']['vllm']['external_server']['base_url'] = None
 config['runtime_options']['vllm']['docker_server']['enabled'] = True
 config['output_dir'] = '/tmp/ai-edge-v0-verify-real'
 dst.write_text(yaml.safe_dump(config, sort_keys=False), encoding='utf-8')
 print(dst)
 PY
 ```
+
+The `vllm/vllm-openai` image entrypoint already runs `vllm serve`, so `docker_server.extra_args` should contain only model/server flags and must not include an extra `serve` token.
 
 In shell A, leave this process running while you do the curl checks in shell B.
 

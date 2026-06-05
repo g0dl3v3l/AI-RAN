@@ -47,6 +47,8 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     assert resolved.dry_run is True
     assert resolved.runtime == "vllm"
     assert resolved.workload["prompt"] == "Respond with the exact text 'smoke ok'."
+    assert resolved.runtime_options["vllm"]["external_server"]["enabled"] is False
+    assert resolved.runtime_options["vllm"]["external_server"]["base_url"] is None
     assert resolved.runtime_options["vllm"]["docker_server"]["model"] == (
         "meta-llama/Meta-Llama-3-8B-Instruct"
     )

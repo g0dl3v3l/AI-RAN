@@ -73,6 +73,45 @@ def test_runtime_disabled_is_skipped():
     assert runner.calls == []
 
 
+
+def test_external_server_disabled_with_base_url_is_skipped():
+    from ai_runtime_experiments.runtime_adapters.vllm import VLLMRuntimeAdapter
+
+    probe_calls: list[dict[str, object]] = []
+
+    def readiness_probe(*, base_url: str, timeout_s: float):
+        probe_calls.append({"base_url": base_url, "timeout_s": timeout_s})
+        return ProbeStatus.OK, {
+            "models_url": f"{base_url}/models",
+            "attempts": 1,
+        }
+
+    runner = RecordingRunner({})
+    adapter = VLLMRuntimeAdapter(
+        config={
+            "external_server": {
+                "enabled": False,
+                "base_url": "http://localhost:8000/v1/",
+            }
+        },
+        runner=runner,
+        timeout_s=7.0,
+        readiness_probe=readiness_probe,
+    )
+
+    session = adapter.start(run_id="task-7")
+
+    assert session.mode == "skipped"
+    assert session.status == ProbeStatus.SKIPPED
+    assert session.base_url is None
+    assert session.runtime_check["status"] == "skipped"
+    assert session.runtime_check["details"]["mode"] == "skipped"
+    assert session.smoke_validation is not None
+    assert session.smoke_validation["status"] == "skipped"
+    assert runner.calls == []
+    assert probe_calls == []
+
+
 def test_external_server_uses_configured_base_url_after_models_readiness_probe():
     from ai_runtime_experiments.runtime_adapters.vllm import VLLMRuntimeAdapter
 
