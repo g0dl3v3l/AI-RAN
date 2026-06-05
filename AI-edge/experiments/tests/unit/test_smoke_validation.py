@@ -97,3 +97,34 @@ def test_unsupported_preemption_classified_as_smoke_not_supported():
     assert record["status"] == "unsupported"
     assert record["classification"] == SmokeClassification.SMOKE_NOT_SUPPORTED.value
     assert record["details"]["reason"] == "unsupported capability: docker checkpoint create"
+
+
+
+def test_restored_preemption_with_response_completed_before_restore_is_not_attempted():
+    from ai_runtime_experiments.validation import classify_smoke_validation
+
+    record = classify_smoke_validation(
+        run_id="task-8",
+        runtime_session=_runtime_session(),
+        smoke_preemption=make_probe_result(
+            run_id="task-8",
+            component="smoke_preemption",
+            status=ProbeStatus.OK,
+            details={
+                "reason": "checkpoint and restore completed",
+                "outcome": "restored",
+                "smoke": {
+                    "attempted": True,
+                    "response_completed_before_restore": True,
+                    "response_monotonic_ns": 100,
+                },
+                "checkpoint": {"attempted": True},
+                "restore": {"attempted": True, "start_monotonic_ns": 200},
+            },
+        ),
+        request_id="req-before-restore",
+    )
+
+    assert record["status"] == "skipped"
+    assert record["classification"] == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
+    assert "before restore" in record["details"]["reason"]

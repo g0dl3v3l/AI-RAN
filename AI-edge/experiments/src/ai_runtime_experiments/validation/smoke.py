@@ -189,6 +189,12 @@ def classify_smoke_validation(
         "preemption_status": smoke_preemption.get("status"),
         "preemption": preemption_details,
     }
+    smoke_details = preemption_details.get("smoke")
+    response_completed_before_restore = False
+    if isinstance(smoke_details, Mapping):
+        response_completed_before_restore = bool(
+            smoke_details.get("response_completed_before_restore")
+        )
 
     if status == ProbeStatus.UNSUPPORTED or outcome == "not_supported":
         return make_smoke_not_supported_validation(
@@ -227,6 +233,19 @@ def classify_smoke_validation(
             request_id=request_id,
             reason=reason,
             details=validation_details,
+        )
+
+    if outcome == "restored" and response_completed_before_restore and not response_replayed:
+        timing_reason = (
+            "smoke response completed before restore; post-restore completion was not observed"
+        )
+        timing_details = dict(validation_details)
+        timing_details["reason"] = timing_reason
+        return make_smoke_not_attempted_validation(
+            run_id=run_id,
+            request_id=request_id,
+            reason=timing_reason,
+            details=timing_details,
         )
 
     if response_replayed or outcome == "replayed":

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
@@ -148,6 +149,62 @@ def _make_skipped_probe(
         status=ProbeStatus.SKIPPED,
         details=merged_details,
     )
+
+
+
+def _latest_smoke_response_record(run_dir: Path) -> dict[str, Any] | None:
+    path = _artifact_path(run_dir, "smoke_response.jsonl")
+    if not path.exists():
+        return None
+
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for line in reversed(lines):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            return None
+        if isinstance(record, dict):
+            return record
+        return None
+    return None
+
+
+
+def _annotate_smoke_preemption_response_timing(
+    *,
+    run_dir: Path,
+    smoke_preemption: dict[str, Any],
+) -> dict[str, Any]:
+    details = smoke_preemption.get("details")
+    if not isinstance(details, dict):
+        return smoke_preemption
+
+    smoke_details = details.get("smoke")
+    restore_details = details.get("restore")
+    if not isinstance(smoke_details, dict) or not isinstance(restore_details, dict):
+        return smoke_preemption
+
+    response_record = _latest_smoke_response_record(run_dir)
+    if response_record is None:
+        return smoke_preemption
+
+    response_status = response_record.get("status")
+    response_monotonic_ns = response_record.get("monotonic_ns")
+    restore_start_monotonic_ns = restore_details.get("start_monotonic_ns")
+    if (
+        response_status != ProbeStatus.OK.value
+        or not isinstance(response_monotonic_ns, int)
+        or not isinstance(restore_start_monotonic_ns, int)
+    ):
+        return smoke_preemption
+
+    smoke_details["response_monotonic_ns"] = response_monotonic_ns
+    smoke_details["response_completed_before_restore"] = (
+        response_monotonic_ns < restore_start_monotonic_ns
+    )
+    return smoke_preemption
 
 
 
@@ -303,6 +360,10 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
             docker_criu_integration=records["docker_criu_integration.json"],
             timeout_s=float(probe_options["preemption"]["timeout_s"]),
             checkpoint_name=str(probe_options["preemption"]["checkpoint_name"]),
+        )
+        records["smoke_preemption.json"] = _annotate_smoke_preemption_response_timing(
+            run_dir=run_dir,
+            smoke_preemption=records["smoke_preemption.json"],
         )
         records["smoke_validation.json"] = classify_smoke_validation(
             run_id=config.run_id,
