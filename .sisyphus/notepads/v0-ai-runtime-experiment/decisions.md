@@ -55,3 +55,10 @@
 - Task 8 stays deliberately split into two pure helper layers: `preemption.smoke.collect_smoke_preemption(...)` produces the raw checkpoint/restore attempt artifact, and `validation.smoke.classify_smoke_validation(...)` maps that artifact (or a pre-existing runtime validation) into the final smoke classification.
 - Unsupported Docker/CRIU prerequisites are preserved as `smoke_preemption.status == unsupported`, but all other non-attempted prerequisites (missing record, runtime not OK, no runtime-owned container) are normalized to `status == skipped` so later orchestration can distinguish "cannot attempt" from "attempted and failed".
 - Task-7 runtime-level smoke validation remains authoritative when present; Task-8 validation reuses that record verbatim instead of overwriting `smoke_not_supported`/`smoke_runtime_failed` decisions for runtimes that never became preemptible.
+
+
+## 2026-06-05 01:06:00Z
+
+- Task 9 treats the configured `output_dir` as the exact run-directory path: the orchestrator still uses Task-3 `ensure_run_dir`, but splits the path into parent/name so CLI overrides like `/tmp/ai-edge-v0-dry-run` produce artifacts directly in that directory.
+- Resolved config output is now an explicit artifact contract: `config.yaml` stores the normalized/override-applied config (including `run_id`, absolute `output_dir`, and `dry_run`) so later validation tasks can reproduce a run without re-deriving CLI state.
+- Unsupported or skipped subprobes never abort orchestration; the overall run is marked `completed` in `run_metadata.json` as long as the orchestrator itself finishes and every required artifact file is written.
