@@ -43,7 +43,10 @@ _DEFAULT_WORKLOAD = {
 }
 _DEFAULT_RUNTIME_OPTIONS = {
     "vllm": {
-        "external_server": {"base_url": None},
+        "external_server": {
+            "enabled": False,
+            "base_url": None,
+        },
         "docker_server": {
             "enabled": False,
             "image": DEFAULT_DOCKER_IMAGE,
