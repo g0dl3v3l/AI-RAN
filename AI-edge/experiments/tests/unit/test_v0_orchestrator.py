@@ -267,6 +267,117 @@ def test_unsupported_probe_does_not_abort_orchestration(tmp_path: Path, monkeypa
 
 
 
+def test_missing_top_level_model_writes_skipped_smoke_placeholders(tmp_path: Path, monkeypatch):
+    from ai_runtime_experiments.config import load_config
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+
+    run_dir = tmp_path / "missing-model-run"
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        textwrap.dedent(
+            f"""
+            experiment_id: v0_env_probe
+            version: v0
+            runtime: vllm
+            model: null
+            arm: env_probe
+            workload:
+              prompt: Respond with the exact text 'smoke ok'.
+            preemption_policy:
+              mode: auto
+            resource_delta: {{}}
+            telemetry: {{}}
+            output_dir: {run_dir}
+            seed: 0
+            runtime_options:
+              vllm:
+                external_server:
+                  enabled: true
+                  base_url: http://127.0.0.1:8000/v1
+                docker_server:
+                  enabled: false
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    config = load_config(config_path)
+
+    def _probe(component: str, status: ProbeStatus) -> dict[str, object]:
+        return make_probe_result(
+            run_id=config.run_id,
+            component=component,
+            status=status,
+            details={"reason": f"{component} -> {status.value}"},
+        )
+
+    monkeypatch.setattr(orchestrator, "collect_hardware_probe", lambda **_: _probe("hardware", ProbeStatus.OK))
+    monkeypatch.setattr(orchestrator, "collect_docker_probe", lambda **_: _probe("docker", ProbeStatus.OK))
+    monkeypatch.setattr(orchestrator, "collect_criu_probe", lambda **_: _probe("criu_check", ProbeStatus.OK))
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_docker_criu_integration",
+        lambda **_: _probe("docker_criu_integration", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(orchestrator, "collect_cuda_container_probe", lambda **_: _probe("cuda_check", ProbeStatus.OK))
+    monkeypatch.setattr(orchestrator, "collect_mps_probe", lambda **_: _probe("mps_check", ProbeStatus.OK))
+
+    class FakeRuntimeAdapter:
+        def __init__(self, *, config, runner=None, timeout_s=30.0):
+            del config, runner, timeout_s
+
+        def start(self, *, run_id: str) -> RuntimeSession:
+            return RuntimeSession(
+                runtime="vllm",
+                mode="external_server",
+                status=ProbeStatus.OK,
+                base_url="http://127.0.0.1:8000/v1",
+                runtime_check=make_probe_result(
+                    run_id=run_id,
+                    component="runtime_check",
+                    status=ProbeStatus.OK,
+                    details={"runtime": "vllm", "mode": "external_server"},
+                ),
+            )
+
+        def stop(self, session: RuntimeSession):
+            del session
+            return None
+
+    monkeypatch.setattr(orchestrator, "VLLMRuntimeAdapter", FakeRuntimeAdapter)
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_smoke_preemption",
+        lambda **_: make_probe_result(
+            run_id=config.run_id,
+            component="smoke_preemption",
+            status=ProbeStatus.SKIPPED,
+            details={
+                "reason": "runtime session has no experiment-owned container",
+                "outcome": "not_attempted",
+                "smoke": {"attempted": False},
+                "checkpoint": {"attempted": False},
+                "restore": {"attempted": False},
+            },
+        ),
+    )
+
+    result = orchestrator.run_v0_orchestrator(
+        config,
+        git_metadata_getter=lambda **_: _git_metadata(),
+    )
+
+    assert result.metadata["status"] == "completed"
+    assert _read_json(run_dir / "runtime_check.json")["status"] == ProbeStatus.OK.value
+    smoke_request = _read_jsonl(run_dir / "smoke_request.jsonl")
+    smoke_response = _read_jsonl(run_dir / "smoke_response.jsonl")
+    assert smoke_request[0]["status"] == ProbeStatus.SKIPPED.value
+    assert smoke_response[0]["status"] == ProbeStatus.SKIPPED.value
+    assert "model is not configured" in smoke_request[0]["details"]["reason"]
+    assert "model is not configured" in smoke_response[0]["details"]["reason"]
+
+
+
 def test_preemption_is_attempted_while_smoke_request_is_in_flight(tmp_path: Path, monkeypatch):
     from ai_runtime_experiments.config import load_config
     import ai_runtime_experiments.v0_orchestrator as orchestrator

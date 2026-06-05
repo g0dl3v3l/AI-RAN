@@ -61,6 +61,36 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
 
 
 
+def test_top_level_model_overrides_docker_server_model(tmp_path: Path):
+    config_path = _write_config(
+        tmp_path / "config.yaml",
+        """
+        experiment_id: v0_env_probe
+        version: v0
+        runtime: vllm
+        model: authoritative/model
+        arm: env_probe
+        workload: {}
+        preemption_policy: {}
+        resource_delta: {}
+        telemetry: {}
+        output_dir: experiments/results/v0_env_probe
+        seed: 7
+        runtime_options:
+          vllm:
+            docker_server:
+              enabled: true
+              model: stale/docker-model
+        """,
+    )
+
+    resolved = load_config(config_path)
+
+    assert resolved.model == "authoritative/model"
+    assert resolved.runtime_options["vllm"]["docker_server"]["model"] == "authoritative/model"
+
+
+
 def test_load_config_uses_safe_yaml_loader(tmp_path: Path):
     config_path = _write_config(
         tmp_path / "unsafe.yaml",
