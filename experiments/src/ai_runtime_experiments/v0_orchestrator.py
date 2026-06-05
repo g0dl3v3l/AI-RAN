@@ -272,18 +272,25 @@ def _annotate_smoke_preemption_response_timing(
 
     response_status = response_record.get("status")
     response_monotonic_ns = response_record.get("monotonic_ns")
-    restore_start_monotonic_ns = restore_details.get("start_monotonic_ns")
-    if (
-        response_status != ProbeStatus.OK.value
-        or not isinstance(response_monotonic_ns, int)
-        or not isinstance(restore_start_monotonic_ns, int)
-    ):
+    smoke_details["response_status"] = response_status
+    if not isinstance(response_monotonic_ns, int):
         return smoke_preemption
 
     smoke_details["response_monotonic_ns"] = response_monotonic_ns
-    smoke_details["response_completed_before_restore"] = (
-        response_monotonic_ns < restore_start_monotonic_ns
-    )
+    if response_status != ProbeStatus.OK.value:
+        return smoke_preemption
+
+    restore_start_monotonic_ns = restore_details.get("start_monotonic_ns")
+    if isinstance(restore_start_monotonic_ns, int):
+        smoke_details["response_completed_before_restore"] = (
+            response_monotonic_ns < restore_start_monotonic_ns
+        )
+
+    restore_end_monotonic_ns = restore_details.get("end_monotonic_ns")
+    if isinstance(restore_end_monotonic_ns, int):
+        smoke_details["response_completed_after_restore"] = (
+            response_monotonic_ns >= restore_end_monotonic_ns
+        )
     return smoke_preemption
 
 
@@ -471,7 +478,7 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
             runtime_session=runtime_session,
             smoke_preemption=records["smoke_preemption.json"],
             request_id=request_id,
-            response_replayed=bool(config.preemption_policy.get("response_replayed", False)),
+            smoke_response=_latest_smoke_response_record(run_dir),
         )
     finally:
         if runtime_adapter is not None and runtime_session is not None:

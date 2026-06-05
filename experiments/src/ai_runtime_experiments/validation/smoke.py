@@ -162,13 +162,73 @@ def make_smoke_not_attempted_validation(
 
 
 
+def _smoke_response_evidence(
+    *,
+    smoke_preemption: Mapping[str, Any] | None,
+    smoke_response: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    preemption_details = dict((smoke_preemption or {}).get("details") or {})
+    smoke_details = preemption_details.get("smoke")
+    restore_details = preemption_details.get("restore")
+
+    response_status_raw = None
+    response_status = None
+    response_monotonic_ns = None
+    if isinstance(smoke_response, Mapping):
+        response_status_raw = smoke_response.get("status")
+        response_status = _status_from_record(smoke_response)
+        raw_monotonic_ns = smoke_response.get("monotonic_ns")
+        if isinstance(raw_monotonic_ns, int):
+            response_monotonic_ns = raw_monotonic_ns
+
+    response_completed_before_restore = False
+    response_completed_after_restore = False
+    if isinstance(smoke_details, Mapping):
+        if response_status_raw is None:
+            response_status_raw = smoke_details.get("response_status")
+        if response_monotonic_ns is None:
+            raw_monotonic_ns = smoke_details.get("response_monotonic_ns")
+            if isinstance(raw_monotonic_ns, int):
+                response_monotonic_ns = raw_monotonic_ns
+        response_completed_before_restore = bool(
+            smoke_details.get("response_completed_before_restore")
+        )
+        response_completed_after_restore = bool(
+            smoke_details.get("response_completed_after_restore")
+        )
+
+    restore_start_monotonic_ns = None
+    restore_end_monotonic_ns = None
+    if isinstance(restore_details, Mapping):
+        raw_restore_start_monotonic_ns = restore_details.get("start_monotonic_ns")
+        if isinstance(raw_restore_start_monotonic_ns, int):
+            restore_start_monotonic_ns = raw_restore_start_monotonic_ns
+        raw_restore_end_monotonic_ns = restore_details.get("end_monotonic_ns")
+        if isinstance(raw_restore_end_monotonic_ns, int):
+            restore_end_monotonic_ns = raw_restore_end_monotonic_ns
+
+    if response_status == ProbeStatus.OK and isinstance(response_monotonic_ns, int):
+        if isinstance(restore_start_monotonic_ns, int):
+            response_completed_before_restore = response_monotonic_ns < restore_start_monotonic_ns
+        if isinstance(restore_end_monotonic_ns, int):
+            response_completed_after_restore = response_monotonic_ns >= restore_end_monotonic_ns
+
+    return {
+        "status": response_status_raw,
+        "monotonic_ns": response_monotonic_ns,
+        "completed_before_restore": response_completed_before_restore,
+        "completed_after_restore": response_completed_after_restore,
+    }
+
+
+
 def classify_smoke_validation(
     *,
     run_id: str,
     runtime_session: RuntimeSession | None,
     smoke_preemption: Mapping[str, Any] | None,
     request_id: str | None = None,
-    response_replayed: bool = False,
+    smoke_response: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     if runtime_session is not None and runtime_session.smoke_validation is not None:
         return _with_request_id(runtime_session.smoke_validation, request_id=request_id)
@@ -184,17 +244,16 @@ def classify_smoke_validation(
     reason = str(preemption_details.get("reason") or "smoke preemption outcome unavailable")
     outcome = str(preemption_details.get("outcome") or "").strip()
     status = _status_from_record(smoke_preemption)
+    response_evidence = _smoke_response_evidence(
+        smoke_preemption=smoke_preemption,
+        smoke_response=smoke_response,
+    )
     validation_details = {
         "reason": reason,
         "preemption_status": smoke_preemption.get("status"),
         "preemption": preemption_details,
+        "smoke_response": response_evidence,
     }
-    smoke_details = preemption_details.get("smoke")
-    response_completed_before_restore = False
-    if isinstance(smoke_details, Mapping):
-        response_completed_before_restore = bool(
-            smoke_details.get("response_completed_before_restore")
-        )
 
     if status == ProbeStatus.UNSUPPORTED or outcome == "not_supported":
         return make_smoke_not_supported_validation(
@@ -235,7 +294,7 @@ def classify_smoke_validation(
             details=validation_details,
         )
 
-    if outcome == "restored" and response_completed_before_restore and not response_replayed:
+    if response_evidence["completed_before_restore"]:
         timing_reason = (
             "smoke response completed before restore; post-restore completion was not observed"
         )
@@ -248,7 +307,18 @@ def classify_smoke_validation(
             details=timing_details,
         )
 
-    if response_replayed or outcome == "replayed":
+    if not response_evidence["completed_after_restore"]:
+        timing_reason = "successful smoke response after restore completion was not observed"
+        timing_details = dict(validation_details)
+        timing_details["reason"] = timing_reason
+        return make_smoke_not_attempted_validation(
+            run_id=run_id,
+            request_id=request_id,
+            reason=timing_reason,
+            details=timing_details,
+        )
+
+    if outcome == "replayed":
         return make_smoke_replayed_validation(
             run_id=run_id,
             request_id=request_id,
