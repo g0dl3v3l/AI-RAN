@@ -10,6 +10,10 @@ from ai_runtime_experiments.docker_criu.probe import (
     _status_from_probe,
 )
 from ai_runtime_experiments.runtime_adapters import RuntimeSession
+from ai_runtime_experiments.runtime_adapters.vllm import (
+    ensure_experiment_owned_vllm_container,
+    parse_vllm_label_mapping,
+)
 from ai_runtime_experiments.schemas import ProbeStatus, make_probe_result
 from ai_runtime_experiments.utils.command import CommandResult, run_command
 from ai_runtime_experiments.utils.time import monotonic_ns, utc_now_iso_z
@@ -168,6 +172,46 @@ def collect_smoke_preemption(
         )
 
     container_name = runtime_session.container_name
+    inspect_labels_result = runner(
+        ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name],
+        timeout_s=timeout_s,
+    )
+    details["commands"]["docker_inspect_labels"] = _command_details(inspect_labels_result)
+    inspect_status, inspect_reason = _classify_result(
+        inspect_labels_result,
+        command_label="docker inspect labels",
+    )
+    if inspect_status != ProbeStatus.OK:
+        details["reason"] = inspect_reason or "unable to inspect runtime labels"
+        details["outcome"] = "not_attempted"
+        return _finalize_smoke_preemption(
+            run_id=run_id,
+            status=inspect_status,
+            details=details,
+        )
+
+    labels = parse_vllm_label_mapping(inspect_labels_result.stdout)
+    if labels is None:
+        details["reason"] = "unable to parse docker inspect labels JSON"
+        details["outcome"] = "not_attempted"
+        return _finalize_smoke_preemption(
+            run_id=run_id,
+            status=ProbeStatus.ERROR,
+            details=details,
+        )
+
+    details["container"]["inspected_labels"] = labels
+    try:
+        ensure_experiment_owned_vllm_container(container_name=container_name, labels=labels)
+    except ValueError as exc:
+        details["reason"] = str(exc)
+        details["outcome"] = "not_attempted"
+        return _finalize_smoke_preemption(
+            run_id=run_id,
+            status=ProbeStatus.ERROR,
+            details=details,
+        )
+
     details["smoke"]["attempted"] = True
 
     checkpoint_phase = details["checkpoint"]

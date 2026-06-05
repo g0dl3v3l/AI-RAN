@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import re
 import uuid
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ai_runtime_experiments.docker_criu.probe import _classify_result
 from ai_runtime_experiments.runtime_adapters.base import (
     BaseRuntimeAdapter,
     RuntimeSession,
@@ -17,10 +19,11 @@ DEFAULT_DOCKER_IMAGE = "vllm/vllm-openai:latest"
 DEFAULT_HOST_PORT = 8000
 DEFAULT_CONTAINER_PORT = 8000
 EXPERIMENT_CONTAINER_NAME_PREFIX = "ai-edge-v0-vllm-"
-_EXPERIMENT_LABELS = {
-    "ai-edge-experiment": "v0",
-    "ai-edge-component": "vllm-runtime",
-}
+EXPERIMENT_LABEL_KEY = "ai-edge-experiment"
+EXPERIMENT_LABEL_VALUE = "v0"
+EXPERIMENT_COMPONENT_LABEL_KEY = "ai-edge-component"
+EXPERIMENT_COMPONENT_LABEL_VALUE = "vllm-runtime"
+EXPERIMENT_RUN_ID_LABEL_KEY = "ai-edge-run-id"
 _DOCKER_NAME_SAFE_RE = re.compile(r"[^a-z0-9_.-]+")
 
 
@@ -38,11 +41,57 @@ def build_vllm_container_name(run_id: str, *, token: str | None = None) -> str:
 
 
 
+def build_vllm_labels(run_id: str) -> dict[str, str]:
+    return {
+        EXPERIMENT_LABEL_KEY: EXPERIMENT_LABEL_VALUE,
+        EXPERIMENT_COMPONENT_LABEL_KEY: EXPERIMENT_COMPONENT_LABEL_VALUE,
+        EXPERIMENT_RUN_ID_LABEL_KEY: run_id,
+    }
+
+
+
 def build_vllm_label_args(run_id: str) -> list[str]:
     args: list[str] = []
-    for key, value in {**_EXPERIMENT_LABELS, "ai-edge-run-id": run_id}.items():
+    for key, value in build_vllm_labels(run_id).items():
         args.extend(["--label", f"{key}={value}"])
     return args
+
+
+
+def parse_vllm_label_mapping(text: str) -> dict[str, str] | None:
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(value, dict):
+        return None
+
+    parsed: dict[str, str] = {}
+    for key, item in value.items():
+        if isinstance(key, str) and isinstance(item, str):
+            parsed[key] = item
+    return parsed
+
+
+
+def is_experiment_owned_vllm_container(*, container_name: str, labels: Mapping[str, str]) -> bool:
+    if not container_name.startswith(EXPERIMENT_CONTAINER_NAME_PREFIX):
+        return False
+    if labels.get(EXPERIMENT_LABEL_KEY) != EXPERIMENT_LABEL_VALUE:
+        return False
+    if labels.get(EXPERIMENT_COMPONENT_LABEL_KEY) != EXPERIMENT_COMPONENT_LABEL_VALUE:
+        return False
+    run_id = labels.get(EXPERIMENT_RUN_ID_LABEL_KEY)
+    return isinstance(run_id, str) and bool(run_id.strip())
+
+
+
+def ensure_experiment_owned_vllm_container(*, container_name: str, labels: Mapping[str, str]) -> None:
+    if not is_experiment_owned_vllm_container(container_name=container_name, labels=labels):
+        raise ValueError(
+            "refusing destructive Docker action because container is not experiment-owned: "
+            f"{container_name}"
+        )
 
 
 
@@ -189,21 +238,66 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
         if session.mode != "docker_server" or not session.container_name:
             return None
 
-        result = self.runner(
-            ["docker", "rm", "-f", session.container_name],
-            timeout_s=self.timeout_s,
-        )
-        status = result.status if result.status != ProbeStatus.ERROR else ProbeStatus.ERROR
         details: dict[str, Any] = {
             "runtime": session.runtime,
             "mode": session.mode,
             "container": {"name": session.container_name},
-            "commands": {"docker_rm_force": _command_details(result)},
+            "commands": {},
         }
         if session.container_id is not None:
             details["container"]["id"] = session.container_id
+
+        inspect_labels_result = self.runner(
+            ["docker", "inspect", "--format", "{{json .Config.Labels}}", session.container_name],
+            timeout_s=self.timeout_s,
+        )
+        details["commands"]["docker_inspect_labels"] = _command_details(inspect_labels_result)
+        inspect_status, inspect_reason = _classify_result(
+            inspect_labels_result,
+            command_label="docker inspect labels",
+        )
+        if inspect_status != ProbeStatus.OK:
+            details["reason"] = inspect_reason or "unable to inspect runtime labels"
+            return make_probe_result(
+                run_id=session.runtime_check["run_id"],
+                component="runtime_teardown",
+                status=inspect_status,
+                details=details,
+            )
+
+        labels = parse_vllm_label_mapping(inspect_labels_result.stdout)
+        if labels is None:
+            details["reason"] = "unable to parse docker inspect labels JSON"
+            return make_probe_result(
+                run_id=session.runtime_check["run_id"],
+                component="runtime_teardown",
+                status=ProbeStatus.ERROR,
+                details=details,
+            )
+
+        details["container"]["inspected_labels"] = labels
+        try:
+            ensure_experiment_owned_vllm_container(
+                container_name=session.container_name,
+                labels=labels,
+            )
+        except ValueError as exc:
+            details["reason"] = str(exc)
+            return make_probe_result(
+                run_id=session.runtime_check["run_id"],
+                component="runtime_teardown",
+                status=ProbeStatus.ERROR,
+                details=details,
+            )
+
+        result = self.runner(
+            ["docker", "rm", "-f", session.container_name],
+            timeout_s=self.timeout_s,
+        )
+        details["commands"]["docker_rm_force"] = _command_details(result)
+        status, reason = _classify_result(result, command_label="docker rm -f")
         if status != ProbeStatus.OK:
-            details["reason"] = _reason_for_status(status=status, mode=session.mode)
+            details["reason"] = reason or "runtime teardown failed"
 
         return make_probe_result(
             run_id=session.runtime_check["run_id"],

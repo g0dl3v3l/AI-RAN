@@ -201,3 +201,109 @@ def test_unsupported_probe_does_not_abort_orchestration(tmp_path: Path, monkeypa
     )
     assert len(_read_jsonl(run_dir / "smoke_request.jsonl")) == 1
     assert len(_read_jsonl(run_dir / "smoke_response.jsonl")) == 1
+
+
+
+def test_response_completed_before_restore_is_not_classified_as_post_restore_completion(
+    tmp_path: Path, monkeypatch
+):
+    from ai_runtime_experiments.config import load_config
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+
+    run_dir = tmp_path / "restore-ordering-run"
+    config_path = _write_config(
+        tmp_path / "config.yaml",
+        output_dir=run_dir,
+        external_base_url="http://127.0.0.1:8000/v1",
+    )
+    config = load_config(config_path)
+
+    def _probe(component: str, status: ProbeStatus) -> dict[str, object]:
+        return make_probe_result(
+            run_id=config.run_id,
+            component=component,
+            status=status,
+            details={"reason": f"{component} -> {status.value}"},
+        )
+
+    monkeypatch.setattr(orchestrator, "collect_hardware_probe", lambda **_: _probe("hardware", ProbeStatus.OK))
+    monkeypatch.setattr(orchestrator, "collect_docker_probe", lambda **_: _probe("docker", ProbeStatus.OK))
+    monkeypatch.setattr(orchestrator, "collect_criu_probe", lambda **_: _probe("criu_check", ProbeStatus.OK))
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_docker_criu_integration",
+        lambda **_: _probe("docker_criu_integration", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_cuda_container_probe",
+        lambda **_: _probe("cuda_check", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(orchestrator, "collect_mps_probe", lambda **_: _probe("mps_check", ProbeStatus.OK))
+
+    class FakeRuntimeAdapter:
+        def __init__(self, *, config, runner=None, timeout_s=30.0):
+            del config, runner, timeout_s
+
+        def start(self, *, run_id: str) -> RuntimeSession:
+            return RuntimeSession(
+                runtime="vllm",
+                mode="external_server",
+                status=ProbeStatus.OK,
+                base_url="http://127.0.0.1:8000/v1",
+                runtime_check=make_probe_result(
+                    run_id=run_id,
+                    component="runtime_check",
+                    status=ProbeStatus.OK,
+                    details={"runtime": "vllm", "mode": "external_server"},
+                ),
+            )
+
+        def stop(self, session: RuntimeSession):
+            del session
+            return None
+
+    monkeypatch.setattr(orchestrator, "VLLMRuntimeAdapter", FakeRuntimeAdapter)
+
+    def _transport(*, url: str, payload: dict[str, object], timeout_s: float, api_key: str):
+        del url, payload, timeout_s, api_key
+        return {"choices": [{"message": {"content": "smoke ok"}}]}
+
+    monkeypatch.setattr(
+        orchestrator,
+        "LLMSmokeClient",
+        lambda *args, **kwargs: LLMSmokeClient(transport=_transport),
+    )
+
+    def _smoke_preemption(**kwargs):
+        del kwargs
+        response_record = _read_jsonl(run_dir / "smoke_response.jsonl")[0]
+        response_monotonic_ns = int(response_record["monotonic_ns"])
+        return make_probe_result(
+            run_id=config.run_id,
+            component="smoke_preemption",
+            status=ProbeStatus.OK,
+            details={
+                "reason": "checkpoint and restore completed",
+                "outcome": "restored",
+                "smoke": {"attempted": True},
+                "checkpoint": {"attempted": True},
+                "restore": {
+                    "attempted": True,
+                    "start_monotonic_ns": response_monotonic_ns + 1,
+                },
+            },
+        )
+
+    monkeypatch.setattr(orchestrator, "collect_smoke_preemption", _smoke_preemption)
+
+    result = orchestrator.run_v0_orchestrator(
+        config,
+        git_metadata_getter=lambda **_: _git_metadata(),
+    )
+
+    assert result.metadata["status"] == "completed"
+    smoke_validation = _read_json(run_dir / "smoke_validation.json")
+    assert smoke_validation["status"] == ProbeStatus.SKIPPED.value
+    assert smoke_validation["classification"] == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
+    assert "before restore" in smoke_validation["details"]["reason"]

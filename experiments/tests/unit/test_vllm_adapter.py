@@ -220,3 +220,51 @@ def test_docker_server_missing_binary_is_unsupported():
         session.smoke_validation["classification"]
         == SmokeClassification.SMOKE_NOT_SUPPORTED.value
     )
+
+
+
+def test_docker_server_stop_refuses_non_experiment_owned_container():
+    from ai_runtime_experiments.runtime_adapters import RuntimeSession, VLLMRuntimeAdapter
+    from ai_runtime_experiments.schemas import make_probe_result
+
+    inspect_command = [
+        "docker",
+        "inspect",
+        "--format",
+        "{{json .Config.Labels}}",
+        "ai-edge-v0-vllm-fixed",
+    ]
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout='{"ai-edge-experiment":"someone-else"}\n',
+            )
+        }
+    )
+    adapter = VLLMRuntimeAdapter(config={}, runner=runner)
+    session = RuntimeSession(
+        runtime="vllm",
+        mode="docker_server",
+        status=ProbeStatus.OK,
+        runtime_check=make_probe_result(
+            run_id="task-7",
+            component="runtime_check",
+            status=ProbeStatus.OK,
+            details={"runtime": "vllm", "mode": "docker_server"},
+        ),
+        base_url="http://127.0.0.1:8000/v1",
+        container_name="ai-edge-v0-vllm-fixed",
+        container_id="container-123",
+    )
+
+    record = adapter.stop(session)
+
+    assert record is not None
+    assert record["component"] == "runtime_teardown"
+    assert record["status"] == "error"
+    assert "experiment-owned" in record["details"]["reason"]
+    assert record["details"]["commands"]["docker_inspect_labels"]["status"] == "ok"
+    assert "docker_rm_force" not in record["details"]["commands"]
+    assert runner.calls == [inspect_command]

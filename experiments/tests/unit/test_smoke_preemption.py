@@ -125,3 +125,40 @@ def test_unsupported_prerequisite_does_not_attempt_preemption():
     assert record["details"]["outcome"] == "not_supported"
     assert "docker checkpoint create" in record["details"]["reason"]
     assert runner.calls == []
+
+
+
+def test_non_experiment_owned_container_fails_before_checkpoint_or_restore():
+    from ai_runtime_experiments.preemption import collect_smoke_preemption
+
+    inspect_command = [
+        "docker",
+        "inspect",
+        "--format",
+        "{{json .Config.Labels}}",
+        "ai-edge-v0-vllm-fixed",
+    ]
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout='{"ai-edge-experiment":"someone-else"}\n',
+            )
+        }
+    )
+    session = _runtime_session()
+
+    record = collect_smoke_preemption(
+        run_id="task-8",
+        runtime_session=session,
+        docker_criu_integration=_docker_criu_probe(),
+        runner=runner,
+    )
+
+    assert record["status"] == "error"
+    assert record["details"]["smoke"]["attempted"] is False
+    assert record["details"]["outcome"] == "not_attempted"
+    assert "experiment-owned" in record["details"]["reason"]
+    assert record["details"]["commands"]["docker_inspect_labels"]["status"] == "ok"
+    assert runner.calls == [inspect_command]
