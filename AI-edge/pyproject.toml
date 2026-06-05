@@ -19,6 +19,7 @@ where = ["experiments/src"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
+pythonpath = ["experiments/src"]
 testpaths = ["experiments/tests"]
 markers = [
     "integration: integration tests (opt-in with AI_EDGE_RUN_INTEGRATION=1; may require Docker/host tools)",
