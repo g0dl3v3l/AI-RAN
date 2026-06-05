@@ -63,3 +63,31 @@
 - Added `config.py` with a safe YAML loader, required-key validation, deterministic default filling for probe/runtime settings, and a `ResolvedConfig` contract that normalizes `output_dir`, `run_id`, and CLI dry-run overrides.
 - Added `v0_orchestrator.py` to create the exact requested run directory, copy the resolved config to `config.yaml`, write `run_metadata.json`, run the Task-4 through Task-8 probe/runtime layers in sequence, and always emit the full V0 artifact set.
 - Dry-run now bypasses Docker/GPU/vLLM entirely while still writing every required artifact, using deterministic skipped/not-attempted placeholder records for runtime, smoke request/response, preemption, and validation.
+
+
+## 2026-06-05 02:00:00Z
+
+- Added `experiments/tests/conftest.py` to gate `integration` and `gpu` tests centrally: they now skip by default unless `AI_EDGE_RUN_INTEGRATION=1` or `AI_EDGE_RUN_GPU=1` is set, while external vLLM smoke still requires `AI_EDGE_VLLM_BASE_URL`.
+- Added four real-environment smoke tests that exercise the existing CLI entrypoints (`collect_hardware.py`, `check_docker_criu.py`, `check_cuda_container.py`, `run_smoke_request.py`) and validate emitted JSON/JSONL artifacts instead of inventing parallel test-only paths.
+- Verified Task 10 behavior with pytest: the default suite still passes via `PYTHONPATH=experiments/src python -m pytest experiments/tests -m "not integration and not gpu" -v`, ungated smoke files skip cleanly by default, integration opt-in ran 2 passing tests, and GPU opt-in ran 1 passing CUDA smoke plus 1 skipped external-vLLM smoke when no URL was configured.
+
+
+## 2026-06-05T01:17:59Z
+
+- Added `experiments/README.md` with a Task-12-only V0 verification guide that separates dry-run artifact checks, live vLLM endpoint checks, and post-run artifact interpretation.
+- Captured the important runtime nuance that `run_v0_probe.py` tears down any Docker-started vLLM container before exit, so `/v1/models` and `/v1/chat/completions` must be verified while a temporary runtime session is still up.
+- Added `experiments/examples/v0_env_probe/verification_checklist.example.json` with machine-readable checks for the dry-run artifact contract, `docker_criu_integration.status`, `runtime_check.status`, `smoke_preemption.status`, and `smoke_validation.classification`, plus explicit classification meanings for later automation.
+
+
+## 2026-06-05 12:20:00Z
+
+- Added Task-11 docs under `experiments/README.md` with the exact repo-root command contract for unit tests, the default non-integration suite, the opt-in integration and GPU suite commands, dry-run, and a real host run.
+- Added committed shape-only examples for `smoke_validation.json` and an unsupported `docker_criu_integration.json` record under `experiments/examples/v0_env_probe/`, using placeholder IDs and timestamps instead of host data.
+- Documented the current Docker ownership gate in the runbook: destructive Docker CRIU actions require the `ai-edge-v0-criu-` prefix plus the `ai-edge-experiment`, `ai-edge-component`, and `ai-edge-run-id` labels before the harness will checkpoint or remove a container.
+
+
+## 2026-06-05T03:15:39Z
+
+- Extended `.gitignore` minimally to match the V0 governance rule that generated checkpoints, logs, and model artifacts stay untracked alongside `experiments/results/**`.
+- Updated `LLMSmokeClient` so live `smoke_request.jsonl` and `smoke_response.jsonl` records now carry the same structured V0 metadata shape used elsewhere: `status`, `component`, and a `details` mapping with smoke runtime/base URL metadata (plus `reason` on failures).
+- Tightened `experiments/tests/unit/test_llm_client.py` to prove both success and error smoke JSONL records preserve the structured request/response contract.

@@ -12,3 +12,7 @@ experiments/results/**
 
 experiments/traces/**
 !experiments/traces/preemption_points.example.csv
+
+experiments/checkpoints/**
+experiments/logs/**
+experiments/models/**

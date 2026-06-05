@@ -75,6 +75,22 @@ def _status_from_exception(error: Exception) -> ProbeStatus:
 
 
 
+def _smoke_record_details(
+    *,
+    runtime: str,
+    base_url: str,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    details: dict[str, Any] = {
+        "runtime": runtime,
+        "base_url": base_url,
+    }
+    if reason is not None:
+        details["reason"] = reason
+    return details
+
+
+
 def post_openai_chat_completion(
     *,
     url: str,
@@ -138,9 +154,15 @@ class LLMSmokeClient:
             "request_id": request_identifier,
             "runtime": runtime,
             "base_url": normalized_base_url,
+            "status": ProbeStatus.OK.value,
+            "component": "smoke_request",
             "timestamp_utc": utc_now_iso_z(),
             "monotonic_ns": monotonic_ns(),
             "payload": payload,
+            "details": _smoke_record_details(
+                runtime=runtime,
+                base_url=normalized_base_url,
+            ),
         }
         append_jsonl(Path(output_dir) / "smoke_request.jsonl", request_record)
 
@@ -158,12 +180,17 @@ class LLMSmokeClient:
                 "runtime": runtime,
                 "base_url": normalized_base_url,
                 "status": ProbeStatus.OK.value,
+                "component": "smoke_response",
                 "timestamp_utc": utc_now_iso_z(),
                 "monotonic_ns": monotonic_ns(),
                 "response": response_payload,
                 "extracted": {
                     "assistant_text": _extract_assistant_text(response_payload),
                 },
+                "details": _smoke_record_details(
+                    runtime=runtime,
+                    base_url=normalized_base_url,
+                ),
             }
         except Exception as error:  # pragma: no cover - exercised in tests via fake transport
             status = _status_from_exception(error)
@@ -174,10 +201,16 @@ class LLMSmokeClient:
                 "runtime": runtime,
                 "base_url": normalized_base_url,
                 "status": status.value,
+                "component": "smoke_response",
                 "timestamp_utc": utc_now_iso_z(),
                 "monotonic_ns": monotonic_ns(),
                 "response": None,
                 "extracted": {"assistant_text": None},
+                "details": _smoke_record_details(
+                    runtime=runtime,
+                    base_url=normalized_base_url,
+                    reason=str(error),
+                ),
                 "error_type": type(error).__name__,
                 "error_message": str(error),
             }

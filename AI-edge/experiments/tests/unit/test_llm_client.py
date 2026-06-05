@@ -80,9 +80,17 @@ def test_smoke_request_writes_request_and_response(tmp_path: Path):
     assert len(request_records) == 1
     assert len(response_records) == 1
     assert request_records[0]["request_id"] == "req-123"
+    assert request_records[0]["status"] == "ok"
+    assert request_records[0]["component"] == "smoke_request"
+    assert request_records[0]["details"]["runtime"] == "vllm"
+    assert request_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
     assert response_records[0]["request_id"] == "req-123"
     assert request_records[0]["payload"]["messages"][0]["content"] == "ping"
     assert response_record["status"] == "ok"
+    assert response_record["component"] == "smoke_response"
+    assert response_records[0]["component"] == "smoke_response"
+    assert response_records[0]["details"]["runtime"] == "vllm"
+    assert response_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
     assert response_records[0]["response"]["choices"][0]["message"]["content"] == "pong"
     assert response_records[0]["extracted"]["assistant_text"] == "pong"
     assert transport.calls == [
@@ -111,9 +119,20 @@ def test_transport_error_writes_error_response_record(tmp_path: Path):
         request_id="req-error",
     )
 
+    request_records = _read_jsonl(tmp_path / "smoke_request.jsonl")
     response_records = _read_jsonl(tmp_path / "smoke_response.jsonl")
 
+    assert request_records[0]["request_id"] == "req-error"
+    assert request_records[0]["status"] == "ok"
+    assert request_records[0]["component"] == "smoke_request"
+    assert request_records[0]["details"]["runtime"] == "vllm"
+    assert request_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
     assert response_record["status"] == "error"
+    assert response_record["component"] == "smoke_response"
     assert response_records[0]["request_id"] == "req-error"
+    assert response_records[0]["component"] == "smoke_response"
+    assert response_records[0]["details"]["runtime"] == "vllm"
+    assert response_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
+    assert response_records[0]["details"]["reason"] == "boom"
     assert response_records[0]["error_type"] == "RuntimeError"
     assert response_records[0]["error_message"] == "boom"
