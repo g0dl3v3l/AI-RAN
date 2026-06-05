@@ -76,6 +76,7 @@ config['model'] = config['runtime_options']['vllm']['docker_server']['model'] = 
 config['runtime_options']['vllm']['external_server']['enabled'] = False
 config['runtime_options']['vllm']['external_server']['base_url'] = None
 config['runtime_options']['vllm']['docker_server']['enabled'] = True
+config['probe_options']['runtime']['timeout_s'] = 300.0
 config['output_dir'] = '/tmp/ai-edge-v0-verify-real'
 dst.write_text(yaml.safe_dump(config, sort_keys=False), encoding='utf-8')
 print(dst)

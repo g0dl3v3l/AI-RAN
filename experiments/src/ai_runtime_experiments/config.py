@@ -210,7 +210,7 @@ def load_config(
     model = raw_config.get("model")
     normalized_model = None if model is None else str(model).strip() or None
     docker_server = runtime_options["vllm"]["docker_server"]
-    if normalized_model is not None and not docker_server.get("model"):
+    if normalized_model is not None:
         docker_server["model"] = normalized_model
 
     seed_value = raw_config.get("seed")

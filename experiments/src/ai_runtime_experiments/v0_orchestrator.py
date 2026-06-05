@@ -477,12 +477,14 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
                     if runtime_session.runtime_check.get("details", {}).get("reason")
                     else "smoke request skipped because runtime is not runnable"
                 )
+                placeholder_status = runtime_session.status
                 if runtime_session.status == ProbeStatus.OK and not config.model:
                     reason = "smoke request skipped because model is not configured"
+                    placeholder_status = ProbeStatus.SKIPPED
                 _write_smoke_placeholder_records(
                     config=config,
                     run_dir=run_dir,
-                    status=runtime_session.status,
+                    status=placeholder_status,
                     reason=reason,
                     request_id=request_id,
                     base_url=runtime_session.base_url,
