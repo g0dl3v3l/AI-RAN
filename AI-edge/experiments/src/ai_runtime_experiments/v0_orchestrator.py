@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
@@ -323,44 +324,65 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
         records["runtime_check.json"] = runtime_session.runtime_check
 
         request_id = str(config.workload.get("request_id") or f"{config.run_id}-smoke-request")
-        if runtime_session.status == ProbeStatus.OK and runtime_session.base_url and config.model:
-            smoke_client = LLMSmokeClient(timeout_s=float(config.workload.get("timeout_s", 30.0)))
-            smoke_client.send_smoke_request(
-                run_id=config.run_id,
-                output_dir=run_dir,
-                base_url=runtime_session.base_url,
-                model=config.model,
-                prompt=config.workload.get("prompt"),
-                messages=config.workload.get("messages"),
-                request_id=request_id,
-                runtime=config.runtime,
-                temperature=float(config.workload.get("temperature", 0.0)),
-                max_tokens=int(config.workload.get("max_tokens", 64)),
-            )
-        else:
-            reason = (
-                str(runtime_session.runtime_check.get("details", {}).get("reason"))
-                if runtime_session.runtime_check.get("details", {}).get("reason")
-                else "smoke request skipped because runtime is not runnable"
-            )
-            if runtime_session.status == ProbeStatus.OK and not config.model:
-                reason = "smoke request skipped because model is not configured"
-            _write_smoke_placeholder_records(
-                config=config,
-                run_dir=run_dir,
-                status=runtime_session.status,
-                reason=reason,
-                request_id=request_id,
-                base_url=runtime_session.base_url,
-            )
+        smoke_request_executor: ThreadPoolExecutor | None = None
+        smoke_request_future = None
+        try:
+            if runtime_session.status == ProbeStatus.OK and runtime_session.base_url and config.model:
+                smoke_client = LLMSmokeClient(timeout_s=float(config.workload.get("timeout_s", 30.0)))
+                smoke_request_kwargs = {
+                    "run_id": config.run_id,
+                    "output_dir": run_dir,
+                    "base_url": runtime_session.base_url,
+                    "model": config.model,
+                    "prompt": config.workload.get("prompt"),
+                    "messages": config.workload.get("messages"),
+                    "request_id": request_id,
+                    "runtime": config.runtime,
+                    "temperature": float(config.workload.get("temperature", 0.0)),
+                    "max_tokens": int(config.workload.get("max_tokens", 64)),
+                }
+                attempt_preemption_while_in_flight = (
+                    _probe_status(records["docker_criu_integration.json"]) == ProbeStatus.OK.value
+                    and runtime_session.container_name is not None
+                    and runtime_session.container_id is not None
+                )
+                if attempt_preemption_while_in_flight:
+                    smoke_request_executor = ThreadPoolExecutor(max_workers=1)
+                    smoke_request_future = smoke_request_executor.submit(
+                        smoke_client.send_smoke_request,
+                        **smoke_request_kwargs,
+                    )
+                else:
+                    smoke_client.send_smoke_request(**smoke_request_kwargs)
+            else:
+                reason = (
+                    str(runtime_session.runtime_check.get("details", {}).get("reason"))
+                    if runtime_session.runtime_check.get("details", {}).get("reason")
+                    else "smoke request skipped because runtime is not runnable"
+                )
+                if runtime_session.status == ProbeStatus.OK and not config.model:
+                    reason = "smoke request skipped because model is not configured"
+                _write_smoke_placeholder_records(
+                    config=config,
+                    run_dir=run_dir,
+                    status=runtime_session.status,
+                    reason=reason,
+                    request_id=request_id,
+                    base_url=runtime_session.base_url,
+                )
 
-        records["smoke_preemption.json"] = collect_smoke_preemption(
-            run_id=config.run_id,
-            runtime_session=runtime_session,
-            docker_criu_integration=records["docker_criu_integration.json"],
-            timeout_s=float(probe_options["preemption"]["timeout_s"]),
-            checkpoint_name=str(probe_options["preemption"]["checkpoint_name"]),
-        )
+            records["smoke_preemption.json"] = collect_smoke_preemption(
+                run_id=config.run_id,
+                runtime_session=runtime_session,
+                docker_criu_integration=records["docker_criu_integration.json"],
+                timeout_s=float(probe_options["preemption"]["timeout_s"]),
+                checkpoint_name=str(probe_options["preemption"]["checkpoint_name"]),
+            )
+            if smoke_request_future is not None:
+                smoke_request_future.result()
+        finally:
+            if smoke_request_executor is not None:
+                smoke_request_executor.shutdown(wait=True)
         records["smoke_preemption.json"] = _annotate_smoke_preemption_response_timing(
             run_dir=run_dir,
             smoke_preemption=records["smoke_preemption.json"],
