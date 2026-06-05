@@ -41,9 +41,10 @@ probe_options:
   criu:
     timeout_s: 10.0
   docker_criu_integration:
-    timeout_s: 10.0
+    timeout_s: 60.0
     checkpoint_name: ai-edge-v0-criu-checkpoint
     smoke_image: busybox:1.36
+    smoke_runtime: runc
   cuda:
     timeout_s: 120.0
     image: nvidia/cuda:12.4.1-base-ubuntu22.04
@@ -53,7 +54,7 @@ probe_options:
     control_binary: nvidia-cuda-mps-control
     control_pipe_path: /tmp/nvidia-mps/control
   runtime:
-    timeout_s: 30.0
+    timeout_s: 180.0
   preemption:
-    timeout_s: 10.0
+    timeout_s: 180.0
     checkpoint_name: ai-edge-v0-criu-checkpoint

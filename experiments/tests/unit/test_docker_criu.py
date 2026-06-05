@@ -176,6 +176,8 @@ def test_refuses_unlabelled_container():
                 "docker",
                 "run",
                 "-d",
+                "--runtime",
+                "runc",
                 "--name",
                 "ai-edge-v0-criu-fixed",
                 "--label",
@@ -193,6 +195,8 @@ def test_refuses_unlabelled_container():
                     "docker",
                     "run",
                     "-d",
+                    "--runtime",
+                    "runc",
                     "--name",
                     "ai-edge-v0-criu-fixed",
                     "--label",
@@ -266,6 +270,8 @@ def test_docker_run_uses_expected_labels_and_prefix():
                 "docker",
                 "run",
                 "-d",
+                "--runtime",
+                "runc",
                 "--name",
                 container_name,
                 "--label",
@@ -283,6 +289,8 @@ def test_docker_run_uses_expected_labels_and_prefix():
                     "docker",
                     "run",
                     "-d",
+                    "--runtime",
+                    "runc",
                     "--name",
                     container_name,
                     "--label",
@@ -350,6 +358,8 @@ def test_docker_run_uses_expected_labels_and_prefix():
     assert record["details"]["commands"]["docker_stop"]["status"] == "ok"
 
     docker_run_call = next(call for call in runner.calls if call[:2] == ["docker", "run"])
+    assert "--runtime" in docker_run_call
+    assert "runc" in docker_run_call
     assert "--name" in docker_run_call
     assert container_name in docker_run_call
     assert f"ai-edge-experiment={labels['ai-edge-experiment']}" in docker_run_call

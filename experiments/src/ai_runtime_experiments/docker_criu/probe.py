@@ -16,6 +16,7 @@ from ai_runtime_experiments.utils.command import CommandResult, run_command
 
 DEFAULT_TIMEOUT_S = 10.0
 DEFAULT_SMOKE_IMAGE = "busybox:1.36"
+DEFAULT_SMOKE_RUNTIME = "runc"
 DEFAULT_CHECKPOINT_NAME = "ai-edge-v0-criu-checkpoint"
 _DEFAULT_LOOP_COMMAND = "while true; do sleep 1; done"
 _CRII_VERSION_RE = re.compile(r"(\d+\.\d+(?:\.\d+)*)")
@@ -187,6 +188,7 @@ def collect_docker_criu_integration(
     container_name: str | None = None,
     checkpoint_name: str = DEFAULT_CHECKPOINT_NAME,
     smoke_image: str = DEFAULT_SMOKE_IMAGE,
+    smoke_runtime: str | None = DEFAULT_SMOKE_RUNTIME,
 ) -> dict[str, Any]:
     resolved_container_name = container_name or build_experiment_container_name(run_id)
     if not resolved_container_name.startswith(EXPERIMENT_CONTAINER_NAME_PREFIX):
@@ -200,6 +202,7 @@ def collect_docker_criu_integration(
             "name": resolved_container_name,
             "checkpoint_name": checkpoint_name,
             "image": smoke_image,
+            "runtime": smoke_runtime,
         },
         "smoke": {"attempted": False},
     }
@@ -223,11 +226,15 @@ def collect_docker_criu_integration(
         details["reason"] = help_reason
         return _finalize_record(run_id=run_id, status=help_status, details=details)
 
-    run_result = runner(
+    docker_run_argv = [
+        "docker",
+        "run",
+        "-d",
+    ]
+    if smoke_runtime:
+        docker_run_argv.extend(["--runtime", smoke_runtime])
+    docker_run_argv.extend(
         [
-            "docker",
-            "run",
-            "-d",
             "--name",
             resolved_container_name,
             *build_docker_label_args(run_id),
@@ -235,7 +242,10 @@ def collect_docker_criu_integration(
             "sh",
             "-c",
             _DEFAULT_LOOP_COMMAND,
-        ],
+        ]
+    )
+    run_result = runner(
+        docker_run_argv,
         timeout_s=timeout_s,
     )
     details["smoke"]["attempted"] = True
