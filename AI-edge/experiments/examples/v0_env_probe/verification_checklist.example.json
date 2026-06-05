@@ -1,0 +1,235 @@
+{
+  "schema_version": "0.1.0",
+  "checklist_id": "v0_verification",
+  "description": "Machine-readable verification checklist for the V0 Docker + CRIU + vLLM smoke path.",
+  "dry_run_output_dir": "/tmp/ai-edge-v0-verify-dry-run",
+  "real_run_output_dir": "/tmp/ai-edge-v0-verify-real",
+  "required_dry_run_artifacts": [
+    "hardware.json",
+    "docker.json",
+    "criu_check.json",
+    "docker_criu_integration.json",
+    "cuda_check.json",
+    "mps_check.json",
+    "runtime_check.json",
+    "smoke_request.jsonl",
+    "smoke_response.jsonl",
+    "smoke_preemption.json",
+    "smoke_validation.json",
+    "run_metadata.json",
+    "config.yaml"
+  ],
+  "verification_layers": [
+    {
+      "id": "dry_run_artifact_contract",
+      "name": "Dry-run artifact contract",
+      "check_ids": [
+        "required_artifact_set"
+      ]
+    },
+    {
+      "id": "docker_criu_path",
+      "name": "Docker + CRIU smoke path",
+      "check_ids": [
+        "docker_criu_integration_status"
+      ]
+    },
+    {
+      "id": "runtime_start_and_restore",
+      "name": "Runtime start and restore",
+      "check_ids": [
+        "runtime_check_status",
+        "smoke_preemption_status"
+      ]
+    },
+    {
+      "id": "request_completion_after_restore",
+      "name": "Request completion after restore",
+      "check_ids": [
+        "smoke_validation_classification"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "required_artifact_set",
+      "name": "Dry-run required artifact set",
+      "artifact": "run directory",
+      "json_path": null,
+      "check_type": "set_equals",
+      "expected_files": [
+        "hardware.json",
+        "docker.json",
+        "criu_check.json",
+        "docker_criu_integration.json",
+        "cuda_check.json",
+        "mps_check.json",
+        "runtime_check.json",
+        "smoke_request.jsonl",
+        "smoke_response.jsonl",
+        "smoke_preemption.json",
+        "smoke_validation.json",
+        "run_metadata.json",
+        "config.yaml"
+      ],
+      "interpretations": {
+        "pass": "The harness wrote the full V0 artifact contract during dry-run.",
+        "fail": "The run directory is missing one or more required artifacts, so later verification is incomplete."
+      }
+    },
+    {
+      "id": "docker_criu_integration_status",
+      "name": "Docker + CRIU integration status",
+      "artifact": "docker_criu_integration.json",
+      "json_path": "$.status",
+      "success_values": [
+        "ok"
+      ],
+      "warn_values": [
+        "unsupported",
+        "skipped"
+      ],
+      "fail_values": [
+        "error",
+        "timeout"
+      ],
+      "interpretations": {
+        "ok": "Docker checkpoint create and Docker start --checkpoint both worked for the experiment-owned BusyBox smoke container.",
+        "unsupported": "The host or Docker daemon does not support the required checkpoint path.",
+        "skipped": "The integration check did not run, so Docker + CRIU was not verified.",
+        "error": "The integration check ran and failed.",
+        "timeout": "The integration check hung or exceeded its timeout."
+      }
+    },
+    {
+      "id": "runtime_check_status",
+      "name": "vLLM runtime startup status",
+      "artifact": "runtime_check.json",
+      "json_path": "$.status",
+      "success_values": [
+        "ok"
+      ],
+      "warn_values": [
+        "unsupported",
+        "skipped"
+      ],
+      "fail_values": [
+        "error",
+        "timeout"
+      ],
+      "interpretations": {
+        "ok": "The vLLM runtime started in the configured mode and the harness considered it runnable.",
+        "unsupported": "The selected vLLM runtime mode is not available on this host.",
+        "skipped": "No runnable vLLM configuration was supplied, or the run was a dry-run.",
+        "error": "The runtime start path failed.",
+        "timeout": "The runtime start path exceeded its timeout."
+      }
+    },
+    {
+      "id": "smoke_preemption_status",
+      "name": "vLLM checkpoint and restore status",
+      "artifact": "smoke_preemption.json",
+      "json_path": "$.status",
+      "success_values": [
+        "ok"
+      ],
+      "warn_values": [
+        "unsupported",
+        "skipped"
+      ],
+      "fail_values": [
+        "error",
+        "timeout"
+      ],
+      "interpretations": {
+        "ok": "The experiment-owned vLLM container reached checkpoint, stop, restore, and post-restore inspect successfully.",
+        "unsupported": "The restore path hit a capability limit, usually in Docker checkpoint support.",
+        "skipped": "The runtime never reached a preemptible state, so no restore attempt was made.",
+        "error": "The checkpoint or restore sequence ran and failed.",
+        "timeout": "The checkpoint or restore sequence hung or exceeded its timeout."
+      }
+    },
+    {
+      "id": "smoke_validation_classification",
+      "name": "Final smoke validation classification",
+      "artifact": "smoke_validation.json",
+      "json_path": "$.classification",
+      "success_values": [
+        "smoke_completed_after_restore",
+        "smoke_replayed"
+      ],
+      "warn_values": [
+        "smoke_not_supported",
+        "smoke_not_attempted"
+      ],
+      "fail_values": [
+        "smoke_failed_restore",
+        "smoke_runtime_failed",
+        "smoke_hung"
+      ],
+      "interpretations": {
+        "smoke_completed_after_restore": "Strongest V0 success signal. The in-flight request completed after restore.",
+        "smoke_replayed": "Restore completed, but the response had to be replayed after restore.",
+        "smoke_failed_restore": "Checkpoint or restore command failed.",
+        "smoke_runtime_failed": "Restore commands returned, but the runtime was not healthy after restore.",
+        "smoke_hung": "The restore path timed out.",
+        "smoke_not_supported": "The host or Docker daemon does not support the required checkpoint path.",
+        "smoke_not_attempted": "The runtime never became preemptible, or the run stayed in dry-run mode."
+      }
+    }
+  ],
+  "minimum_full_success": {
+    "required_checks": [
+      {
+        "check_id": "docker_criu_integration_status",
+        "required_value": "ok"
+      },
+      {
+        "check_id": "runtime_check_status",
+        "required_value": "ok"
+      },
+      {
+        "check_id": "smoke_preemption_status",
+        "required_value": "ok"
+      },
+      {
+        "check_id": "smoke_validation_classification",
+        "required_values": [
+          "smoke_completed_after_restore",
+          "smoke_replayed"
+        ]
+      }
+    ],
+    "summary": "All four checks above must land in their success set before claiming the full V0 Docker + CRIU + vLLM path worked."
+  },
+  "classification_interpretations": {
+    "smoke_completed_after_restore": {
+      "result": "pass",
+      "meaning": "The request completed after restore without needing replay."
+    },
+    "smoke_replayed": {
+      "result": "pass_with_caveat",
+      "meaning": "The request finished after restore, but the final response was replayed."
+    },
+    "smoke_failed_restore": {
+      "result": "fail",
+      "meaning": "Checkpoint or restore command failure prevented a clean post-restore response."
+    },
+    "smoke_runtime_failed": {
+      "result": "fail",
+      "meaning": "The runtime container was not healthy after restore."
+    },
+    "smoke_hung": {
+      "result": "fail",
+      "meaning": "The restore path timed out."
+    },
+    "smoke_not_supported": {
+      "result": "expected_unsupported",
+      "meaning": "The host or Docker daemon does not support the required checkpoint path."
+    },
+    "smoke_not_attempted": {
+      "result": "expected_skipped",
+      "meaning": "The run never reached a preemptible state, or it stayed in dry-run mode."
+    }
+  }
+}
