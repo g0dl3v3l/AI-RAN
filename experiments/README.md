@@ -208,3 +208,5 @@ Use `smoke_validation.json` as the final decision record.
 * `runtime_check.json.status == "ok"`
 * `smoke_preemption.json.status == "ok"`
 * `smoke_validation.json.classification` in `{"smoke_completed_after_restore", "smoke_replayed"}`
+
+For later automation, keep `experiments/examples/v0_env_probe/verification_checklist.example.json` next to the run artifacts and evaluate the checks in order. The JSON file uses the same layer names, artifact names, and result meanings as this section.
