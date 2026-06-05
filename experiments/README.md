@@ -2,6 +2,14 @@
 
 This README is intentionally narrow. It covers V0 verification for the current experiment harness, so you can prove the harness wrote the expected artifact set, Docker and CRIU worked on the experiment-owned smoke container, vLLM came up, and the smoke request finished after the restore path.
 
+Pytest skips integration and GPU cases unless you opt in with env vars. From the repo root, run:
+
+```bash
+pytest experiments/tests
+AI_EDGE_RUN_INTEGRATION=1 pytest experiments/tests
+AI_EDGE_RUN_GPU=1 pytest experiments/tests
+```
+
 ## V0 Verification: Docker + CRIU + vLLM
 
 V0 verification has three layers.
