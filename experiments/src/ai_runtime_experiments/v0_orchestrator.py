@@ -62,6 +62,85 @@ def _artifact_path(run_dir: Path, artifact_name: str) -> Path:
 
 
 
+def _probe_details(record: dict[str, Any]) -> dict[str, Any]:
+    details = record.get("details")
+    if isinstance(details, dict):
+        return details
+    return {}
+
+
+
+def _probe_extracted(record: dict[str, Any]) -> dict[str, Any]:
+    extracted = _probe_details(record).get("extracted")
+    if isinstance(extracted, dict):
+        return extracted
+    return {}
+
+
+
+def _build_hardware_summary(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    extracted = _probe_extracted(records.get("hardware.json", {}))
+    summary: dict[str, Any] = {}
+    for key in (
+        "cpu_model",
+        "cpu_core_count",
+        "system_memory_total_bytes",
+        "vram_total_mib",
+        "gpu_count",
+        "gpu_names",
+        "driver_version",
+        "cuda_version",
+    ):
+        if key in extracted:
+            summary[key] = deepcopy(extracted[key])
+    return summary
+
+
+
+def _build_mps_summary(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    record = records.get("mps_check.json", {})
+    details = _probe_details(record)
+    summary: dict[str, Any] = {"status": _probe_status(record)}
+
+    mode = details.get("mode")
+    if mode is not None:
+        summary["mode"] = mode
+
+    reason = details.get("reason")
+    if reason is not None:
+        summary["reason"] = reason
+
+    start_stop = details.get("start_stop")
+    if isinstance(start_stop, dict):
+        if "allowed" in start_stop:
+            summary["allow_start_stop"] = bool(start_stop["allowed"])
+        if "attempted" in start_stop:
+            summary["attempted_start_stop"] = bool(start_stop["attempted"])
+        if "started_by_probe" in start_stop:
+            summary["started_by_probe"] = bool(start_stop["started_by_probe"])
+
+    daemon = details.get("daemon")
+    if isinstance(daemon, dict):
+        if daemon.get("control_binary") is not None:
+            summary["control_binary"] = daemon["control_binary"]
+        if daemon.get("control_pipe_path") is not None:
+            summary["control_pipe_path"] = daemon["control_pipe_path"]
+        if "control_pipe_exists" in daemon:
+            summary["control_pipe_exists"] = bool(daemon["control_pipe_exists"])
+
+    return summary
+
+
+
+def _docker_version(records: dict[str, dict[str, Any]]) -> str | None:
+    extracted = _probe_extracted(records.get("docker.json", {}))
+    docker_version = extracted.get("server_version") or extracted.get("client_version")
+    if docker_version is None:
+        return None
+    return str(docker_version)
+
+
+
 def _create_run_dir(config: ResolvedConfig) -> Path:
     return ensure_run_dir(
         output_root=config.output_dir.parent,
@@ -413,6 +492,10 @@ def _build_run_metadata(
     started_monotonic_ns: int,
     cleanup_record: dict[str, Any] | None,
 ) -> dict[str, Any]:
+    hardware_summary = _build_hardware_summary(records)
+    docker_version = _docker_version(records)
+    mps_summary = _build_mps_summary(records)
+
     return {
         "schema_version": SCHEMA_VERSION,
         "run_id": config.run_id,
@@ -420,6 +503,7 @@ def _build_run_metadata(
         "experiment_id": config.experiment_id,
         "version": config.version,
         "runtime": config.runtime,
+        "model": config.model,
         "arm": config.arm,
         "seed": config.seed,
         "dry_run": config.dry_run,
@@ -429,6 +513,12 @@ def _build_run_metadata(
         "started_monotonic_ns": started_monotonic_ns,
         "completed_at_utc": utc_now_iso_z(),
         "completed_monotonic_ns": monotonic_ns(),
+        "gpu_names": deepcopy(hardware_summary.get("gpu_names")),
+        "driver_version": hardware_summary.get("driver_version"),
+        "cuda_version": hardware_summary.get("cuda_version"),
+        "docker_version": docker_version,
+        "mps_summary": mps_summary,
+        "hardware_summary": hardware_summary,
         "probe_statuses": {
             path.rsplit(".", 1)[0]: _probe_status(record) for path, record in records.items()
         },
@@ -458,6 +548,7 @@ def run_v0_orchestrator(
             "experiment_id": config.experiment_id,
             "version": config.version,
             "runtime": config.runtime,
+            "model": config.model,
             "arm": config.arm,
             "seed": config.seed,
             "dry_run": config.dry_run,
@@ -465,6 +556,12 @@ def run_v0_orchestrator(
             "output_dir": str(run_dir),
             "started_at_utc": started_at_utc,
             "started_monotonic_ns": started_monotonic_ns,
+            "gpu_names": None,
+            "driver_version": None,
+            "cuda_version": None,
+            "docker_version": None,
+            "mps_summary": None,
+            "hardware_summary": {},
             "git": git_metadata,
         },
     )

@@ -95,12 +95,22 @@ def test_host_probe_success_shape():
                     "CUDA Version                        : 12.4\n"
                     "Attached GPUs                       : 1\n"
                     "Product Name                        : NVIDIA RTX A5000\n"
+                    "FB Memory Usage\n"
+                    "    Total                           : 24564 MiB\n"
                 ),
             ),
         }
     )
 
-    record = collect_hardware_probe(run_id="task-4", runner=runner)
+    record = collect_hardware_probe(
+        run_id="task-4",
+        runner=runner,
+        host_facts_getter=lambda: {
+            "cpu_model": "AMD EPYC 7502 32-Core Processor",
+            "cpu_core_count": 32,
+            "system_memory_total_bytes": 137438953472,
+        },
+    )
 
     assert record["component"] == "hardware"
     assert record["status"] == "ok"
@@ -113,6 +123,10 @@ def test_host_probe_success_shape():
     assert record["details"]["extracted"]["cuda_version"] == "12.4"
     assert record["details"]["extracted"]["gpu_count"] == 1
     assert record["details"]["extracted"]["gpu_names"] == ["NVIDIA RTX A5000"]
+    assert record["details"]["extracted"]["vram_total_mib"] == 24564
+    assert record["details"]["extracted"]["cpu_model"] == "AMD EPYC 7502 32-Core Processor"
+    assert record["details"]["extracted"]["cpu_core_count"] == 32
+    assert record["details"]["extracted"]["system_memory_total_bytes"] == 137438953472
 
 
 
@@ -146,12 +160,61 @@ def test_missing_nvidia_smi_is_unsupported():
         }
     )
 
-    record = collect_hardware_probe(run_id="task-4", runner=runner)
+    record = collect_hardware_probe(
+        run_id="task-4",
+        runner=runner,
+        host_facts_getter=lambda: {"cpu_core_count": 16},
+    )
 
     assert record["status"] == "unsupported"
     assert "nvidia-smi" in record["details"]["reason"]
     assert record["details"]["commands"]["nvidia_smi"]["status"] == "unsupported"
     assert record["details"]["extracted"]["python_version"] == "Python 3.12.3"
+    assert record["details"]["extracted"]["cpu_core_count"] == 16
+
+
+
+def test_host_probe_ignores_best_effort_host_fact_failures():
+    collect_hardware_probe, _ = _load_probe_functions()
+
+    runner = _runner_factory(
+        {
+            ("uname", "-a"): _result(
+                ["uname", "-a"],
+                status=ProbeStatus.OK,
+                stdout="Linux ai-edge 6.8.0-31-generic #31-Ubuntu SMP x86_64 GNU/Linux\n",
+            ),
+            ("python", "--version"): _result(
+                ["python", "--version"],
+                status=ProbeStatus.OK,
+                stdout="Python 3.12.3\n",
+            ),
+            ("nvidia-smi",): _result(
+                ["nvidia-smi"],
+                status=ProbeStatus.OK,
+                stdout="",
+            ),
+            ("nvidia-smi", "-q"): _result(
+                ["nvidia-smi", "-q"],
+                status=ProbeStatus.OK,
+                stdout="",
+            ),
+        }
+    )
+
+    def broken_host_facts_getter():
+        raise OSError("procfs unavailable")
+
+    record = collect_hardware_probe(
+        run_id="task-4",
+        runner=runner,
+        host_facts_getter=broken_host_facts_getter,
+    )
+
+    assert record["status"] == "ok"
+    assert record["details"]["extracted"]["python_version"] == "Python 3.12.3"
+    assert "cpu_model" not in record["details"]["extracted"]
+    assert "system_memory_total_bytes" not in record["details"]["extracted"]
 
 
 
