@@ -101,6 +101,7 @@ def test_dry_run_creates_all_required_v0_artifacts(tmp_path: Path):
     run_metadata = _read_json(run_dir / "run_metadata.json")
     assert run_metadata["status"] == "completed"
     assert run_metadata["dry_run"] is True
+    assert run_metadata["model"] == "meta-llama/Meta-Llama-3-8B-Instruct"
     assert run_metadata["git"]["commit"] == "abc123"
 
 
@@ -125,8 +126,50 @@ def test_unsupported_probe_does_not_abort_orchestration(tmp_path: Path, monkeypa
             details={"reason": f"{component} -> {status.value}"},
         )
 
-    monkeypatch.setattr(orchestrator, "collect_hardware_probe", lambda **_: _probe("hardware", ProbeStatus.OK))
-    monkeypatch.setattr(orchestrator, "collect_docker_probe", lambda **_: _probe("docker", ProbeStatus.OK))
+    hardware_record = make_probe_result(
+        run_id=config.run_id,
+        component="hardware",
+        status=ProbeStatus.OK,
+        details={
+            "extracted": {
+                "cpu_model": "AMD EPYC 7502 32-Core Processor",
+                "cpu_core_count": 32,
+                "system_memory_total_bytes": 137438953472,
+                "vram_total_mib": 24564,
+                "gpu_count": 1,
+                "gpu_names": ["NVIDIA RTX A5000"],
+                "driver_version": "550.54.14",
+                "cuda_version": "12.4",
+            }
+        },
+    )
+    docker_record = make_probe_result(
+        run_id=config.run_id,
+        component="docker",
+        status=ProbeStatus.OK,
+        details={"extracted": {"client_version": "27.0.1", "server_version": "27.0.1"}},
+    )
+    mps_record = make_probe_result(
+        run_id=config.run_id,
+        component="mps_check",
+        status=ProbeStatus.OK,
+        details={
+            "mode": "read_only",
+            "daemon": {
+                "control_binary": "nvidia-cuda-mps-control",
+                "control_pipe_path": "/tmp/nvidia-mps/control",
+                "control_pipe_exists": False,
+            },
+            "start_stop": {
+                "allowed": False,
+                "attempted": False,
+                "started_by_probe": False,
+            },
+        },
+    )
+
+    monkeypatch.setattr(orchestrator, "collect_hardware_probe", lambda **_: hardware_record)
+    monkeypatch.setattr(orchestrator, "collect_docker_probe", lambda **_: docker_record)
     monkeypatch.setattr(orchestrator, "collect_criu_probe", lambda **_: _probe("criu_check", ProbeStatus.OK))
     monkeypatch.setattr(
         orchestrator,
@@ -138,7 +181,7 @@ def test_unsupported_probe_does_not_abort_orchestration(tmp_path: Path, monkeypa
         "collect_cuda_container_probe",
         lambda **_: _probe("cuda_check", ProbeStatus.UNSUPPORTED),
     )
-    monkeypatch.setattr(orchestrator, "collect_mps_probe", lambda **_: _probe("mps_check", ProbeStatus.OK))
+    monkeypatch.setattr(orchestrator, "collect_mps_probe", lambda **_: mps_record)
 
     class FakeRuntimeAdapter:
         def __init__(self, *, config, runner=None, timeout_s=30.0):
@@ -203,6 +246,23 @@ def test_unsupported_probe_does_not_abort_orchestration(tmp_path: Path, monkeypa
     )
     assert len(_read_jsonl(run_dir / "smoke_request.jsonl")) == 1
     assert len(_read_jsonl(run_dir / "smoke_response.jsonl")) == 1
+
+    run_metadata = _read_json(run_dir / "run_metadata.json")
+    assert run_metadata["model"] == config.model
+    assert run_metadata["gpu_names"] == ["NVIDIA RTX A5000"]
+    assert run_metadata["driver_version"] == "550.54.14"
+    assert run_metadata["cuda_version"] == "12.4"
+    assert run_metadata["docker_version"] == "27.0.1"
+    assert run_metadata["mps_summary"]["status"] == ProbeStatus.OK.value
+    assert run_metadata["mps_summary"]["mode"] == "read_only"
+    assert run_metadata["mps_summary"]["allow_start_stop"] is False
+    assert run_metadata["mps_summary"]["control_binary"] == "nvidia-cuda-mps-control"
+    assert run_metadata["mps_summary"]["control_pipe_path"] == "/tmp/nvidia-mps/control"
+    assert run_metadata["mps_summary"]["control_pipe_exists"] is False
+    assert run_metadata["hardware_summary"]["cpu_model"] == "AMD EPYC 7502 32-Core Processor"
+    assert run_metadata["hardware_summary"]["cpu_core_count"] == 32
+    assert run_metadata["hardware_summary"]["system_memory_total_bytes"] == 137438953472
+    assert run_metadata["hardware_summary"]["vram_total_mib"] == 24564
 
 
 
