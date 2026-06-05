@@ -84,6 +84,13 @@ def test_smoke_request_writes_request_and_response(tmp_path: Path):
     assert request_records[0]["component"] == "smoke_request"
     assert request_records[0]["details"]["runtime"] == "vllm"
     assert request_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
+    assert request_records[0]["details"]["request_url"] == "http://localhost:8000/v1/chat/completions"
+    assert request_records[0]["details"]["request"] == {
+        "model": "test-model",
+        "message_count": 1,
+        "temperature": 0.0,
+        "max_tokens": 16,
+    }
     assert response_records[0]["request_id"] == "req-123"
     assert request_records[0]["payload"]["messages"][0]["content"] == "ping"
     assert response_record["status"] == "ok"
@@ -91,6 +98,19 @@ def test_smoke_request_writes_request_and_response(tmp_path: Path):
     assert response_records[0]["component"] == "smoke_response"
     assert response_records[0]["details"]["runtime"] == "vllm"
     assert response_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
+    assert response_records[0]["details"]["request_url"] == "http://localhost:8000/v1/chat/completions"
+    assert response_records[0]["details"]["request"] == {
+        "model": "test-model",
+        "message_count": 1,
+        "temperature": 0.0,
+        "max_tokens": 16,
+    }
+    assert response_records[0]["details"]["response"] == {
+        "id": "chatcmpl-123",
+        "model": "test-model",
+        "choice_count": 1,
+    }
+    assert response_records[0]["details"]["extracted"] == {"assistant_text": "pong"}
     assert response_records[0]["response"]["choices"][0]["message"]["content"] == "pong"
     assert response_records[0]["extracted"]["assistant_text"] == "pong"
     assert transport.calls == [
@@ -127,12 +147,32 @@ def test_transport_error_writes_error_response_record(tmp_path: Path):
     assert request_records[0]["component"] == "smoke_request"
     assert request_records[0]["details"]["runtime"] == "vllm"
     assert request_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
+    assert request_records[0]["details"]["request_url"] == "http://localhost:8000/v1/chat/completions"
+    assert request_records[0]["details"]["request"] == {
+        "model": "test-model",
+        "message_count": 1,
+        "temperature": 0.0,
+        "max_tokens": 64,
+    }
     assert response_record["status"] == "error"
     assert response_record["component"] == "smoke_response"
     assert response_records[0]["request_id"] == "req-error"
     assert response_records[0]["component"] == "smoke_response"
     assert response_records[0]["details"]["runtime"] == "vllm"
     assert response_records[0]["details"]["base_url"] == "http://localhost:8000/v1"
+    assert response_records[0]["details"]["request_url"] == "http://localhost:8000/v1/chat/completions"
+    assert response_records[0]["details"]["request"] == {
+        "model": "test-model",
+        "message_count": 1,
+        "temperature": 0.0,
+        "max_tokens": 64,
+    }
+    assert response_records[0]["details"]["response"] == {
+        "id": None,
+        "model": None,
+        "choice_count": 0,
+    }
+    assert response_records[0]["details"]["extracted"] == {"assistant_text": None}
     assert response_records[0]["details"]["reason"] == "boom"
     assert response_records[0]["error_type"] == "RuntimeError"
     assert response_records[0]["error_message"] == "boom"
