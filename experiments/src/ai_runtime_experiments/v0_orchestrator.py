@@ -232,8 +232,8 @@ def _make_skipped_probe(
 
 
 
-def _latest_smoke_response_record(run_dir: Path) -> dict[str, Any] | None:
-    path = _artifact_path(run_dir, "smoke_response.jsonl")
+def _latest_jsonl_record(run_dir: Path, artifact_name: str) -> dict[str, Any] | None:
+    path = _artifact_path(run_dir, artifact_name)
     if not path.exists():
         return None
 
@@ -252,6 +252,16 @@ def _latest_smoke_response_record(run_dir: Path) -> dict[str, Any] | None:
 
 
 
+def _latest_smoke_request_record(run_dir: Path) -> dict[str, Any] | None:
+    return _latest_jsonl_record(run_dir, "smoke_request.jsonl")
+
+
+
+def _latest_smoke_response_record(run_dir: Path) -> dict[str, Any] | None:
+    return _latest_jsonl_record(run_dir, "smoke_response.jsonl")
+
+
+
 def _annotate_smoke_preemption_response_timing(
     *,
     run_dir: Path,
@@ -265,6 +275,27 @@ def _annotate_smoke_preemption_response_timing(
     restore_details = details.get("restore")
     if not isinstance(smoke_details, dict) or not isinstance(restore_details, dict):
         return smoke_preemption
+
+    request_record = _latest_smoke_request_record(run_dir)
+    if request_record is not None:
+        request_status = request_record.get("status")
+        request_monotonic_ns = request_record.get("monotonic_ns")
+        smoke_details["request_status"] = request_status
+        if isinstance(request_monotonic_ns, int):
+            smoke_details["request_monotonic_ns"] = request_monotonic_ns
+            checkpoint_details = details.get("checkpoint")
+            checkpoint_start_monotonic_ns = None
+            if isinstance(checkpoint_details, dict):
+                checkpoint_start_monotonic_ns = checkpoint_details.get("start_monotonic_ns")
+            restore_start_monotonic_ns = restore_details.get("start_monotonic_ns")
+            if isinstance(checkpoint_start_monotonic_ns, int):
+                smoke_details["request_started_before_checkpoint"] = (
+                    request_monotonic_ns <= checkpoint_start_monotonic_ns
+                )
+            elif isinstance(restore_start_monotonic_ns, int):
+                smoke_details["request_started_before_checkpoint"] = (
+                    request_monotonic_ns <= restore_start_monotonic_ns
+                )
 
     response_record = _latest_smoke_response_record(run_dir)
     if response_record is None:
@@ -479,6 +510,7 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
             smoke_preemption=records["smoke_preemption.json"],
             request_id=request_id,
             smoke_response=_latest_smoke_response_record(run_dir),
+            smoke_request=_latest_smoke_request_record(run_dir),
         )
     finally:
         if runtime_adapter is not None and runtime_session is not None:

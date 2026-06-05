@@ -191,7 +191,7 @@ def test_external_server_returns_timeout_when_models_endpoint_never_becomes_read
     assert session.smoke_validation["status"] == "timeout"
     assert (
         session.smoke_validation["classification"]
-        == SmokeClassification.SMOKE_HUNG.value
+        == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
     )
     assert runner.calls == []
     assert probe_calls == [{"base_url": "http://localhost:8000/v1", "timeout_s": 5.0}]
@@ -349,10 +349,33 @@ def test_docker_server_returns_timeout_when_models_endpoint_never_becomes_ready(
     assert session.smoke_validation["status"] == "timeout"
     assert (
         session.smoke_validation["classification"]
-        == SmokeClassification.SMOKE_HUNG.value
+        == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
     )
     assert runner.calls == [command]
     assert probe_calls == [{"base_url": "http://127.0.0.1:8012/v1", "timeout_s": 6.0}]
+
+
+def test_docker_server_config_error_is_not_restore_path_failure():
+    from ai_runtime_experiments.runtime_adapters import VLLMRuntimeAdapter
+
+    runner = RecordingRunner({})
+    adapter = VLLMRuntimeAdapter(
+        config={"docker_server": {"enabled": True, "model": ""}},
+        runner=runner,
+    )
+
+    session = adapter.start(run_id="task-7")
+
+    assert session.status == ProbeStatus.ERROR
+    assert session.runtime_check["status"] == "error"
+    assert session.smoke_validation is not None
+    assert session.smoke_validation["status"] == "error"
+    assert (
+        session.smoke_validation["classification"]
+        == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
+    )
+    assert runner.calls == []
+
 
 
 def test_docker_server_missing_binary_is_unsupported():

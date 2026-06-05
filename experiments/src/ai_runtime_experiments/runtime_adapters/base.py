@@ -33,8 +33,8 @@ class BaseRuntimeAdapter(ABC):
 _UNAVAILABLE_CLASSIFICATION = {
     ProbeStatus.SKIPPED: SmokeClassification.SMOKE_NOT_ATTEMPTED,
     ProbeStatus.UNSUPPORTED: SmokeClassification.SMOKE_NOT_SUPPORTED,
-    ProbeStatus.ERROR: SmokeClassification.SMOKE_RUNTIME_FAILED,
-    ProbeStatus.TIMEOUT: SmokeClassification.SMOKE_HUNG,
+    ProbeStatus.ERROR: SmokeClassification.SMOKE_NOT_ATTEMPTED,
+    ProbeStatus.TIMEOUT: SmokeClassification.SMOKE_NOT_ATTEMPTED,
 }
 
 
