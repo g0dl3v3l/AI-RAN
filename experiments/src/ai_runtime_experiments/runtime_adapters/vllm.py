@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import re
+import time
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
+from urllib import error, request
 
 from ai_runtime_experiments.docker_criu.probe import _classify_result
 from ai_runtime_experiments.runtime_adapters.base import (
@@ -24,6 +26,8 @@ EXPERIMENT_LABEL_VALUE = "v0"
 EXPERIMENT_COMPONENT_LABEL_KEY = "ai-edge-component"
 EXPERIMENT_COMPONENT_LABEL_VALUE = "vllm-runtime"
 EXPERIMENT_RUN_ID_LABEL_KEY = "ai-edge-run-id"
+DEFAULT_READINESS_REQUEST_TIMEOUT_S = 2.0
+DEFAULT_READINESS_POLL_INTERVAL_S = 0.5
 _DOCKER_NAME_SAFE_RE = re.compile(r"[^a-z0-9_.-]+")
 
 
@@ -138,6 +142,52 @@ def _normalize_base_url(base_url: str | None) -> str | None:
 
 
 
+def _models_url(base_url: str) -> str:
+    return f"{base_url}/models"
+
+
+
+def _probe_vllm_readiness(*, base_url: str, timeout_s: float) -> tuple[ProbeStatus, dict[str, Any]]:
+    models_url = _models_url(base_url)
+    attempts = 0
+    last_error: str | None = None
+    total_timeout_s = max(float(timeout_s), 0.0)
+    request_timeout_s = max(
+        0.1,
+        min(
+            DEFAULT_READINESS_REQUEST_TIMEOUT_S,
+            total_timeout_s or DEFAULT_READINESS_REQUEST_TIMEOUT_S,
+        ),
+    )
+    deadline = time.monotonic() + total_timeout_s
+
+    while True:
+        attempts += 1
+        try:
+            with request.urlopen(models_url, timeout=request_timeout_s) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            if isinstance(payload, Mapping) and isinstance(payload.get("data"), list):
+                return ProbeStatus.OK, {
+                    "models_url": models_url,
+                    "attempts": attempts,
+                }
+            last_error = "response missing OpenAI-compatible models data"
+        except (error.URLError, TimeoutError, OSError, ValueError) as exc:
+            last_error = f"{type(exc).__name__}: {exc}"
+
+        remaining_s = deadline - time.monotonic()
+        if remaining_s <= 0:
+            return ProbeStatus.TIMEOUT, {
+                "models_url": models_url,
+                "attempts": attempts,
+                "reason": "timed out waiting for /v1/models",
+                "last_error": last_error,
+            }
+
+        time.sleep(min(DEFAULT_READINESS_POLL_INTERVAL_S, remaining_s))
+
+
+
 def _command_details(result: CommandResult) -> dict[str, Any]:
     return {
         "argv": result.argv,
@@ -178,31 +228,26 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
         config: Mapping[str, Any],
         runner=run_command,
         timeout_s: float = 30.0,
+        readiness_probe: Callable[..., tuple[ProbeStatus, dict[str, Any]]] = _probe_vllm_readiness,
     ) -> None:
         self.config = dict(config)
         self.runner = runner
         self.timeout_s = timeout_s
+        self.readiness_probe = readiness_probe
 
     def start(self, *, run_id: str) -> RuntimeSession:
         external_config = _mapping(self.config.get("external_server"))
         external_base_url = _normalize_base_url(external_config.get("base_url"))
         if external_base_url is not None:
-            runtime_check = make_probe_result(
+            return self._resolve_ready_session(
                 run_id=run_id,
-                component="runtime_check",
-                status=ProbeStatus.OK,
+                mode="external_server",
+                base_url=external_base_url,
                 details={
                     "runtime": "vllm",
                     "mode": "external_server",
                     "base_url": external_base_url,
                 },
-            )
-            return RuntimeSession(
-                runtime="vllm",
-                mode="external_server",
-                status=ProbeStatus.OK,
-                base_url=external_base_url,
-                runtime_check=runtime_check,
             )
 
         docker_config = _mapping(self.config.get("docker_server"))
@@ -232,6 +277,68 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
             status=ProbeStatus.SKIPPED,
             runtime_check=runtime_check,
             smoke_validation=smoke_validation,
+        )
+
+    def _resolve_ready_session(
+        self,
+        *,
+        run_id: str,
+        mode: str,
+        base_url: str,
+        details: Mapping[str, Any],
+        container_name: str | None = None,
+        container_id: str | None = None,
+    ) -> RuntimeSession:
+        status, readiness_details = self.readiness_probe(
+            base_url=base_url,
+            timeout_s=self.timeout_s,
+        )
+        merged_details = dict(details)
+        merged_details.update(readiness_details)
+
+        if status != ProbeStatus.OK:
+            reason = str(merged_details.get("reason") or _reason_for_status(status=status, mode=mode))
+            merged_details["reason"] = reason
+            runtime_check = make_probe_result(
+                run_id=run_id,
+                component="runtime_check",
+                status=status,
+                details=merged_details,
+            )
+            smoke_validation = make_unavailable_smoke_validation(
+                run_id=run_id,
+                status=status,
+                reason=reason,
+                details={
+                    "runtime": "vllm",
+                    "mode": mode,
+                    "base_url": base_url,
+                },
+            )
+            return RuntimeSession(
+                runtime="vllm",
+                mode=mode,
+                status=status,
+                runtime_check=runtime_check,
+                smoke_validation=smoke_validation,
+                container_name=container_name,
+                container_id=container_id,
+            )
+
+        runtime_check = make_probe_result(
+            run_id=run_id,
+            component="runtime_check",
+            status=ProbeStatus.OK,
+            details=merged_details,
+        )
+        return RuntimeSession(
+            runtime="vllm",
+            mode=mode,
+            status=ProbeStatus.OK,
+            base_url=base_url,
+            runtime_check=runtime_check,
+            container_name=container_name,
+            container_id=container_id,
         )
 
     def stop(self, session: RuntimeSession) -> dict[str, Any] | None:
@@ -363,9 +470,7 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
         )
         result = self.runner(command, timeout_s=self.timeout_s)
         status = result.status if result.status != ProbeStatus.ERROR else ProbeStatus.ERROR
-        base_url = (
-            f"http://127.0.0.1:{host_port}/v1" if status == ProbeStatus.OK else None
-        )
+        base_url = f"http://127.0.0.1:{host_port}/v1"
         container_id = result.stdout.strip() or None
         details: dict[str, Any] = {
             "runtime": "vllm",
@@ -380,33 +485,36 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
         }
         if container_id is not None:
             details["container"]["id"] = container_id
-        if base_url is not None:
-            details["base_url"] = base_url
         if status != ProbeStatus.OK:
             details["reason"] = _reason_for_status(status=status, mode="docker_server")
-
-        runtime_check = make_probe_result(
-            run_id=run_id,
-            component="runtime_check",
-            status=status,
-            details=details,
-        )
-        smoke_validation = None
-        if status != ProbeStatus.OK:
+            runtime_check = make_probe_result(
+                run_id=run_id,
+                component="runtime_check",
+                status=status,
+                details=details,
+            )
             smoke_validation = make_unavailable_smoke_validation(
                 run_id=run_id,
                 status=status,
                 reason=details["reason"],
                 details={"runtime": "vllm", "mode": "docker_server"},
             )
+            return RuntimeSession(
+                runtime="vllm",
+                mode="docker_server",
+                status=status,
+                runtime_check=runtime_check,
+                smoke_validation=smoke_validation,
+                container_name=container_name,
+                container_id=container_id,
+            )
 
-        return RuntimeSession(
-            runtime="vllm",
+        details["base_url"] = base_url
+        return self._resolve_ready_session(
+            run_id=run_id,
             mode="docker_server",
-            status=status,
-            runtime_check=runtime_check,
             base_url=base_url,
-            smoke_validation=smoke_validation,
+            details=details,
             container_name=container_name,
             container_id=container_id,
         )
