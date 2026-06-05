@@ -48,3 +48,10 @@
 - Task-7 runtime config is intentionally minimal and mapping-based until the later orchestrator/config task lands: `external_server.base_url` is enough to use an existing server, while `docker_server.enabled` is the explicit opt-in gate for starting an experiment-owned vLLM container.
 - Docker vLLM startup binds only `127.0.0.1:<port>:8000` on the host while serving on `0.0.0.0` inside the container, preserving localhost-only exposure without blocking OpenAI-compatible requests from the smoke client.
 - Non-runnable runtime states are converted immediately into smoke-validation records in the adapter layer: `skipped -> smoke_not_attempted`, `unsupported -> smoke_not_supported`, `error -> smoke_runtime_failed`, and `timeout -> smoke_hung`.
+
+
+## 2026-06-05 00:49:06Z
+
+- Task 8 stays deliberately split into two pure helper layers: `preemption.smoke.collect_smoke_preemption(...)` produces the raw checkpoint/restore attempt artifact, and `validation.smoke.classify_smoke_validation(...)` maps that artifact (or a pre-existing runtime validation) into the final smoke classification.
+- Unsupported Docker/CRIU prerequisites are preserved as `smoke_preemption.status == unsupported`, but all other non-attempted prerequisites (missing record, runtime not OK, no runtime-owned container) are normalized to `status == skipped` so later orchestration can distinguish "cannot attempt" from "attempted and failed".
+- Task-7 runtime-level smoke validation remains authoritative when present; Task-8 validation reuses that record verbatim instead of overwriting `smoke_not_supported`/`smoke_runtime_failed` decisions for runtimes that never became preemptible.
