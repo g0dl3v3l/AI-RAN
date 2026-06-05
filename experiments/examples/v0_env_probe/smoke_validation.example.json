@@ -1,0 +1,26 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "example-v0-run-ok",
+  "request_id": "req-example-0001",
+  "status": "ok",
+  "classification": "smoke_completed_after_restore",
+  "timestamp_utc": "2026-06-05T01:10:00Z",
+  "monotonic_ns": 123456789012345,
+  "details": {
+    "reason": "smoke request completed after restore",
+    "preemption_status": "ok",
+    "preemption": {
+      "reason": "smoke request completed after restore",
+      "outcome": "restored",
+      "smoke": {
+        "attempted": true
+      },
+      "checkpoint": {
+        "attempted": true
+      },
+      "restore": {
+        "attempted": true
+      }
+    }
+  }
+}

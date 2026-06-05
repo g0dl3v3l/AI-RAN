@@ -1,0 +1,36 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "example-v0-run-unsupported",
+  "status": "unsupported",
+  "component": "docker_criu_integration",
+  "timestamp_utc": "2026-06-05T01:12:00Z",
+  "monotonic_ns": 123456789045678,
+  "details": {
+    "commands": {
+      "docker_checkpoint_help": {
+        "argv": [
+          "docker",
+          "checkpoint",
+          "--help"
+        ],
+        "status": "error",
+        "returncode": 125,
+        "stdout": "",
+        "stderr": "docker: 'checkpoint' is not a docker command.\nSee 'docker --help'.\n",
+        "timed_out": false,
+        "duration_s": 0.018,
+        "error_type": null,
+        "error_message": null
+      }
+    },
+    "container": {
+      "name": "ai-edge-v0-criu-example-abc123",
+      "checkpoint_name": "ai-edge-v0-criu-checkpoint",
+      "image": "busybox:1.36"
+    },
+    "smoke": {
+      "attempted": false
+    },
+    "reason": "unsupported capability: docker checkpoint --help"
+  }
+}
