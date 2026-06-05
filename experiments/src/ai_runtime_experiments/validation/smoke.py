@@ -43,6 +43,14 @@ def _status_from_record(record: Mapping[str, Any] | None) -> ProbeStatus | None:
 
 
 
+def _phase_was_attempted(details: Mapping[str, Any], phase_name: str) -> bool:
+    phase = details.get(phase_name)
+    if not isinstance(phase, Mapping):
+        return False
+    return bool(phase.get("attempted"))
+
+
+
 def make_smoke_completed_after_restore_validation(
     *,
     run_id: str,
@@ -174,9 +182,11 @@ def _smoke_response_evidence(
     restore_details = preemption_details.get("restore")
 
     request_status_raw = None
+    request_status = None
     request_monotonic_ns = None
     if isinstance(smoke_request, Mapping):
         request_status_raw = smoke_request.get("status")
+        request_status = _status_from_record(smoke_request)
         raw_request_monotonic_ns = smoke_request.get("monotonic_ns")
         if isinstance(raw_request_monotonic_ns, int):
             request_monotonic_ns = raw_request_monotonic_ns
@@ -195,15 +205,6 @@ def _smoke_response_evidence(
     response_completed_before_restore = False
     response_completed_after_restore = False
     if isinstance(smoke_details, Mapping):
-        if request_status_raw is None:
-            request_status_raw = smoke_details.get("request_status")
-        if request_monotonic_ns is None:
-            raw_request_monotonic_ns = smoke_details.get("request_monotonic_ns")
-            if isinstance(raw_request_monotonic_ns, int):
-                request_monotonic_ns = raw_request_monotonic_ns
-        request_started_before_checkpoint = bool(
-            smoke_details.get("request_started_before_checkpoint")
-        )
         if response_status_raw is None:
             response_status_raw = smoke_details.get("response_status")
         if response_monotonic_ns is None:
@@ -233,7 +234,7 @@ def _smoke_response_evidence(
         if isinstance(raw_restore_end_monotonic_ns, int):
             restore_end_monotonic_ns = raw_restore_end_monotonic_ns
 
-    if isinstance(request_monotonic_ns, int):
+    if request_status == ProbeStatus.OK and isinstance(request_monotonic_ns, int):
         if isinstance(checkpoint_start_monotonic_ns, int):
             request_started_before_checkpoint = request_monotonic_ns <= checkpoint_start_monotonic_ns
         elif isinstance(restore_start_monotonic_ns, int):
@@ -301,6 +302,16 @@ def classify_smoke_validation(
         )
 
     if status == ProbeStatus.SKIPPED or outcome == "not_attempted":
+        return make_smoke_not_attempted_validation(
+            run_id=run_id,
+            request_id=request_id,
+            reason=reason,
+            details=validation_details,
+        )
+
+    if not _phase_was_attempted(preemption_details, "checkpoint") and not _phase_was_attempted(
+        preemption_details, "restore"
+    ):
         return make_smoke_not_attempted_validation(
             run_id=run_id,
             request_id=request_id,

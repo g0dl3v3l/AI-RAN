@@ -200,25 +200,26 @@ PY
 | Docker + CRIU smoke path | `docker_criu_integration.json` | `status == "ok"` | Docker checkpoint and restore worked for the experiment-owned BusyBox smoke container. This is the Docker + CRIU proof point. |
 | vLLM startup | live `curl -sS http://localhost:8000/v1/models` and `runtime_check.json` | curl returns JSON and `runtime_check.json.status == "ok"` | The vLLM runtime came up and answered the OpenAI-compatible API before the full probe. |
 | vLLM restore step | `smoke_preemption.json` | `status == "ok"` and `details.outcome == "restored"` | The experiment-owned vLLM container reached checkpoint, stop, restore, and post-restore `docker inspect` successfully. |
-| In-flight request completed | `smoke_validation.json` and `smoke_response.jsonl` | `classification` is `smoke_completed_after_restore`, and the last response record has `status == "ok"` | The request produced a successful response after restore completion. Current V0 does not implement or verify a replay execution path. |
+| In-flight request completed | `smoke_validation.json`, `smoke_request.jsonl`, and `smoke_response.jsonl` | `classification` is `smoke_completed_after_restore`, the request record started before checkpoint/restore timing, and the last response record has `status == "ok"` after restore completion | The request was already in flight before checkpoint/restore timing and produced a successful response after restore completion. Current V0 does not implement or verify a replay execution path. |
 
 Use `smoke_validation.json` as the final decision record.
 
 | `smoke_validation.json.classification` | Meaning | Verdict |
 | --- | --- | --- |
-| `smoke_completed_after_restore` | The strongest V0 result. A successful smoke response was observed after restore completed. | pass |
+| `smoke_completed_after_restore` | The strongest V0 result. A request-start record was observed before checkpoint/restore timing and a successful smoke response was observed after restore completed. | pass |
 | `smoke_replayed` | Reserved for a future explicit replay flow. Current V0 does not execute or verify replay, so this classification should not be treated as a V0 success signal. | not expected in current V0 |
 | `smoke_failed_restore` | The checkpoint or restore command failed. Check `smoke_preemption.json.details.commands`. | fail |
 | `smoke_runtime_failed` | Restore commands returned, but the runtime container was not running after restore. | fail |
-| `smoke_hung` | A checkpoint, restore, or follow-up probe timed out. | fail |
+| `smoke_hung` | A checkpoint, restore, or follow-up probe timed out after the preemption path was attempted. Runtime startup timeouts before preemption are `smoke_not_attempted`. | fail |
 | `smoke_not_supported` | The host or Docker daemon does not support the required checkpoint path. | expected unsupported |
-| `smoke_not_attempted` | The runtime never became preemptible, or no successful post-restore response was proven, or you only ran the dry-run path. | expected skipped |
+| `smoke_not_attempted` | The runtime never became preemptible, runtime startup failed or timed out before preemption, no request-start evidence before checkpoint/restore was proven, no successful post-restore response was proven, or you only ran the dry-run path. | expected skipped |
 
 `docker_criu_integration.json.status == "ok"` by itself is not enough to claim vLLM checkpoint success. That file only proves the Docker + CRIU smoke path worked on the experiment-owned CPU container. To claim the full V0 path worked, you need all of these together:
 
 * `docker_criu_integration.json.status == "ok"`
 * `runtime_check.json.status == "ok"`
 * `smoke_preemption.json.status == "ok"`
+* `smoke_request.jsonl` contains the request record used as pre-restore start evidence
 * `smoke_validation.json.classification == "smoke_completed_after_restore"`
 
 For later automation, keep `experiments/examples/v0_env_probe/verification_checklist.example.json` next to the run artifacts and evaluate the checks in order. The JSON file uses the same layer names, artifact names, and result meanings as this section.

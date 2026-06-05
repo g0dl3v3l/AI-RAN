@@ -61,6 +61,58 @@ def test_skipped_preemption_classified_as_smoke_not_attempted():
     assert record["request_id"] == "req-skip"
 
 
+def test_runtime_start_error_before_preemption_is_not_restore_path_failure():
+    from ai_runtime_experiments.validation import classify_smoke_validation
+
+    record = classify_smoke_validation(
+        run_id="task-8",
+        runtime_session=_runtime_session(),
+        smoke_preemption=make_probe_result(
+            run_id="task-8",
+            component="smoke_preemption",
+            status=ProbeStatus.ERROR,
+            details={
+                "reason": "runtime session is not preemptible: error",
+                "outcome": "runtime_failed",
+                "smoke": {"attempted": False},
+                "checkpoint": {"attempted": False},
+                "restore": {"attempted": False},
+            },
+        ),
+        request_id="req-runtime-error",
+    )
+
+    assert record["status"] == "skipped"
+    assert record["classification"] == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
+
+
+
+def test_runtime_start_timeout_before_preemption_is_not_restore_path_hung():
+    from ai_runtime_experiments.validation import classify_smoke_validation
+
+    record = classify_smoke_validation(
+        run_id="task-8",
+        runtime_session=_runtime_session(),
+        smoke_preemption=make_probe_result(
+            run_id="task-8",
+            component="smoke_preemption",
+            status=ProbeStatus.TIMEOUT,
+            details={
+                "reason": "runtime session is not preemptible: timeout",
+                "outcome": "hung",
+                "smoke": {"attempted": False},
+                "checkpoint": {"attempted": False},
+                "restore": {"attempted": False},
+            },
+        ),
+        request_id="req-runtime-timeout",
+    )
+
+    assert record["status"] == "skipped"
+    assert record["classification"] == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
+
+
+
 def test_checkpoint_error_classified_as_smoke_failed_restore():
     from ai_runtime_experiments.validation import classify_smoke_validation
 
@@ -235,6 +287,44 @@ def test_restored_preemption_without_request_started_before_checkpoint_is_not_at
 
 
 
+def test_restored_preemption_without_request_artifact_is_not_completed_after_restore():
+    from ai_runtime_experiments.validation import classify_smoke_validation
+
+    record = classify_smoke_validation(
+        run_id="task-8",
+        runtime_session=_runtime_session(),
+        smoke_preemption=make_probe_result(
+            run_id="task-8",
+            component="smoke_preemption",
+            status=ProbeStatus.OK,
+            details={
+                "reason": "checkpoint and restore completed",
+                "outcome": "restored",
+                "smoke": {
+                    "attempted": True,
+                    "request_monotonic_ns": 100,
+                    "response_monotonic_ns": 400,
+                },
+                "checkpoint": {
+                    "attempted": True,
+                    "start_monotonic_ns": 200,
+                },
+                "restore": {
+                    "attempted": True,
+                    "end_monotonic_ns": 300,
+                },
+            },
+        ),
+        smoke_response={"status": ProbeStatus.OK.value, "monotonic_ns": 400},
+        request_id="req-no-request-artifact",
+    )
+
+    assert record["status"] == "skipped"
+    assert record["classification"] == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
+    assert "request was not observed before checkpoint" in record["details"]["reason"]
+
+
+
 def test_restored_preemption_with_request_before_checkpoint_and_response_after_restore_succeeds():
     from ai_runtime_experiments.validation import classify_smoke_validation
 
@@ -263,6 +353,7 @@ def test_restored_preemption_with_request_before_checkpoint_and_response_after_r
                 },
             },
         ),
+        smoke_request={"status": ProbeStatus.OK.value, "monotonic_ns": 100},
         smoke_response={"status": ProbeStatus.OK.value, "monotonic_ns": 400},
         request_id="req-post-restore",
     )
