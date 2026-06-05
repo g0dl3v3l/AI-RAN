@@ -42,3 +42,10 @@
 - Added Task-6 CUDA and MPS probes that keep per-command metadata under `details.commands` and extract lightweight runtime facts (`driver_version`, `cuda_version`, MPS binary/control-pipe presence) for downstream orchestration.
 - Real-host verification showed the CUDA probe can pull and run `nvidia/cuda:12.4.1-base-ubuntu22.04` successfully on this host, producing `cuda_check.json.status == "ok"` with extracted driver `580.159.04` and CUDA `13.0`.
 - The default MPS CLI path stays strictly read-only: it records `nvidia-cuda-mps-control` availability and control-pipe state without attempting daemon start/stop unless explicitly opted in.
+
+
+## 2026-06-05 00:34:56Z
+
+- Added a reusable Task-7 runtime contract with `RuntimeSession`, shared smoke-validation helpers, and a `VLLMRuntimeAdapter` that can resolve an existing OpenAI-compatible base URL, launch an experiment-owned localhost-only Docker vLLM server, or explicitly classify the runtime as `skipped` when nothing is configured.
+- The vLLM adapter now emits `runtime_check` records plus an immediate smoke-validation classification for non-runnable states, including the required `smoke_not_attempted` path for the default-safe skipped mode.
+- Added a stdlib-based `LLMSmokeClient` that appends `smoke_request.jsonl` and `smoke_response.jsonl` with a stable `request_id`, so later orchestration/preemption tasks can build on deterministic smoke artifacts without pulling in a full OpenAI SDK.
