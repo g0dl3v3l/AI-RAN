@@ -49,3 +49,10 @@
 - Added a reusable Task-7 runtime contract with `RuntimeSession`, shared smoke-validation helpers, and a `VLLMRuntimeAdapter` that can resolve an existing OpenAI-compatible base URL, launch an experiment-owned localhost-only Docker vLLM server, or explicitly classify the runtime as `skipped` when nothing is configured.
 - The vLLM adapter now emits `runtime_check` records plus an immediate smoke-validation classification for non-runnable states, including the required `smoke_not_attempted` path for the default-safe skipped mode.
 - Added a stdlib-based `LLMSmokeClient` that appends `smoke_request.jsonl` and `smoke_response.jsonl` with a stable `request_id`, so later orchestration/preemption tasks can build on deterministic smoke artifacts without pulling in a full OpenAI SDK.
+
+
+## 2026-06-05 00:49:06Z
+
+- Task-8 smoke preemption now treats the Task-7 runtime session as the ownership gate: only `docker_server` sessions with both `container_name` and `container_id` reach checkpoint commands; external/no-container sessions cleanly return `smoke_preemption.status == skipped` with `outcome == not_attempted`.
+- Reusing the Docker/CRIU command classifiers keeps checkpoint capability failures (`docker checkpoint create`, `docker start --checkpoint`) mapped to `unsupported` without crashing, while hard command errors still stay distinct for `smoke_failed_restore` classification.
+- Smoke validation now derives publishable smoke outcomes from the preemption artifact shape: skipped → `smoke_not_attempted`, unsupported → `smoke_not_supported`, checkpoint/restore command errors → `smoke_failed_restore`, and successful restore defaults to `smoke_completed_after_restore` unless a later orchestrator marks replay.
