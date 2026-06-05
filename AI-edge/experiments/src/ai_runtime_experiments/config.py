@@ -10,6 +10,7 @@ import yaml
 from ai_runtime_experiments.docker_criu.probe import (
     DEFAULT_CHECKPOINT_NAME,
     DEFAULT_SMOKE_IMAGE,
+    DEFAULT_SMOKE_RUNTIME,
 )
 from ai_runtime_experiments.env_probe.cuda import DEFAULT_CUDA_IMAGE
 from ai_runtime_experiments.env_probe.mps import (
@@ -62,9 +63,10 @@ _DEFAULT_PROBE_OPTIONS = {
     "docker": {"timeout_s": 5.0},
     "criu": {"timeout_s": 10.0},
     "docker_criu_integration": {
-        "timeout_s": 10.0,
+        "timeout_s": 60.0,
         "checkpoint_name": DEFAULT_CHECKPOINT_NAME,
         "smoke_image": DEFAULT_SMOKE_IMAGE,
+        "smoke_runtime": DEFAULT_SMOKE_RUNTIME,
     },
     "cuda": {
         "timeout_s": 120.0,
@@ -76,9 +78,9 @@ _DEFAULT_PROBE_OPTIONS = {
         "control_binary": DEFAULT_MPS_CONTROL_BINARY,
         "control_pipe_path": DEFAULT_MPS_CONTROL_PIPE_PATH,
     },
-    "runtime": {"timeout_s": 30.0},
+    "runtime": {"timeout_s": 180.0},
     "preemption": {
-        "timeout_s": 10.0,
+        "timeout_s": 180.0,
         "checkpoint_name": DEFAULT_CHECKPOINT_NAME,
     },
 }
