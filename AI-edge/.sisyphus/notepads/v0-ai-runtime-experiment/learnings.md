@@ -56,3 +56,10 @@
 - Task-8 smoke preemption now treats the Task-7 runtime session as the ownership gate: only `docker_server` sessions with both `container_name` and `container_id` reach checkpoint commands; external/no-container sessions cleanly return `smoke_preemption.status == skipped` with `outcome == not_attempted`.
 - Reusing the Docker/CRIU command classifiers keeps checkpoint capability failures (`docker checkpoint create`, `docker start --checkpoint`) mapped to `unsupported` without crashing, while hard command errors still stay distinct for `smoke_failed_restore` classification.
 - Smoke validation now derives publishable smoke outcomes from the preemption artifact shape: skipped → `smoke_not_attempted`, unsupported → `smoke_not_supported`, checkpoint/restore command errors → `smoke_failed_restore`, and successful restore defaults to `smoke_completed_after_restore` unless a later orchestrator marks replay.
+
+
+## 2026-06-05 01:06:00Z
+
+- Added `config.py` with a safe YAML loader, required-key validation, deterministic default filling for probe/runtime settings, and a `ResolvedConfig` contract that normalizes `output_dir`, `run_id`, and CLI dry-run overrides.
+- Added `v0_orchestrator.py` to create the exact requested run directory, copy the resolved config to `config.yaml`, write `run_metadata.json`, run the Task-4 through Task-8 probe/runtime layers in sequence, and always emit the full V0 artifact set.
+- Dry-run now bypasses Docker/GPU/vLLM entirely while still writing every required artifact, using deterministic skipped/not-attempted placeholder records for runtime, smoke request/response, preemption, and validation.
