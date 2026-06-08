@@ -28,6 +28,7 @@ EXPERIMENT_COMPONENT_LABEL_VALUE = "vllm-runtime"
 EXPERIMENT_RUN_ID_LABEL_KEY = "ai-edge-run-id"
 DEFAULT_READINESS_REQUEST_TIMEOUT_S = 2.0
 DEFAULT_READINESS_POLL_INTERVAL_S = 0.5
+DEFAULT_IMAGE_PULL_TIMEOUT_S = 1800.0
 _DOCKER_NAME_SAFE_RE = re.compile(r"[^a-z0-9_.-]+")
 
 
@@ -425,6 +426,9 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
         )
         image = str(docker_config.get("image") or DEFAULT_DOCKER_IMAGE)
         host_port = int(docker_config.get("port") or DEFAULT_HOST_PORT)
+        image_pull_timeout_s = float(
+            docker_config.get("image_pull_timeout_s") or DEFAULT_IMAGE_PULL_TIMEOUT_S
+        )
 
         if not model:
             status = ProbeStatus.ERROR
@@ -460,6 +464,85 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
                 container_name=container_name,
             )
 
+        base_url = f"http://127.0.0.1:{host_port}/v1"
+        details: dict[str, Any] = {
+            "runtime": "vllm",
+            "mode": "docker_server",
+            "commands": {},
+            "container": {
+                "name": container_name,
+                "image": image,
+                "host_port": host_port,
+                "container_port": DEFAULT_CONTAINER_PORT,
+            },
+        }
+
+        inspect_image_result = self.runner(
+            ["docker", "image", "inspect", image],
+            timeout_s=self.timeout_s,
+        )
+        details["commands"]["docker_image_inspect"] = _command_details(inspect_image_result)
+        inspect_status, inspect_reason = _classify_result(
+            inspect_image_result,
+            command_label="docker image inspect",
+            capability_sensitive=True,
+        )
+        if inspect_status == ProbeStatus.UNSUPPORTED:
+            details["reason"] = inspect_reason or "docker image inspect is unavailable"
+            runtime_check = make_probe_result(
+                run_id=run_id,
+                component="runtime_check",
+                status=ProbeStatus.UNSUPPORTED,
+                details=details,
+            )
+            smoke_validation = make_unavailable_smoke_validation(
+                run_id=run_id,
+                status=ProbeStatus.UNSUPPORTED,
+                reason=details["reason"],
+                details={"runtime": "vllm", "mode": "docker_server"},
+            )
+            return RuntimeSession(
+                runtime="vllm",
+                mode="docker_server",
+                status=ProbeStatus.UNSUPPORTED,
+                runtime_check=runtime_check,
+                smoke_validation=smoke_validation,
+                container_name=container_name,
+            )
+        if inspect_image_result.status != ProbeStatus.OK:
+            pull_result = self.runner(
+                ["docker", "pull", image],
+                timeout_s=image_pull_timeout_s,
+            )
+            details["commands"]["docker_pull"] = _command_details(pull_result)
+            pull_status, pull_reason = _classify_result(
+                pull_result,
+                command_label="docker pull",
+                capability_sensitive=True,
+            )
+            if pull_status != ProbeStatus.OK:
+                details["reason"] = pull_reason or "docker image pull failed"
+                runtime_check = make_probe_result(
+                    run_id=run_id,
+                    component="runtime_check",
+                    status=pull_status,
+                    details=details,
+                )
+                smoke_validation = make_unavailable_smoke_validation(
+                    run_id=run_id,
+                    status=pull_status,
+                    reason=details["reason"],
+                    details={"runtime": "vllm", "mode": "docker_server"},
+                )
+                return RuntimeSession(
+                    runtime="vllm",
+                    mode="docker_server",
+                    status=pull_status,
+                    runtime_check=runtime_check,
+                    smoke_validation=smoke_validation,
+                    container_name=container_name,
+                )
+
         command = build_vllm_docker_command(
             run_id=run_id,
             image=image,
@@ -469,20 +552,9 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
             extra_args=docker_config.get("extra_args"),
         )
         result = self.runner(command, timeout_s=self.timeout_s)
+        details["commands"]["docker_run"] = _command_details(result)
         status = result.status if result.status != ProbeStatus.ERROR else ProbeStatus.ERROR
-        base_url = f"http://127.0.0.1:{host_port}/v1"
         container_id = result.stdout.strip() or None
-        details: dict[str, Any] = {
-            "runtime": "vllm",
-            "mode": "docker_server",
-            "commands": {"docker_run": _command_details(result)},
-            "container": {
-                "name": container_name,
-                "image": image,
-                "host_port": host_port,
-                "container_port": DEFAULT_CONTAINER_PORT,
-            },
-        }
         if container_id is not None:
             details["container"]["id"] = container_id
         if status != ProbeStatus.OK:

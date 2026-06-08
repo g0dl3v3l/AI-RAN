@@ -52,6 +52,7 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     assert resolved.runtime_options["vllm"]["docker_server"]["model"] == (
         "meta-llama/Meta-Llama-3-8B-Instruct"
     )
+    assert resolved.runtime_options["vllm"]["docker_server"]["image_pull_timeout_s"] == 1800.0
     assert resolved.probe_options["cuda"]["image"] == "nvidia/cuda:12.4.1-base-ubuntu22.04"
     assert resolved.probe_options["docker_criu_integration"]["smoke_runtime"] == "runc"
     assert resolved.probe_options["docker_criu_integration"]["network_mode"] == "host"

@@ -31,6 +31,7 @@ runtime_options:
       port: 8000
       container_name: null
       extra_args: []
+      image_pull_timeout_s: 1800.0
       model: null
 
 probe_options:
