@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -17,6 +18,8 @@ from ai_runtime_experiments.utils.command import CommandResult, run_command
 DEFAULT_TIMEOUT_S = 10.0
 DEFAULT_SMOKE_IMAGE = "busybox:1.36"
 DEFAULT_SMOKE_RUNTIME = "runc"
+DEFAULT_SMOKE_NETWORK_MODE = "host"
+DEFAULT_POST_CHECKPOINT_DELAY_S = 5.0
 DEFAULT_CHECKPOINT_NAME = "ai-edge-v0-criu-checkpoint"
 _DEFAULT_LOOP_COMMAND = "while true; do sleep 1; done"
 _CRII_VERSION_RE = re.compile(r"(\d+\.\d+(?:\.\d+)*)")
@@ -189,6 +192,8 @@ def collect_docker_criu_integration(
     checkpoint_name: str = DEFAULT_CHECKPOINT_NAME,
     smoke_image: str = DEFAULT_SMOKE_IMAGE,
     smoke_runtime: str | None = DEFAULT_SMOKE_RUNTIME,
+    smoke_network_mode: str | None = DEFAULT_SMOKE_NETWORK_MODE,
+    post_checkpoint_delay_s: float = DEFAULT_POST_CHECKPOINT_DELAY_S,
 ) -> dict[str, Any]:
     resolved_container_name = container_name or build_experiment_container_name(run_id)
     if not resolved_container_name.startswith(EXPERIMENT_CONTAINER_NAME_PREFIX):
@@ -203,6 +208,8 @@ def collect_docker_criu_integration(
             "checkpoint_name": checkpoint_name,
             "image": smoke_image,
             "runtime": smoke_runtime,
+            "network_mode": smoke_network_mode,
+            "post_checkpoint_delay_s": post_checkpoint_delay_s,
         },
         "smoke": {"attempted": False},
     }
@@ -233,6 +240,8 @@ def collect_docker_criu_integration(
     ]
     if smoke_runtime:
         docker_run_argv.extend(["--runtime", smoke_runtime])
+    if smoke_network_mode:
+        docker_run_argv.extend(["--network", smoke_network_mode])
     docker_run_argv.extend(
         [
             "--name",
@@ -312,28 +321,12 @@ def collect_docker_criu_integration(
             details["cleanup_reason"] = cleanup_reason
         return _finalize_record(run_id=run_id, status=checkpoint_status, details=details)
 
-    stop_result = runner(["docker", "stop", resolved_container_name], timeout_s=timeout_s)
-    details["commands"]["docker_stop"] = _command_details(stop_result)
-    stop_status, stop_reason = _classify_result(
-        stop_result,
-        command_label="docker stop",
-    )
-    if stop_status != ProbeStatus.OK:
-        cleanup_result = _cleanup_owned_container(
-            container_name=resolved_container_name,
-            labels=labels,
-            runner=runner,
-            timeout_s=timeout_s,
-            details=details,
-        )
-        cleanup_status, cleanup_reason = _classify_result(
-            cleanup_result,
-            command_label="docker rm -f",
-        )
-        details["reason"] = stop_reason
-        if cleanup_status != ProbeStatus.OK:
-            details["cleanup_reason"] = cleanup_reason
-        return _finalize_record(run_id=run_id, status=stop_status, details=details)
+    if post_checkpoint_delay_s > 0:
+        time.sleep(post_checkpoint_delay_s)
+        details["commands"]["post_checkpoint_delay"] = {
+            "duration_s": post_checkpoint_delay_s,
+            "status": ProbeStatus.OK.value,
+        }
 
     start_result = runner(
         ["docker", "start", "--checkpoint", checkpoint_name, resolved_container_name],

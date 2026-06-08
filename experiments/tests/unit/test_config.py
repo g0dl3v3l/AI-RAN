@@ -54,6 +54,8 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     )
     assert resolved.probe_options["cuda"]["image"] == "nvidia/cuda:12.4.1-base-ubuntu22.04"
     assert resolved.probe_options["docker_criu_integration"]["smoke_runtime"] == "runc"
+    assert resolved.probe_options["docker_criu_integration"]["network_mode"] == "host"
+    assert resolved.probe_options["docker_criu_integration"]["post_checkpoint_delay_s"] == 5.0
     assert resolved.probe_options["docker_criu_integration"]["timeout_s"] == 60.0
     assert resolved.probe_options["runtime"]["timeout_s"] == 180.0
     assert resolved.probe_options["preemption"]["timeout_s"] == 180.0
