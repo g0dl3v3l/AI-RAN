@@ -1,0 +1,63 @@
+experiment_id: v0_env_probe
+version: v0
+runtime: llama_cpp
+model: gemma-3-1b-it-f16.gguf
+arm: env_probe
+workload:
+  prompt: Say smoke ok
+  temperature: 0.0
+  max_tokens: 32
+  timeout_s: 60.0
+preemption_policy:
+  mode: single_at_progress
+resource_delta: {}
+telemetry: {}
+output_dir: experiments/results/v0_env_probe
+seed: 0
+
+runtime_options:
+  llama_cpp:
+    external_server:
+      enabled: false
+      base_url: null
+    docker_server:
+      enabled: true
+      image: ghcr.io/ggml-org/llama.cpp:server
+      port: 8080
+      container_name: null
+      extra_args: []
+      image_pull_timeout_s: 900.0
+      host_model_dir: /home/netsys/llama-models
+      container_model_dir: /models
+      model_file: gemma-3-1b-it-f16.gguf
+      threads: 4
+      ctx_size: 2048
+      n_gpu_layers: 0
+
+probe_options:
+  hardware:
+    timeout_s: 5.0
+  docker:
+    timeout_s: 5.0
+  criu:
+    timeout_s: 10.0
+  docker_criu_integration:
+    timeout_s: 60.0
+    checkpoint_name: ai-edge-v0-criu-checkpoint
+    smoke_image: busybox:1.36
+    smoke_runtime: runc
+    network_mode: host
+    post_checkpoint_delay_s: 5.0
+  cuda:
+    timeout_s: 120.0
+    image: nvidia/cuda:12.4.1-base-ubuntu22.04
+  mps:
+    timeout_s: 5.0
+    allow_start_stop: false
+    control_binary: nvidia-cuda-mps-control
+    control_pipe_path: /tmp/nvidia-mps/control
+  runtime:
+    timeout_s: 120.0
+  preemption:
+    timeout_s: 180.0
+    checkpoint_name: ai-edge-v0-criu-checkpoint

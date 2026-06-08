@@ -109,6 +109,38 @@ def test_load_config_uses_safe_yaml_loader(tmp_path: Path):
 
 
 
+def test_load_config_supports_llama_cpp_runtime(tmp_path: Path):
+    config_path = _write_config(
+        tmp_path / "llama.yaml",
+        """
+        experiment_id: v0_env_probe
+        version: v0
+        runtime: llama_cpp
+        model: gemma-3-1b-it-f16.gguf
+        arm: env_probe
+        workload: {}
+        preemption_policy: {}
+        resource_delta: {}
+        telemetry: {}
+        output_dir: experiments/results/v0_env_probe
+        seed: 0
+        runtime_options:
+          llama_cpp:
+            docker_server:
+              enabled: true
+              host_model_dir: /home/netsys/llama-models
+        """,
+    )
+
+    resolved = load_config(config_path)
+
+    assert resolved.runtime == "llama_cpp"
+    assert resolved.runtime_options["llama_cpp"]["docker_server"]["model_file"] == "gemma-3-1b-it-f16.gguf"
+    assert resolved.runtime_options["llama_cpp"]["docker_server"]["host_model_dir"] == "/home/netsys/llama-models"
+    assert resolved.runtime_options["llama_cpp"]["docker_server"]["image"] == "ghcr.io/ggml-org/llama.cpp:server"
+
+
+
 def test_load_config_rejects_unsupported_runtime(tmp_path: Path):
     config_path = _write_config(
         tmp_path / "unsupported.yaml",

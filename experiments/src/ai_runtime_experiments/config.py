@@ -19,13 +19,21 @@ from ai_runtime_experiments.env_probe.mps import (
     DEFAULT_MPS_CONTROL_BINARY,
     DEFAULT_MPS_CONTROL_PIPE_PATH,
 )
+from ai_runtime_experiments.runtime_adapters.llama_cpp import (
+    DEFAULT_LLAMA_CPP_CTX_SIZE,
+    DEFAULT_LLAMA_CPP_HOST_PORT,
+    DEFAULT_LLAMA_CPP_IMAGE,
+    DEFAULT_LLAMA_CPP_IMAGE_PULL_TIMEOUT_S,
+    DEFAULT_LLAMA_CPP_MODEL_DIR,
+    DEFAULT_LLAMA_CPP_THREADS,
+)
 from ai_runtime_experiments.runtime_adapters.vllm import (
     DEFAULT_DOCKER_IMAGE,
     DEFAULT_HOST_PORT,
     DEFAULT_IMAGE_PULL_TIMEOUT_S,
 )
 
-_ALLOWED_RUNTIMES = {"vllm"}
+_ALLOWED_RUNTIMES = {"vllm", "llama_cpp"}
 _REQUIRED_KEYS = (
     "experiment_id",
     "version",
@@ -46,6 +54,26 @@ _DEFAULT_WORKLOAD = {
     "timeout_s": 30.0,
 }
 _DEFAULT_RUNTIME_OPTIONS = {
+    "llama_cpp": {
+        "external_server": {
+            "enabled": False,
+            "base_url": None,
+        },
+        "docker_server": {
+            "enabled": False,
+            "image": DEFAULT_LLAMA_CPP_IMAGE,
+            "port": DEFAULT_LLAMA_CPP_HOST_PORT,
+            "container_name": None,
+            "extra_args": [],
+            "image_pull_timeout_s": DEFAULT_LLAMA_CPP_IMAGE_PULL_TIMEOUT_S,
+            "host_model_dir": None,
+            "container_model_dir": DEFAULT_LLAMA_CPP_MODEL_DIR,
+            "model_file": None,
+            "threads": DEFAULT_LLAMA_CPP_THREADS,
+            "ctx_size": DEFAULT_LLAMA_CPP_CTX_SIZE,
+            "n_gpu_layers": 0,
+        },
+    },
     "vllm": {
         "external_server": {
             "enabled": False,
@@ -217,9 +245,9 @@ def load_config(
 
     model = raw_config.get("model")
     normalized_model = None if model is None else str(model).strip() or None
-    docker_server = runtime_options["vllm"]["docker_server"]
     if normalized_model is not None:
-        docker_server["model"] = normalized_model
+        runtime_options["vllm"]["docker_server"]["model"] = normalized_model
+        runtime_options["llama_cpp"]["docker_server"]["model_file"] = normalized_model
 
     seed_value = raw_config.get("seed")
     if seed_value is None:

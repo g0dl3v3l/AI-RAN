@@ -5,7 +5,12 @@ from pathlib import Path
 from typing import Sequence
 
 from ai_runtime_experiments.artifacts import write_json
-from ai_runtime_experiments.runtime_adapters import DEFAULT_DOCKER_IMAGE, VLLMRuntimeAdapter
+from ai_runtime_experiments.runtime_adapters import (
+    DEFAULT_DOCKER_IMAGE,
+    DEFAULT_LLAMA_CPP_IMAGE,
+    LlamaCppRuntimeAdapter,
+    VLLMRuntimeAdapter,
+)
 from ai_runtime_experiments.schemas import ProbeStatus
 from ai_runtime_experiments.utils.paths import ensure_run_dir
 from ai_runtime_experiments.workload import LLMSmokeClient
@@ -39,8 +44,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Start an experiment-owned vLLM Docker container instead of staying in skipped mode",
     )
     parser.add_argument(
+        "--runtime",
+        choices=["vllm", "llama_cpp"],
+        default="vllm",
+        help="Runtime adapter to use for the smoke request",
+    )
+    parser.add_argument(
         "--docker-image",
-        default=DEFAULT_DOCKER_IMAGE,
+        default="",
         help="Docker image used when --allow-docker-start is set",
     )
     parser.add_argument(
@@ -59,6 +70,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="EMPTY",
         help="Bearer token sent to OpenAI-compatible runtimes",
     )
+    parser.add_argument("--host-model-dir", default="", help="Host model directory for llama.cpp Docker mode")
+    parser.add_argument("--model-file", default="", help="GGUF model filename for llama.cpp Docker mode")
+    parser.add_argument("--threads", type=int, default=4, help="llama.cpp thread count")
+    parser.add_argument("--ctx-size", type=int, default=2048, help="llama.cpp context size")
+    parser.add_argument("--n-gpu-layers", type=int, default=0, help="llama.cpp GPU-offloaded layer count")
     return parser
 
 
@@ -74,12 +90,26 @@ def _resolve_output_dir(output_dir: str | Path) -> Path:
 
 
 def _build_runtime_config(args: argparse.Namespace) -> dict[str, object]:
+    image = args.docker_image or (
+        DEFAULT_LLAMA_CPP_IMAGE if args.runtime == "llama_cpp" else DEFAULT_DOCKER_IMAGE
+    )
     docker_server: dict[str, object] = {
         "enabled": args.allow_docker_start,
-        "image": args.docker_image,
-        "model": args.model,
+        "image": image,
         "port": args.docker_port,
     }
+    if args.runtime == "llama_cpp":
+        docker_server.update(
+            {
+                "host_model_dir": args.host_model_dir,
+                "model_file": args.model_file or args.model,
+                "threads": args.threads,
+                "ctx_size": args.ctx_size,
+                "n_gpu_layers": args.n_gpu_layers,
+            }
+        )
+    else:
+        docker_server["model"] = args.model
     if args.container_name:
         docker_server["container_name"] = args.container_name
     return {
@@ -96,7 +126,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(list(argv) if argv is not None else None)
     output_dir = _resolve_output_dir(args.output_dir)
 
-    adapter = VLLMRuntimeAdapter(config=_build_runtime_config(args))
+    adapter_cls = LlamaCppRuntimeAdapter if args.runtime == "llama_cpp" else VLLMRuntimeAdapter
+    adapter = adapter_cls(config=_build_runtime_config(args))
     session = adapter.start(run_id=args.run_id)
     write_json(output_dir / "runtime_check.json", session.runtime_check)
 
