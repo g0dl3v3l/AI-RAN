@@ -106,6 +106,7 @@ def build_llama_cpp_docker_command(
     threads: int = DEFAULT_LLAMA_CPP_THREADS,
     ctx_size: int = DEFAULT_LLAMA_CPP_CTX_SIZE,
     n_gpu_layers: int = 0,
+    network_mode: str | None = "host",
     extra_args: Sequence[str] | None = None,
 ) -> list[str]:
     model_path = f"{container_model_dir.rstrip('/')}/{model_file}"
@@ -116,8 +117,12 @@ def build_llama_cpp_docker_command(
         "--name",
         container_name,
         *build_llama_cpp_label_args(run_id),
-        "-p",
-        f"127.0.0.1:{host_port}:{DEFAULT_LLAMA_CPP_CONTAINER_PORT}",
+    ]
+    if network_mode:
+        command.extend(["--network", network_mode])
+    if network_mode != "host":
+        command.extend(["-p", f"127.0.0.1:{host_port}:{DEFAULT_LLAMA_CPP_CONTAINER_PORT}"])
+    command.extend([
         "-v",
         f"{host_model_dir}:{container_model_dir}:ro",
         image,
@@ -131,7 +136,7 @@ def build_llama_cpp_docker_command(
         str(threads),
         "--ctx-size",
         str(ctx_size),
-    ]
+    ])
     if n_gpu_layers > 0:
         command.extend(["--n-gpu-layers", str(n_gpu_layers)])
     if extra_args:
@@ -332,6 +337,7 @@ class LlamaCppRuntimeAdapter(BaseRuntimeAdapter):
         threads = int(docker_config.get("threads") or DEFAULT_LLAMA_CPP_THREADS)
         ctx_size = int(docker_config.get("ctx_size") or DEFAULT_LLAMA_CPP_CTX_SIZE)
         n_gpu_layers = int(docker_config.get("n_gpu_layers") or 0)
+        network_mode = str(docker_config.get("network_mode") or "host")
         image_pull_timeout_s = float(
             docker_config.get("image_pull_timeout_s") or DEFAULT_LLAMA_CPP_IMAGE_PULL_TIMEOUT_S
         )
@@ -348,6 +354,7 @@ class LlamaCppRuntimeAdapter(BaseRuntimeAdapter):
                 "host_model_dir": host_model_dir,
                 "container_model_dir": container_model_dir,
                 "model_file": model_file,
+                "network_mode": network_mode,
             },
         }
         if not model_file or not host_model_dir:
@@ -444,6 +451,7 @@ class LlamaCppRuntimeAdapter(BaseRuntimeAdapter):
             threads=threads,
             ctx_size=ctx_size,
             n_gpu_layers=n_gpu_layers,
+            network_mode=network_mode,
             extra_args=docker_config.get("extra_args"),
         )
         result = self.runner(command, timeout_s=self.timeout_s)

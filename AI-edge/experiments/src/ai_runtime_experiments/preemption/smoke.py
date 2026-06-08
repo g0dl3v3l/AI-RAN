@@ -1,25 +1,63 @@
 from __future__ import annotations
 
+import json
+import time
 from collections.abc import Callable, Mapping
 from typing import Any
 
 from ai_runtime_experiments.docker_criu.probe import (
     DEFAULT_CHECKPOINT_NAME,
+    DEFAULT_POST_CHECKPOINT_DELAY_S,
     _classify_result,
     _command_details,
     _status_from_probe,
 )
 from ai_runtime_experiments.runtime_adapters import RuntimeSession
-from ai_runtime_experiments.runtime_adapters.vllm import (
-    ensure_experiment_owned_vllm_container,
-    parse_vllm_label_mapping,
-)
 from ai_runtime_experiments.schemas import ProbeStatus, make_probe_result
 from ai_runtime_experiments.utils.command import CommandResult, run_command
 from ai_runtime_experiments.utils.time import monotonic_ns, utc_now_iso_z
 
 CommandRunner = Callable[..., CommandResult]
 DEFAULT_TIMEOUT_S = 10.0
+_ALLOWED_RUNTIME_COMPONENTS = {"vllm-runtime", "llama-cpp-runtime"}
+
+
+def _parse_label_mapping(text: str) -> dict[str, str] | None:
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(value, dict):
+        return None
+    return {key: item for key, item in value.items() if isinstance(key, str) and isinstance(item, str)}
+
+
+def _ensure_experiment_owned_runtime_container(
+    *,
+    container_name: str,
+    labels: Mapping[str, str],
+) -> None:
+    if not container_name.startswith("ai-edge-v0-"):
+        raise ValueError(
+            "refusing destructive Docker action because container is not experiment-owned: "
+            f"{container_name}"
+        )
+    if labels.get("ai-edge-experiment") != "v0":
+        raise ValueError(
+            "refusing destructive Docker action because container is not experiment-owned: "
+            f"{container_name}"
+        )
+    if labels.get("ai-edge-component") not in _ALLOWED_RUNTIME_COMPONENTS:
+        raise ValueError(
+            "refusing destructive Docker action because container is not experiment-owned: "
+            f"{container_name}"
+        )
+    run_id = labels.get("ai-edge-run-id")
+    if not isinstance(run_id, str) or not run_id.strip():
+        raise ValueError(
+            "refusing destructive Docker action because container is not experiment-owned: "
+            f"{container_name}"
+        )
 
 
 
@@ -104,6 +142,7 @@ def collect_smoke_preemption(
     runner: CommandRunner = run_command,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     checkpoint_name: str = DEFAULT_CHECKPOINT_NAME,
+    post_checkpoint_delay_s: float = DEFAULT_POST_CHECKPOINT_DELAY_S,
 ) -> dict[str, Any]:
     details = _base_details(
         runtime_session=runtime_session,
@@ -190,7 +229,7 @@ def collect_smoke_preemption(
             details=details,
         )
 
-    labels = parse_vllm_label_mapping(inspect_labels_result.stdout)
+    labels = _parse_label_mapping(inspect_labels_result.stdout)
     if labels is None:
         details["reason"] = "unable to parse docker inspect labels JSON"
         details["outcome"] = "not_attempted"
@@ -202,7 +241,7 @@ def collect_smoke_preemption(
 
     details["container"]["inspected_labels"] = labels
     try:
-        ensure_experiment_owned_vllm_container(container_name=container_name, labels=labels)
+        _ensure_experiment_owned_runtime_container(container_name=container_name, labels=labels)
     except ValueError as exc:
         details["reason"] = str(exc)
         details["outcome"] = "not_attempted"
@@ -248,32 +287,12 @@ def collect_smoke_preemption(
 
     restore_phase = details["restore"]
     _mark_phase_start(restore_phase)
-
-    stop_result = runner(["docker", "stop", container_name], timeout_s=timeout_s)
-    details["commands"]["docker_stop"] = _command_details(stop_result)
-    stop_status, stop_reason = _classify_result(
-        stop_result,
-        command_label="docker stop",
-    )
-    if stop_status != ProbeStatus.OK:
-        _mark_phase_end(
-            restore_phase,
-            status=stop_status,
-            reason=stop_reason,
-            command="docker_stop",
-        )
-        details["reason"] = stop_reason or "smoke restore stop failed"
-        if stop_status == ProbeStatus.UNSUPPORTED:
-            details["outcome"] = "not_supported"
-        elif stop_status == ProbeStatus.TIMEOUT:
-            details["outcome"] = "hung"
-        else:
-            details["outcome"] = "restore_failed"
-        return _finalize_smoke_preemption(
-            run_id=run_id,
-            status=stop_status,
-            details=details,
-        )
+    if post_checkpoint_delay_s > 0:
+        time.sleep(post_checkpoint_delay_s)
+        details["commands"]["post_checkpoint_delay"] = {
+            "duration_s": post_checkpoint_delay_s,
+            "status": ProbeStatus.OK.value,
+        }
 
     start_result = runner(
         ["docker", "start", "--checkpoint", checkpoint_name, container_name],

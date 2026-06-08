@@ -108,8 +108,8 @@ def test_docker_server_start_returns_localhost_session_after_models_readiness_pr
         "ai-edge-component=llama-cpp-runtime",
         "--label",
         "ai-edge-run-id=llama-task",
-        "-p",
-        "127.0.0.1:8081:8080",
+        "--network",
+        "host",
         "-v",
         f"{DEFAULT_MODEL_DIR}:/models:ro",
         DEFAULT_IMAGE,
@@ -147,6 +147,7 @@ def test_docker_server_start_returns_localhost_session_after_models_readiness_pr
                 "model_file": DEFAULT_MODEL_FILE,
                 "threads": 4,
                 "ctx_size": 2048,
+                "network_mode": "host",
             }
         },
         runner=runner,
@@ -162,6 +163,7 @@ def test_docker_server_start_returns_localhost_session_after_models_readiness_pr
     assert session.container_name == "ai-edge-v0-llama-cpp-fixed"
     assert session.container_id == "container-llama"
     assert session.runtime_check["details"]["container"]["model_file"] == DEFAULT_MODEL_FILE
+    assert session.runtime_check["details"]["container"]["network_mode"] == "host"
     assert runner.calls == [image_inspect, command]
     assert probe_calls == [{"base_url": "http://127.0.0.1:8081/v1", "timeout_s": 9.0}]
 

@@ -510,6 +510,9 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
                 docker_criu_integration=records["docker_criu_integration.json"],
                 timeout_s=float(probe_options["preemption"]["timeout_s"]),
                 checkpoint_name=str(probe_options["preemption"]["checkpoint_name"]),
+                post_checkpoint_delay_s=float(
+                    probe_options["docker_criu_integration"].get("post_checkpoint_delay_s", 5.0)
+                ),
             )
             if smoke_request_future is not None:
                 smoke_request_future.result()
