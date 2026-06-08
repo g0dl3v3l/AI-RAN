@@ -233,13 +233,19 @@ def test_docker_server_start_returns_localhost_session_after_models_readiness_pr
             "attempts": 2,
         }
 
+    image_inspect = ["docker", "image", "inspect", DEFAULT_IMAGE]
     runner = RecordingRunner(
         {
+            tuple(image_inspect): _result(
+                image_inspect,
+                status=ProbeStatus.OK,
+                stdout="[]\n",
+            ),
             tuple(command): _result(
                 command,
                 status=ProbeStatus.OK,
                 stdout="container-123\n",
-            )
+            ),
         }
     )
     adapter = VLLMRuntimeAdapter(
@@ -268,7 +274,8 @@ def test_docker_server_start_returns_localhost_session_after_models_readiness_pr
     assert session.runtime_check["details"]["container"]["id"] == "container-123"
     assert session.runtime_check["details"]["models_url"] == "http://127.0.0.1:8012/v1/models"
     assert session.runtime_check["details"]["attempts"] == 2
-    assert runner.calls == [command]
+    assert runner.calls == [image_inspect, command]
+    assert "docker_pull" not in session.runtime_check["details"]["commands"]
     assert probe_calls == [{"base_url": "http://127.0.0.1:8012/v1", "timeout_s": 9.0}]
 
 
@@ -310,13 +317,19 @@ def test_docker_server_returns_timeout_when_models_endpoint_never_becomes_ready(
             "reason": "timed out waiting for /v1/models",
         }
 
+    image_inspect = ["docker", "image", "inspect", DEFAULT_IMAGE]
     runner = RecordingRunner(
         {
+            tuple(image_inspect): _result(
+                image_inspect,
+                status=ProbeStatus.OK,
+                stdout="[]\n",
+            ),
             tuple(command): _result(
                 command,
                 status=ProbeStatus.OK,
                 stdout="container-123\n",
-            )
+            ),
         }
     )
     adapter = VLLMRuntimeAdapter(
@@ -351,7 +364,7 @@ def test_docker_server_returns_timeout_when_models_endpoint_never_becomes_ready(
         session.smoke_validation["classification"]
         == SmokeClassification.SMOKE_NOT_ATTEMPTED.value
     )
-    assert runner.calls == [command]
+    assert runner.calls == [image_inspect, command]
     assert probe_calls == [{"base_url": "http://127.0.0.1:8012/v1", "timeout_s": 6.0}]
 
 
@@ -381,34 +394,11 @@ def test_docker_server_config_error_is_not_restore_path_failure():
 def test_docker_server_missing_binary_is_unsupported():
     from ai_runtime_experiments.runtime_adapters import VLLMRuntimeAdapter
 
-    command = [
-        "docker",
-        "run",
-        "-d",
-        "--name",
-        "ai-edge-v0-vllm-fixed",
-        "--label",
-        "ai-edge-experiment=v0",
-        "--label",
-        "ai-edge-component=vllm-runtime",
-        "--label",
-        "ai-edge-run-id=task-7",
-        "-p",
-        "127.0.0.1:8000:8000",
-        "--gpus",
-        "all",
-        DEFAULT_IMAGE,
-        "--model",
-        DEFAULT_MODEL,
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-    ]
+    image_inspect = ["docker", "image", "inspect", DEFAULT_IMAGE]
     runner = RecordingRunner(
         {
-            tuple(command): _result(
-                command,
+            tuple(image_inspect): _result(
+                image_inspect,
                 status=ProbeStatus.UNSUPPORTED,
                 error_type="FileNotFoundError",
                 error_message="[Errno 2] No such file or directory: 'docker'",
@@ -437,6 +427,79 @@ def test_docker_server_missing_binary_is_unsupported():
         session.smoke_validation["classification"]
         == SmokeClassification.SMOKE_NOT_SUPPORTED.value
     )
+    assert runner.calls == [image_inspect]
+
+
+
+def test_docker_server_pulls_missing_image_before_run():
+    from ai_runtime_experiments.runtime_adapters import VLLMRuntimeAdapter
+
+    image_inspect = ["docker", "image", "inspect", DEFAULT_IMAGE]
+    image_pull = ["docker", "pull", DEFAULT_IMAGE]
+    command = [
+        "docker",
+        "run",
+        "-d",
+        "--name",
+        "ai-edge-v0-vllm-fixed",
+        "--label",
+        "ai-edge-experiment=v0",
+        "--label",
+        "ai-edge-component=vllm-runtime",
+        "--label",
+        "ai-edge-run-id=task-7",
+        "-p",
+        "127.0.0.1:8012:8000",
+        "--gpus",
+        "all",
+        DEFAULT_IMAGE,
+        "--model",
+        DEFAULT_MODEL,
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+    ]
+    probe_calls: list[dict[str, object]] = []
+
+    def readiness_probe(*, base_url: str, timeout_s: float):
+        probe_calls.append({"base_url": base_url, "timeout_s": timeout_s})
+        return ProbeStatus.OK, {"models_url": f"{base_url}/models", "attempts": 1}
+
+    runner = RecordingRunner(
+        {
+            tuple(image_inspect): _result(
+                image_inspect,
+                status=ProbeStatus.ERROR,
+                returncode=1,
+                stderr="No such image\n",
+            ),
+            tuple(image_pull): _result(image_pull, status=ProbeStatus.OK, stdout="pulled\n"),
+            tuple(command): _result(command, status=ProbeStatus.OK, stdout="container-123\n"),
+        }
+    )
+    adapter = VLLMRuntimeAdapter(
+        config={
+            "docker_server": {
+                "enabled": True,
+                "image": DEFAULT_IMAGE,
+                "model": DEFAULT_MODEL,
+                "port": 8012,
+                "container_name": "ai-edge-v0-vllm-fixed",
+                "image_pull_timeout_s": 123.0,
+            }
+        },
+        runner=runner,
+        timeout_s=9.0,
+        readiness_probe=readiness_probe,
+    )
+
+    session = adapter.start(run_id="task-7")
+
+    assert session.status == ProbeStatus.OK
+    assert session.runtime_check["details"]["commands"]["docker_pull"]["status"] == "ok"
+    assert runner.calls == [image_inspect, image_pull, command]
+    assert probe_calls == [{"base_url": "http://127.0.0.1:8012/v1", "timeout_s": 9.0}]
 
 
 

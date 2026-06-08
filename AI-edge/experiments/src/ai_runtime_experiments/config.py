@@ -22,6 +22,7 @@ from ai_runtime_experiments.env_probe.mps import (
 from ai_runtime_experiments.runtime_adapters.vllm import (
     DEFAULT_DOCKER_IMAGE,
     DEFAULT_HOST_PORT,
+    DEFAULT_IMAGE_PULL_TIMEOUT_S,
 )
 
 _ALLOWED_RUNTIMES = {"vllm"}
@@ -56,6 +57,7 @@ _DEFAULT_RUNTIME_OPTIONS = {
             "port": DEFAULT_HOST_PORT,
             "container_name": None,
             "extra_args": [],
+            "image_pull_timeout_s": DEFAULT_IMAGE_PULL_TIMEOUT_S,
             "model": None,
         },
     }
