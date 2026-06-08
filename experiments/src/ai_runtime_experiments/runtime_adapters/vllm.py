@@ -108,6 +108,7 @@ def build_vllm_docker_command(
     container_name: str,
     host_port: int,
     extra_args: Sequence[str] | None = None,
+    gpu_mode: str = "gpus_flag",
 ) -> list[str]:
     command = [
         "docker",
@@ -118,8 +119,12 @@ def build_vllm_docker_command(
         *build_vllm_label_args(run_id),
         "-p",
         f"127.0.0.1:{host_port}:{DEFAULT_CONTAINER_PORT}",
-        "--gpus",
-        "all",
+    ]
+    if gpu_mode == "nvidia_runtime":
+        command.extend(["--runtime", "nvidia", "-e", "NVIDIA_VISIBLE_DEVICES=all"])
+    else:
+        command.extend(["--gpus", "all"])
+    command.extend([
         image,
         "--model",
         model,
@@ -127,7 +132,7 @@ def build_vllm_docker_command(
         "0.0.0.0",
         "--port",
         str(DEFAULT_CONTAINER_PORT),
-    ]
+    ])
     if extra_args:
         command.extend(str(item) for item in extra_args)
     return command
@@ -200,6 +205,13 @@ def _command_details(result: CommandResult) -> dict[str, Any]:
         "error_type": result.error_type,
         "error_message": result.error_message,
     }
+
+
+
+def _is_cdi_gpu_vendor_failure(result: CommandResult) -> bool:
+    text = "\n".join(part for part in (result.stderr, result.stdout, result.error_message or "") if part)
+    lowered = text.lower()
+    return "failed to discover gpu vendor from cdi" in lowered or "no known gpu vendor found" in lowered
 
 
 
@@ -550,9 +562,22 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
             container_name=container_name,
             host_port=host_port,
             extra_args=docker_config.get("extra_args"),
+            gpu_mode="gpus_flag",
         )
         result = self.runner(command, timeout_s=self.timeout_s)
         details["commands"]["docker_run"] = _command_details(result)
+        if result.status != ProbeStatus.OK and _is_cdi_gpu_vendor_failure(result):
+            fallback_command = build_vllm_docker_command(
+                run_id=run_id,
+                image=image,
+                model=model,
+                container_name=container_name,
+                host_port=host_port,
+                extra_args=docker_config.get("extra_args"),
+                gpu_mode="nvidia_runtime",
+            )
+            result = self.runner(fallback_command, timeout_s=self.timeout_s)
+            details["commands"]["docker_run_nvidia_runtime_fallback"] = _command_details(result)
         status = result.status if result.status != ProbeStatus.ERROR else ProbeStatus.ERROR
         container_id = result.stdout.strip() or None
         if container_id is not None:
