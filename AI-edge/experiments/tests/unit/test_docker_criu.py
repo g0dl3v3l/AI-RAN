@@ -178,6 +178,8 @@ def test_refuses_unlabelled_container():
                 "-d",
                 "--runtime",
                 "runc",
+                "--network",
+                "host",
                 "--name",
                 "ai-edge-v0-criu-fixed",
                 "--label",
@@ -197,6 +199,8 @@ def test_refuses_unlabelled_container():
                     "-d",
                     "--runtime",
                     "runc",
+                    "--network",
+                    "host",
                     "--name",
                     "ai-edge-v0-criu-fixed",
                     "--label",
@@ -272,6 +276,8 @@ def test_docker_run_uses_expected_labels_and_prefix():
                 "-d",
                 "--runtime",
                 "runc",
+                "--network",
+                "host",
                 "--name",
                 container_name,
                 "--label",
@@ -291,6 +297,8 @@ def test_docker_run_uses_expected_labels_and_prefix():
                     "-d",
                     "--runtime",
                     "runc",
+                    "--network",
+                    "host",
                     "--name",
                     container_name,
                     "--label",
@@ -323,11 +331,6 @@ def test_docker_run_uses_expected_labels_and_prefix():
                 status=ProbeStatus.OK,
                 stdout="ai-edge-v0-criu-checkpoint\n",
             ),
-            ("docker", "stop", container_name): _result(
-                ["docker", "stop", container_name],
-                status=ProbeStatus.OK,
-                stdout=container_name + "\n",
-            ),
             ("docker", "start", "--checkpoint", "ai-edge-v0-criu-checkpoint", container_name): _result(
                 ["docker", "start", "--checkpoint", "ai-edge-v0-criu-checkpoint", container_name],
                 status=ProbeStatus.OK,
@@ -351,24 +354,28 @@ def test_docker_run_uses_expected_labels_and_prefix():
         runner=runner,
         criu_probe=_ok_criu_probe(),
         container_name=container_name,
+        post_checkpoint_delay_s=0,
     )
 
     assert record["status"] == "ok"
     assert container_name.startswith("ai-edge-v0-criu-")
-    assert record["details"]["commands"]["docker_stop"]["status"] == "ok"
-
     docker_run_call = next(call for call in runner.calls if call[:2] == ["docker", "run"])
     assert "--runtime" in docker_run_call
     assert "runc" in docker_run_call
+    assert "--network" in docker_run_call
+    assert "host" in docker_run_call
     assert "--name" in docker_run_call
     assert container_name in docker_run_call
     assert f"ai-edge-experiment={labels['ai-edge-experiment']}" in docker_run_call
 
-    stop_index = runner.calls.index(["docker", "stop", container_name])
+    checkpoint_index = runner.calls.index(
+        ["docker", "checkpoint", "create", container_name, "ai-edge-v0-criu-checkpoint"]
+    )
     start_index = runner.calls.index(
         ["docker", "start", "--checkpoint", "ai-edge-v0-criu-checkpoint", container_name]
     )
-    assert stop_index < start_index
+    assert checkpoint_index < start_index
+    assert not any(call[:2] == ["docker", "stop"] for call in runner.calls)
 
 
 

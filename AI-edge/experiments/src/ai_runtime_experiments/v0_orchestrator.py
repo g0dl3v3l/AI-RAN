@@ -416,6 +416,10 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
         checkpoint_name=str(probe_options["docker_criu_integration"]["checkpoint_name"]),
         smoke_image=str(probe_options["docker_criu_integration"]["smoke_image"]),
         smoke_runtime=probe_options["docker_criu_integration"].get("smoke_runtime") or "runc",
+        smoke_network_mode=probe_options["docker_criu_integration"].get("network_mode") or "host",
+        post_checkpoint_delay_s=float(
+            probe_options["docker_criu_integration"].get("post_checkpoint_delay_s", 5.0)
+        ),
     )
     records["cuda_check.json"] = collect_cuda_container_probe(
         run_id=config.run_id,

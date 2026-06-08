@@ -9,7 +9,9 @@ import yaml
 
 from ai_runtime_experiments.docker_criu.probe import (
     DEFAULT_CHECKPOINT_NAME,
+    DEFAULT_POST_CHECKPOINT_DELAY_S,
     DEFAULT_SMOKE_IMAGE,
+    DEFAULT_SMOKE_NETWORK_MODE,
     DEFAULT_SMOKE_RUNTIME,
 )
 from ai_runtime_experiments.env_probe.cuda import DEFAULT_CUDA_IMAGE
@@ -67,6 +69,8 @@ _DEFAULT_PROBE_OPTIONS = {
         "checkpoint_name": DEFAULT_CHECKPOINT_NAME,
         "smoke_image": DEFAULT_SMOKE_IMAGE,
         "smoke_runtime": DEFAULT_SMOKE_RUNTIME,
+        "network_mode": DEFAULT_SMOKE_NETWORK_MODE,
+        "post_checkpoint_delay_s": DEFAULT_POST_CHECKPOINT_DELAY_S,
     },
     "cuda": {
         "timeout_s": 120.0,

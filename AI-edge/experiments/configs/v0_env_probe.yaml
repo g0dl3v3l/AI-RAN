@@ -45,6 +45,8 @@ probe_options:
     checkpoint_name: ai-edge-v0-criu-checkpoint
     smoke_image: busybox:1.36
     smoke_runtime: runc
+    network_mode: host
+    post_checkpoint_delay_s: 5.0
   cuda:
     timeout_s: 120.0
     image: nvidia/cuda:12.4.1-base-ubuntu22.04
