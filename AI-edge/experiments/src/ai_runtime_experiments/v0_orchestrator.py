@@ -18,7 +18,11 @@ from ai_runtime_experiments.env_probe.docker import collect_docker_probe
 from ai_runtime_experiments.env_probe.hardware import collect_hardware_probe
 from ai_runtime_experiments.env_probe.mps import collect_mps_probe
 from ai_runtime_experiments.preemption import collect_smoke_preemption
-from ai_runtime_experiments.runtime_adapters import RuntimeSession, VLLMRuntimeAdapter
+from ai_runtime_experiments.runtime_adapters import (
+    LlamaCppRuntimeAdapter,
+    RuntimeSession,
+    VLLMRuntimeAdapter,
+)
 from ai_runtime_experiments.schemas import SCHEMA_VERSION, ProbeStatus, make_probe_result
 from ai_runtime_experiments.utils.git_info import get_git_metadata
 from ai_runtime_experiments.utils.paths import ensure_run_dir
@@ -435,13 +439,18 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
     )
 
     try:
-        if config.runtime != "vllm":
+        if config.runtime == "vllm":
+            runtime_adapter = VLLMRuntimeAdapter(
+                config=deepcopy(config.runtime_options["vllm"]),
+                timeout_s=float(probe_options["runtime"]["timeout_s"]),
+            )
+        elif config.runtime == "llama_cpp":
+            runtime_adapter = LlamaCppRuntimeAdapter(
+                config=deepcopy(config.runtime_options["llama_cpp"]),
+                timeout_s=float(probe_options["runtime"]["timeout_s"]),
+            )
+        else:
             raise ValueError(f"unsupported runtime: {config.runtime!r}")
-
-        runtime_adapter = VLLMRuntimeAdapter(
-            config=deepcopy(config.runtime_options["vllm"]),
-            timeout_s=float(probe_options["runtime"]["timeout_s"]),
-        )
         runtime_session = runtime_adapter.start(run_id=config.run_id)
         records["runtime_check.json"] = runtime_session.runtime_check
 
