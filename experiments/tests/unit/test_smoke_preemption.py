@@ -48,20 +48,21 @@ class RecordingRunner:
 
 def _runtime_session(
     *,
+    runtime: str = "vllm",
     mode: str = "docker_server",
     status: ProbeStatus = ProbeStatus.OK,
     container_name: str | None = "ai-edge-v0-vllm-fixed",
     container_id: str | None = "container-123",
 ) -> RuntimeSession:
     return RuntimeSession(
-        runtime="vllm",
+        runtime=runtime,
         mode=mode,
         status=status,
         runtime_check=make_probe_result(
             run_id="task-8",
             component="runtime_check",
             status=status,
-            details={"runtime": "vllm", "mode": mode},
+            details={"runtime": runtime, "mode": mode},
         ),
         base_url="http://127.0.0.1:8000/v1",
         container_name=container_name,
@@ -69,7 +70,9 @@ def _runtime_session(
     )
 
 
-def _docker_criu_probe(*, status: ProbeStatus = ProbeStatus.OK, reason: str | None = None):
+def _docker_criu_probe(
+    *, status: ProbeStatus = ProbeStatus.OK, reason: str | None = None
+):
     details: dict[str, object] = {"commands": {}}
     if reason is not None:
         details["reason"] = reason
@@ -85,7 +88,9 @@ def test_no_container_skips_preemption():
     from ai_runtime_experiments.preemption import collect_smoke_preemption
 
     runner = RecordingRunner({})
-    session = _runtime_session(mode="external_server", container_name=None, container_id=None)
+    session = _runtime_session(
+        mode="external_server", container_name=None, container_id=None
+    )
 
     record = collect_smoke_preemption(
         run_id="task-8",
@@ -127,7 +132,6 @@ def test_unsupported_prerequisite_does_not_attempt_preemption():
     assert runner.calls == []
 
 
-
 def test_non_experiment_owned_container_fails_before_checkpoint_or_restore():
     from ai_runtime_experiments.preemption import collect_smoke_preemption
 
@@ -162,3 +166,73 @@ def test_non_experiment_owned_container_fails_before_checkpoint_or_restore():
     assert "experiment-owned" in record["details"]["reason"]
     assert record["details"]["commands"]["docker_inspect_labels"]["status"] == "ok"
     assert runner.calls == [inspect_command]
+
+
+def test_llama_cpp_experiment_owned_container_can_attempt_preemption():
+    from ai_runtime_experiments.preemption import collect_smoke_preemption
+
+    container_name = "ai-edge-v0-llama-cpp-fixed"
+    inspect_command = [
+        "docker",
+        "inspect",
+        "--format",
+        "{{json .Config.Labels}}",
+        container_name,
+    ]
+    checkpoint_command = ["docker", "checkpoint", "create", container_name, "cp1"]
+    start_command = ["docker", "start", "--checkpoint", "cp1", container_name]
+    state_command = [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        container_name,
+    ]
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout=(
+                    '{"ai-edge-experiment":"v0",'
+                    '"ai-edge-component":"llama-cpp-runtime",'
+                    '"ai-edge-run-id":"task-8"}\n'
+                ),
+            ),
+            tuple(checkpoint_command): _result(
+                checkpoint_command, status=ProbeStatus.OK, stdout="cp1\n"
+            ),
+            tuple(start_command): _result(
+                start_command, status=ProbeStatus.OK, stdout=container_name + "\n"
+            ),
+            tuple(state_command): _result(
+                state_command, status=ProbeStatus.OK, stdout="running\n"
+            ),
+        }
+    )
+    session = _runtime_session(
+        runtime="llama_cpp",
+        container_name=container_name,
+    )
+
+    record = collect_smoke_preemption(
+        run_id="task-8",
+        runtime_session=session,
+        docker_criu_integration=_docker_criu_probe(),
+        runner=runner,
+        checkpoint_name="cp1",
+        post_checkpoint_delay_s=0,
+    )
+
+    assert record["status"] == "ok"
+    assert record["details"]["outcome"] == "restored"
+    assert (
+        record["details"]["container"]["inspected_labels"]["ai-edge-component"]
+        == "llama-cpp-runtime"
+    )
+    assert runner.calls == [
+        inspect_command,
+        checkpoint_command,
+        start_command,
+        state_command,
+    ]

@@ -72,6 +72,7 @@ _DEFAULT_RUNTIME_OPTIONS = {
             "threads": DEFAULT_LLAMA_CPP_THREADS,
             "ctx_size": DEFAULT_LLAMA_CPP_CTX_SIZE,
             "n_gpu_layers": 0,
+            "network_mode": "host",
         },
     },
     "vllm": {

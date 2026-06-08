@@ -138,6 +138,7 @@ def test_load_config_supports_llama_cpp_runtime(tmp_path: Path):
     assert resolved.runtime_options["llama_cpp"]["docker_server"]["model_file"] == "gemma-3-1b-it-f16.gguf"
     assert resolved.runtime_options["llama_cpp"]["docker_server"]["host_model_dir"] == "/home/netsys/llama-models"
     assert resolved.runtime_options["llama_cpp"]["docker_server"]["image"] == "ghcr.io/ggml-org/llama.cpp:server"
+    assert resolved.runtime_options["llama_cpp"]["docker_server"]["network_mode"] == "host"
 
 
 
