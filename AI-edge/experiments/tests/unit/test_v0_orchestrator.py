@@ -1161,6 +1161,114 @@ def test_capture_criu_logs_copies_paths_from_failed_command_stderr(tmp_path: Pat
     ]
 
 
+def test_capture_criu_logs_uses_sudo_cat_when_direct_copy_denied(
+    tmp_path: Path, monkeypatch
+):
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+    from ai_runtime_experiments.utils.command import CommandResult
+
+    source_log = Path(
+        "/run/containerd/../containerd/io.containerd.runtime.v2.task/moby/container-id/criu-dump.log"
+    )
+    resolved_source_log = source_log.resolve(strict=False)
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    record = make_probe_result(
+        run_id="run-with-root-criu-log",
+        component="smoke_preemption",
+        status=ProbeStatus.ERROR,
+        details={
+            "commands": {
+                "docker_checkpoint_create": {
+                    "stderr": f"criu failed: type DUMP errno 0 path= {source_log}\n"
+                }
+            }
+        },
+    )
+
+    def _copyfile_raises_permission(src, dst):
+        del src, dst
+        raise PermissionError("permission denied")
+
+    calls: list[list[str]] = []
+
+    def _fake_run_command(argv, *, timeout_s=None, **kwargs):
+        del kwargs
+        calls.append(list(argv))
+        assert timeout_s == 5.0
+        return CommandResult(
+            argv=list(argv),
+            status=ProbeStatus.OK,
+            returncode=0,
+            stdout="root-owned criu details\n",
+            stderr="",
+            timed_out=False,
+            duration_s=0.01,
+            error_type=None,
+            error_message=None,
+        )
+
+    monkeypatch.setattr(orchestrator.shutil, "copyfile", _copyfile_raises_permission)
+    monkeypatch.setattr(orchestrator, "run_command", _fake_run_command)
+
+    orchestrator._capture_criu_logs(
+        run_dir=run_dir, records={"smoke_preemption.json": record}
+    )
+
+    copied = run_dir / "criu_logs" / "smoke_preemption" / "01-criu-dump.log"
+    assert copied.read_text(encoding="utf-8") == "root-owned criu details\n"
+    assert calls == [["sudo", "-n", "cat", str(resolved_source_log)]]
+    entry = record["details"]["diagnostics"]["criu_logs"][0]
+    assert entry["status"] == "ok"
+    assert entry["fallback"] == "sudo-cat"
+    assert entry["direct_copy_error_type"] == "PermissionError"
+    assert entry["direct_copy_error_message"] == "permission denied"
+    assert entry.get("error_type") is None
+    assert entry.get("error_message") is None
+
+
+def test_capture_criu_logs_does_not_sudo_cat_untrusted_log_path(
+    tmp_path: Path, monkeypatch
+):
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+
+    source_log = Path("/home/user/secret.log")
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    record = make_probe_result(
+        run_id="run-with-untrusted-log",
+        component="smoke_preemption",
+        status=ProbeStatus.ERROR,
+        details={
+            "commands": {
+                "docker_checkpoint_create": {
+                    "stderr": f"criu failed: type DUMP errno 0 path= {source_log}\n"
+                }
+            }
+        },
+    )
+
+    def _copyfile_raises_permission(src, dst):
+        del src, dst
+        raise PermissionError("permission denied")
+
+    def _run_command_must_not_run(*args, **kwargs):
+        del args, kwargs
+        raise AssertionError("sudo fallback must not run for untrusted paths")
+
+    monkeypatch.setattr(orchestrator.shutil, "copyfile", _copyfile_raises_permission)
+    monkeypatch.setattr(orchestrator, "run_command", _run_command_must_not_run)
+
+    orchestrator._capture_criu_logs(
+        run_dir=run_dir, records={"smoke_preemption.json": record}
+    )
+
+    entry = record["details"]["diagnostics"]["criu_logs"][0]
+    assert entry["status"] == "error"
+    assert entry["error_type"] == "PermissionError"
+    assert entry["fallback"] == "skipped-untrusted-path"
+
+
 def test_orchestrator_copies_criu_log_before_runtime_cleanup_deletes_source(
     tmp_path: Path, monkeypatch
 ):
