@@ -106,6 +106,9 @@ def _capture_criu_logs_for_record(
     artifact_name: str,
     record: dict[str, Any],
 ) -> None:
+    details = _probe_details(record)
+    if isinstance(details.get("diagnostics"), dict) and details["diagnostics"].get("criu_logs"):
+        return
     log_paths = _extract_criu_log_paths(record)
     if not log_paths:
         return
@@ -129,7 +132,6 @@ def _capture_criu_logs_for_record(
             entry["status"] = ProbeStatus.OK.value
         captured.append(entry)
 
-    details = _probe_details(record)
     details.setdefault("diagnostics", {})["criu_logs"] = captured
 
 
@@ -600,6 +602,11 @@ def _run_real_sequence(
                     )
                 ),
             )
+            _capture_criu_logs_for_record(
+                run_dir=run_dir,
+                artifact_name="smoke_preemption.json",
+                record=records["smoke_preemption.json"],
+            )
             if smoke_request_future is not None:
                 smoke_request_future.result()
         finally:
@@ -616,6 +623,11 @@ def _run_real_sequence(
             request_id=request_id,
             smoke_response=_latest_smoke_response_record(run_dir),
             smoke_request=_latest_smoke_request_record(run_dir),
+        )
+        _capture_criu_logs_for_record(
+            run_dir=run_dir,
+            artifact_name="smoke_validation.json",
+            record=records["smoke_validation.json"],
         )
     finally:
         if runtime_adapter is not None and runtime_session is not None:

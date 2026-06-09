@@ -1159,3 +1159,128 @@ def test_capture_criu_logs_copies_paths_from_failed_command_stderr(tmp_path: Pat
             "status": ProbeStatus.OK.value,
         }
     ]
+
+
+def test_orchestrator_copies_criu_log_before_runtime_cleanup_deletes_source(
+    tmp_path: Path, monkeypatch
+):
+    from ai_runtime_experiments.config import load_config
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+
+    run_dir = tmp_path / "criu-log-race-run"
+    source_log = tmp_path / "criu-dump.log"
+    source_log.write_text("dump failed before cleanup\n", encoding="utf-8")
+    config_path = _write_config(
+        tmp_path / "config.yaml",
+        output_dir=run_dir,
+        external_base_url="http://127.0.0.1:8000/v1",
+    )
+    config = load_config(config_path)
+
+    def _probe(component: str, status: ProbeStatus) -> dict[str, object]:
+        return make_probe_result(
+            run_id=config.run_id,
+            component=component,
+            status=status,
+            details={"reason": f"{component} -> {status.value}"},
+        )
+
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_hardware_probe",
+        lambda **_: _probe("hardware", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_docker_probe",
+        lambda **_: _probe("docker", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_criu_probe",
+        lambda **_: _probe("criu_check", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_docker_criu_integration",
+        lambda **_: _probe("docker_criu_integration", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_cuda_container_probe",
+        lambda **_: _probe("cuda_check", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_mps_probe",
+        lambda **_: _probe("mps_check", ProbeStatus.OK),
+    )
+
+    class FakeRuntimeAdapter:
+        def __init__(self, *, config, runner=None, timeout_s=30.0):
+            del config, runner, timeout_s
+
+        def start(self, *, run_id: str) -> RuntimeSession:
+            return RuntimeSession(
+                runtime="vllm",
+                mode="docker_server",
+                status=ProbeStatus.OK,
+                base_url="http://127.0.0.1:8000/v1",
+                container_name="owned-runtime",
+                container_id="container-id",
+                runtime_check=make_probe_result(
+                    run_id=run_id,
+                    component="runtime_check",
+                    status=ProbeStatus.OK,
+                    details={"runtime": "vllm", "mode": "docker_server"},
+                ),
+            )
+
+        def stop(self, session: RuntimeSession):
+            del session
+            source_log.unlink(missing_ok=True)
+            return None
+
+    monkeypatch.setattr(orchestrator, "VLLMRuntimeAdapter", FakeRuntimeAdapter)
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_smoke_preemption",
+        lambda **_: make_probe_result(
+            run_id=config.run_id,
+            component="smoke_preemption",
+            status=ProbeStatus.ERROR,
+            details={
+                "outcome": "checkpoint_failed",
+                "reason": "command failure(s): docker checkpoint create",
+                "commands": {
+                    "docker_checkpoint_create": {
+                        "stderr": f"criu failed: type DUMP errno 0 path= {source_log}\n"
+                    }
+                },
+                "checkpoint": {"attempted": True, "status": "error"},
+                "restore": {"attempted": False},
+            },
+        ),
+    )
+
+    def _transport(
+        *, url: str, payload: dict[str, object], timeout_s: float, api_key: str
+    ):
+        del url, payload, timeout_s, api_key
+        return {"choices": [{"message": {"content": "smoke ok"}}]}
+
+    monkeypatch.setattr(
+        orchestrator,
+        "LLMSmokeClient",
+        lambda *args, **kwargs: LLMSmokeClient(transport=_transport),
+    )
+
+    orchestrator.run_v0_orchestrator(
+        config, git_metadata_getter=lambda **_: _git_metadata()
+    )
+
+    copied = run_dir / "criu_logs" / "smoke_preemption" / "01-criu-dump.log"
+    assert copied.read_text(encoding="utf-8") == "dump failed before cleanup\n"
+    smoke_preemption = _read_json(run_dir / "smoke_preemption.json")
+    assert smoke_preemption["details"]["diagnostics"]["criu_logs"][0]["status"] == "ok"
+    assert not source_log.exists()
