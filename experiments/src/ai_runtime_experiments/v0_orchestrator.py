@@ -30,6 +30,7 @@ from ai_runtime_experiments.schemas import (
     ProbeStatus,
     make_probe_result,
 )
+from ai_runtime_experiments.utils.command import CommandResult, run_command
 from ai_runtime_experiments.utils.git_info import get_git_metadata
 from ai_runtime_experiments.utils.paths import ensure_run_dir
 from ai_runtime_experiments.utils.time import monotonic_ns, utc_now_iso_z
@@ -40,6 +41,12 @@ from ai_runtime_experiments.validation import (
 from ai_runtime_experiments.workload.llm_client import LLMSmokeClient
 
 _CRIU_LOG_PATH_RE = re.compile(r"path=\s*(?P<path>/\S+\.log)")
+
+_TRUSTED_CRIU_LOG_PREFIXES = (
+    Path("/run/containerd"),
+    Path("/var/lib/docker"),
+)
+
 
 REQUIRED_V0_ARTIFACTS = {
     "hardware.json",
@@ -85,6 +92,19 @@ def _iter_command_dicts(value: Any):
             yield from _iter_command_dicts(nested)
 
 
+def _trusted_criu_log_path(path: Path) -> Path | None:
+    try:
+        resolved = path.resolve(strict=False)
+    except OSError:
+        return None
+    if any(
+        resolved == prefix or prefix in resolved.parents
+        for prefix in _TRUSTED_CRIU_LOG_PREFIXES
+    ):
+        return resolved
+    return None
+
+
 def _extract_criu_log_paths(record: dict[str, Any]) -> list[Path]:
     paths: list[Path] = []
     seen: set[str] = set()
@@ -98,6 +118,51 @@ def _extract_criu_log_paths(record: dict[str, Any]) -> list[Path]:
                 paths.append(Path(raw_path))
                 seen.add(raw_path)
     return paths
+
+
+def _command_result_details(result: CommandResult) -> dict[str, Any]:
+    return {
+        "argv": result.argv,
+        "status": result.status.value,
+        "returncode": result.returncode,
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "timed_out": result.timed_out,
+        "duration_s": result.duration_s,
+        "error_type": result.error_type,
+        "error_message": result.error_message,
+    }
+
+
+def _copy_criu_log_with_sudo_cat(source_path: Path, destination: Path) -> dict[str, Any]:
+    trusted_source_path = _trusted_criu_log_path(source_path)
+    if trusted_source_path is None:
+        return {
+            "status": ProbeStatus.ERROR.value,
+            "fallback": "sudo-cat",
+            "error_type": "UntrustedPath",
+            "error_message": f"Refused sudo fallback for untrusted path: {source_path}",
+        }
+    result = run_command(
+        ["sudo", "-n", "cat", str(trusted_source_path)],
+        timeout_s=5.0,
+    )
+    details = _command_result_details(result)
+    if result.status == ProbeStatus.OK and result.returncode == 0:
+        destination.write_text(result.stdout, encoding="utf-8")
+        destination.chmod(0o600)
+        return {
+            "status": ProbeStatus.OK.value,
+            "fallback": "sudo-cat",
+            "fallback_command": details,
+        }
+    return {
+        "status": ProbeStatus.ERROR.value,
+        "fallback": "sudo-cat",
+        "error_type": result.error_type or "CommandFailed",
+        "error_message": result.stderr or result.error_message or "sudo cat failed",
+        "fallback_command": details,
+    }
 
 
 def _capture_criu_logs_for_record(
@@ -125,9 +190,23 @@ def _capture_criu_logs_for_record(
         try:
             shutil.copyfile(source_path, destination)
         except OSError as exc:
-            entry["status"] = ProbeStatus.ERROR.value
-            entry["error_type"] = type(exc).__name__
-            entry["error_message"] = str(exc)
+            if isinstance(exc, PermissionError):
+                trusted_source_path = _trusted_criu_log_path(source_path)
+                if trusted_source_path is not None:
+                    entry["direct_copy_error_type"] = type(exc).__name__
+                    entry["direct_copy_error_message"] = str(exc)
+                    entry.update(
+                        _copy_criu_log_with_sudo_cat(trusted_source_path, destination)
+                    )
+                else:
+                    entry["status"] = ProbeStatus.ERROR.value
+                    entry["error_type"] = type(exc).__name__
+                    entry["error_message"] = str(exc)
+                    entry["fallback"] = "skipped-untrusted-path"
+            else:
+                entry["status"] = ProbeStatus.ERROR.value
+                entry["error_type"] = type(exc).__name__
+                entry["error_message"] = str(exc)
         else:
             entry["status"] = ProbeStatus.OK.value
         captured.append(entry)
