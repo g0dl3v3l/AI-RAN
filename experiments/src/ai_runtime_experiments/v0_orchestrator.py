@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import re
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
@@ -23,12 +25,21 @@ from ai_runtime_experiments.runtime_adapters import (
     RuntimeSession,
     VLLMRuntimeAdapter,
 )
-from ai_runtime_experiments.schemas import SCHEMA_VERSION, ProbeStatus, make_probe_result
+from ai_runtime_experiments.schemas import (
+    SCHEMA_VERSION,
+    ProbeStatus,
+    make_probe_result,
+)
 from ai_runtime_experiments.utils.git_info import get_git_metadata
 from ai_runtime_experiments.utils.paths import ensure_run_dir
 from ai_runtime_experiments.utils.time import monotonic_ns, utc_now_iso_z
-from ai_runtime_experiments.validation import classify_smoke_validation, make_smoke_not_attempted_validation
+from ai_runtime_experiments.validation import (
+    classify_smoke_validation,
+    make_smoke_not_attempted_validation,
+)
 from ai_runtime_experiments.workload.llm_client import LLMSmokeClient
+
+_CRIU_LOG_PATH_RE = re.compile(r"path=\s*(?P<path>/\S+\.log)")
 
 REQUIRED_V0_ARTIFACTS = {
     "hardware.json",
@@ -55,15 +66,84 @@ class OrchestratorResult:
     artifacts: dict[str, Path]
 
 
-
 def _probe_status(record: dict[str, Any]) -> str:
     return str(record.get("status") or ProbeStatus.ERROR.value)
-
 
 
 def _artifact_path(run_dir: Path, artifact_name: str) -> Path:
     return run_dir / artifact_name
 
+
+def _iter_command_dicts(value: Any):
+    if isinstance(value, dict):
+        if any(key in value for key in ("stderr", "stdout", "error_message")):
+            yield value
+        for nested in value.values():
+            yield from _iter_command_dicts(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            yield from _iter_command_dicts(nested)
+
+
+def _extract_criu_log_paths(record: dict[str, Any]) -> list[Path]:
+    paths: list[Path] = []
+    seen: set[str] = set()
+    for command in _iter_command_dicts(record):
+        text = "\n".join(
+            str(command.get(key) or "") for key in ("stderr", "stdout", "error_message")
+        )
+        for match in _CRIU_LOG_PATH_RE.finditer(text):
+            raw_path = match.group("path")
+            if raw_path not in seen:
+                paths.append(Path(raw_path))
+                seen.add(raw_path)
+    return paths
+
+
+def _capture_criu_logs_for_record(
+    *,
+    run_dir: Path,
+    artifact_name: str,
+    record: dict[str, Any],
+) -> None:
+    log_paths = _extract_criu_log_paths(record)
+    if not log_paths:
+        return
+
+    capture_dir = run_dir / "criu_logs" / artifact_name.removesuffix(".json")
+    capture_dir.mkdir(parents=True, exist_ok=True)
+    captured: list[dict[str, Any]] = []
+    for index, source_path in enumerate(log_paths, start=1):
+        destination = capture_dir / f"{index:02d}-{source_path.name}"
+        entry: dict[str, Any] = {
+            "source_path": str(source_path),
+            "destination_path": str(destination),
+        }
+        try:
+            shutil.copyfile(source_path, destination)
+        except OSError as exc:
+            entry["status"] = ProbeStatus.ERROR.value
+            entry["error_type"] = type(exc).__name__
+            entry["error_message"] = str(exc)
+        else:
+            entry["status"] = ProbeStatus.OK.value
+        captured.append(entry)
+
+    details = _probe_details(record)
+    details.setdefault("diagnostics", {})["criu_logs"] = captured
+
+
+def _capture_criu_logs(*, run_dir: Path, records: dict[str, dict[str, Any]]) -> None:
+    for artifact_name in (
+        "docker_criu_integration.json",
+        "smoke_preemption.json",
+        "smoke_validation.json",
+    ):
+        record = records.get(artifact_name)
+        if record is not None:
+            _capture_criu_logs_for_record(
+                run_dir=run_dir, artifact_name=artifact_name, record=record
+            )
 
 
 def _probe_details(record: dict[str, Any]) -> dict[str, Any]:
@@ -73,13 +153,11 @@ def _probe_details(record: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
-
 def _probe_extracted(record: dict[str, Any]) -> dict[str, Any]:
     extracted = _probe_details(record).get("extracted")
     if isinstance(extracted, dict):
         return extracted
     return {}
-
 
 
 def _build_hardware_summary(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -98,7 +176,6 @@ def _build_hardware_summary(records: dict[str, dict[str, Any]]) -> dict[str, Any
         if key in extracted:
             summary[key] = deepcopy(extracted[key])
     return summary
-
 
 
 def _build_mps_summary(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -135,14 +212,12 @@ def _build_mps_summary(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return summary
 
 
-
 def _docker_version(records: dict[str, dict[str, Any]]) -> str | None:
     extracted = _probe_extracted(records.get("docker.json", {}))
     docker_version = extracted.get("server_version") or extracted.get("client_version")
     if docker_version is None:
         return None
     return str(docker_version)
-
 
 
 def _create_run_dir(config: ResolvedConfig) -> Path:
@@ -153,12 +228,12 @@ def _create_run_dir(config: ResolvedConfig) -> Path:
     ).resolve()
 
 
-
-def _write_probe_artifact(run_dir: Path, artifact_name: str, record: dict[str, Any]) -> Path:
+def _write_probe_artifact(
+    run_dir: Path, artifact_name: str, record: dict[str, Any]
+) -> Path:
     path = _artifact_path(run_dir, artifact_name)
     write_json(path, record)
     return path
-
 
 
 def _smoke_payload(config: ResolvedConfig) -> dict[str, Any]:
@@ -172,7 +247,6 @@ def _smoke_payload(config: ResolvedConfig) -> dict[str, Any]:
     else:
         payload["prompt"] = config.workload.get("prompt")
     return payload
-
 
 
 def _write_smoke_placeholder_records(
@@ -217,7 +291,6 @@ def _write_smoke_placeholder_records(
     append_jsonl(_artifact_path(run_dir, "smoke_response.jsonl"), response_record)
 
 
-
 def _make_skipped_probe(
     *,
     run_id: str,
@@ -233,7 +306,6 @@ def _make_skipped_probe(
         status=ProbeStatus.SKIPPED,
         details=merged_details,
     )
-
 
 
 def _latest_jsonl_record(run_dir: Path, artifact_name: str) -> dict[str, Any] | None:
@@ -255,15 +327,12 @@ def _latest_jsonl_record(run_dir: Path, artifact_name: str) -> dict[str, Any] | 
     return None
 
 
-
 def _latest_smoke_request_record(run_dir: Path) -> dict[str, Any] | None:
     return _latest_jsonl_record(run_dir, "smoke_request.jsonl")
 
 
-
 def _latest_smoke_response_record(run_dir: Path) -> dict[str, Any] | None:
     return _latest_jsonl_record(run_dir, "smoke_response.jsonl")
-
 
 
 def _annotate_smoke_preemption_response_timing(
@@ -290,7 +359,9 @@ def _annotate_smoke_preemption_response_timing(
             checkpoint_details = details.get("checkpoint")
             checkpoint_start_monotonic_ns = None
             if isinstance(checkpoint_details, dict):
-                checkpoint_start_monotonic_ns = checkpoint_details.get("start_monotonic_ns")
+                checkpoint_start_monotonic_ns = checkpoint_details.get(
+                    "start_monotonic_ns"
+                )
             restore_start_monotonic_ns = restore_details.get("start_monotonic_ns")
             if isinstance(checkpoint_start_monotonic_ns, int):
                 smoke_details["request_started_before_checkpoint"] = (
@@ -327,7 +398,6 @@ def _annotate_smoke_preemption_response_timing(
             response_monotonic_ns >= restore_end_monotonic_ns
         )
     return smoke_preemption
-
 
 
 def _dry_run_probe_records(config: ResolvedConfig) -> dict[str, dict[str, Any]]:
@@ -393,8 +463,9 @@ def _dry_run_probe_records(config: ResolvedConfig) -> dict[str, dict[str, Any]]:
     }
 
 
-
-def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str, dict[str, Any]], dict[str, Any] | None]:
+def _run_real_sequence(
+    config: ResolvedConfig, run_dir: Path
+) -> tuple[dict[str, dict[str, Any]], dict[str, Any] | None]:
     probe_options = config.probe_options
     records: dict[str, dict[str, Any]] = {}
     runtime_adapter = None
@@ -417,10 +488,14 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
         run_id=config.run_id,
         criu_probe=records["criu_check.json"],
         timeout_s=float(probe_options["docker_criu_integration"]["timeout_s"]),
-        checkpoint_name=str(probe_options["docker_criu_integration"]["checkpoint_name"]),
+        checkpoint_name=str(
+            probe_options["docker_criu_integration"]["checkpoint_name"]
+        ),
         smoke_image=str(probe_options["docker_criu_integration"]["smoke_image"]),
-        smoke_runtime=probe_options["docker_criu_integration"].get("smoke_runtime") or "runc",
-        smoke_network_mode=probe_options["docker_criu_integration"].get("network_mode") or "host",
+        smoke_runtime=probe_options["docker_criu_integration"].get("smoke_runtime")
+        or "runc",
+        smoke_network_mode=probe_options["docker_criu_integration"].get("network_mode")
+        or "host",
         post_checkpoint_delay_s=float(
             probe_options["docker_criu_integration"].get("post_checkpoint_delay_s", 5.0)
         ),
@@ -454,12 +529,20 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
         runtime_session = runtime_adapter.start(run_id=config.run_id)
         records["runtime_check.json"] = runtime_session.runtime_check
 
-        request_id = str(config.workload.get("request_id") or f"{config.run_id}-smoke-request")
+        request_id = str(
+            config.workload.get("request_id") or f"{config.run_id}-smoke-request"
+        )
         smoke_request_executor: ThreadPoolExecutor | None = None
         smoke_request_future = None
         try:
-            if runtime_session.status == ProbeStatus.OK and runtime_session.base_url and config.model:
-                smoke_client = LLMSmokeClient(timeout_s=float(config.workload.get("timeout_s", 30.0)))
+            if (
+                runtime_session.status == ProbeStatus.OK
+                and runtime_session.base_url
+                and config.model
+            ):
+                smoke_client = LLMSmokeClient(
+                    timeout_s=float(config.workload.get("timeout_s", 30.0))
+                )
                 smoke_request_kwargs = {
                     "run_id": config.run_id,
                     "output_dir": run_dir,
@@ -473,7 +556,8 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
                     "max_tokens": int(config.workload.get("max_tokens", 64)),
                 }
                 attempt_preemption_while_in_flight = (
-                    _probe_status(records["docker_criu_integration.json"]) == ProbeStatus.OK.value
+                    _probe_status(records["docker_criu_integration.json"])
+                    == ProbeStatus.OK.value
                     and runtime_session.container_name is not None
                     and runtime_session.container_id is not None
                 )
@@ -511,7 +595,9 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
                 timeout_s=float(probe_options["preemption"]["timeout_s"]),
                 checkpoint_name=str(probe_options["preemption"]["checkpoint_name"]),
                 post_checkpoint_delay_s=float(
-                    probe_options["docker_criu_integration"].get("post_checkpoint_delay_s", 5.0)
+                    probe_options["docker_criu_integration"].get(
+                        "post_checkpoint_delay_s", 5.0
+                    )
                 ),
             )
             if smoke_request_future is not None:
@@ -536,7 +622,6 @@ def _run_real_sequence(config: ResolvedConfig, run_dir: Path) -> tuple[dict[str,
             cleanup_record = runtime_adapter.stop(runtime_session)
 
     return records, cleanup_record
-
 
 
 def _build_run_metadata(
@@ -578,12 +663,12 @@ def _build_run_metadata(
         "mps_summary": mps_summary,
         "hardware_summary": hardware_summary,
         "probe_statuses": {
-            path.rsplit(".", 1)[0]: _probe_status(record) for path, record in records.items()
+            path.rsplit(".", 1)[0]: _probe_status(record)
+            for path, record in records.items()
         },
         "git": git,
         "cleanup": cleanup_record,
     }
-
 
 
 def run_v0_orchestrator(
@@ -638,6 +723,8 @@ def run_v0_orchestrator(
         cleanup_record = None
     else:
         records, cleanup_record = _run_real_sequence(config, run_dir)
+
+    _capture_criu_logs(run_dir=run_dir, records=records)
 
     artifact_paths = {
         name: _write_probe_artifact(run_dir, name, record)

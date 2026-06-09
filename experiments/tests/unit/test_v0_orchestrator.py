@@ -1122,3 +1122,40 @@ runtime_options:
         _read_json(run_dir / "runtime_check.json")["details"]["runtime"] == "llama_cpp"
     )
     assert _read_jsonl(run_dir / "smoke_request.jsonl")[0]["runtime"] == "llama_cpp"
+
+
+def test_capture_criu_logs_copies_paths_from_failed_command_stderr(tmp_path: Path):
+    from ai_runtime_experiments.v0_orchestrator import _capture_criu_logs
+
+    source_log = tmp_path / "criu-dump.log"
+    source_log.write_text("root cause from criu\n", encoding="utf-8")
+    record = make_probe_result(
+        run_id="run-with-criu-log",
+        component="smoke_preemption",
+        status=ProbeStatus.ERROR,
+        details={
+            "commands": {
+                "docker_checkpoint_create": {
+                    "stderr": (
+                        "runc did not terminate successfully: criu failed: "
+                        f"type DUMP errno 0 path= {source_log}\n"
+                    )
+                }
+            }
+        },
+    )
+    records = {"smoke_preemption.json": record}
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+
+    _capture_criu_logs(run_dir=run_dir, records=records)
+
+    copied = run_dir / "criu_logs" / "smoke_preemption" / "01-criu-dump.log"
+    assert copied.read_text(encoding="utf-8") == "root cause from criu\n"
+    assert record["details"]["diagnostics"]["criu_logs"] == [
+        {
+            "source_path": str(source_log),
+            "destination_path": str(copied),
+            "status": ProbeStatus.OK.value,
+        }
+    ]
