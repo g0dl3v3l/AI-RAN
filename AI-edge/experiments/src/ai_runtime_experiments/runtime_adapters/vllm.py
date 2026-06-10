@@ -107,6 +107,7 @@ def build_vllm_docker_command(
     model: str,
     container_name: str,
     host_port: int,
+    network_mode: str | None = None,
     extra_args: Sequence[str] | None = None,
     gpu_mode: str = "gpus_flag",
 ) -> list[str]:
@@ -117,9 +118,14 @@ def build_vllm_docker_command(
         "--name",
         container_name,
         *build_vllm_label_args(run_id),
-        "-p",
-        f"127.0.0.1:{host_port}:{DEFAULT_CONTAINER_PORT}",
     ]
+    if network_mode:
+        command.extend(["--network", network_mode])
+    if network_mode != "host":
+        command.extend([
+            "-p",
+            f"127.0.0.1:{host_port}:{DEFAULT_CONTAINER_PORT}",
+        ])
     if gpu_mode == "nvidia_runtime":
         command.extend(["--runtime", "nvidia", "-e", "NVIDIA_VISIBLE_DEVICES=all"])
     else:
@@ -438,6 +444,8 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
         )
         image = str(docker_config.get("image") or DEFAULT_DOCKER_IMAGE)
         host_port = int(docker_config.get("port") or DEFAULT_HOST_PORT)
+        raw_network_mode = docker_config.get("network_mode")
+        network_mode = None if raw_network_mode is None else str(raw_network_mode).strip() or None
         image_pull_timeout_s = float(
             docker_config.get("image_pull_timeout_s") or DEFAULT_IMAGE_PULL_TIMEOUT_S
         )
@@ -458,6 +466,7 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
                         "image": image,
                         "host_port": host_port,
                         "container_port": DEFAULT_CONTAINER_PORT,
+                        "network_mode": network_mode,
                     },
                 },
             )
@@ -476,7 +485,8 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
                 container_name=container_name,
             )
 
-        base_url = f"http://127.0.0.1:{host_port}/v1"
+        base_url_port = DEFAULT_CONTAINER_PORT if network_mode == "host" else host_port
+        base_url = f"http://127.0.0.1:{base_url_port}/v1"
         details: dict[str, Any] = {
             "runtime": "vllm",
             "mode": "docker_server",
@@ -486,6 +496,7 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
                 "image": image,
                 "host_port": host_port,
                 "container_port": DEFAULT_CONTAINER_PORT,
+                "network_mode": network_mode,
             },
         }
 
@@ -561,6 +572,7 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
             model=model,
             container_name=container_name,
             host_port=host_port,
+            network_mode=network_mode,
             extra_args=docker_config.get("extra_args"),
             gpu_mode="gpus_flag",
         )
@@ -573,6 +585,7 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
                 model=model,
                 container_name=container_name,
                 host_port=host_port,
+                network_mode=network_mode,
                 extra_args=docker_config.get("extra_args"),
                 gpu_mode="nvidia_runtime",
             )

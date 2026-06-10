@@ -280,6 +280,76 @@ def test_docker_server_start_returns_localhost_session_after_models_readiness_pr
 
 
 
+def test_docker_server_start_uses_host_network_without_port_publish():
+    from ai_runtime_experiments.runtime_adapters.vllm import VLLMRuntimeAdapter
+
+    image_inspect = ["docker", "image", "inspect", DEFAULT_IMAGE]
+    command = [
+        "docker",
+        "run",
+        "-d",
+        "--name",
+        "ai-edge-v0-vllm-fixed",
+        "--label",
+        "ai-edge-experiment=v0",
+        "--label",
+        "ai-edge-component=vllm-runtime",
+        "--label",
+        "ai-edge-run-id=task-7",
+        "--network",
+        "host",
+        "--gpus",
+        "all",
+        DEFAULT_IMAGE,
+        "--model",
+        DEFAULT_MODEL,
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+    ]
+    probe_calls: list[dict[str, object]] = []
+
+    def readiness_probe(*, base_url: str, timeout_s: float):
+        probe_calls.append({"base_url": base_url, "timeout_s": timeout_s})
+        return ProbeStatus.OK, {
+            "models_url": f"{base_url}/models",
+            "attempts": 1,
+        }
+
+    runner = RecordingRunner(
+        {
+            tuple(image_inspect): _result(image_inspect, status=ProbeStatus.OK, stdout="[]\n"),
+            tuple(command): _result(command, status=ProbeStatus.OK, stdout="container-123\n"),
+        }
+    )
+    adapter = VLLMRuntimeAdapter(
+        config={
+            "docker_server": {
+                "enabled": True,
+                "image": DEFAULT_IMAGE,
+                "model": DEFAULT_MODEL,
+                "port": 8012,
+                "container_name": "ai-edge-v0-vllm-fixed",
+                "network_mode": "host",
+            }
+        },
+        runner=runner,
+        timeout_s=9.0,
+        readiness_probe=readiness_probe,
+    )
+
+    session = adapter.start(run_id="task-7")
+
+    assert session.mode == "docker_server"
+    assert session.status == ProbeStatus.OK
+    assert session.base_url == "http://127.0.0.1:8000/v1"
+    assert session.runtime_check["details"]["container"]["network_mode"] == "host"
+    assert session.runtime_check["details"]["models_url"] == "http://127.0.0.1:8000/v1/models"
+    assert runner.calls == [image_inspect, command]
+    assert probe_calls == [{"base_url": "http://127.0.0.1:8000/v1", "timeout_s": 9.0}]
+
+
 def test_docker_server_retries_with_nvidia_runtime_when_cdi_gpu_discovery_fails():
     from ai_runtime_experiments.runtime_adapters import VLLMRuntimeAdapter
 
