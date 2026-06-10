@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Sequence
 
 from ai_runtime_experiments.artifacts import write_json
+from ai_runtime_experiments.debug_capture import capture_criu_logs_for_record
 from ai_runtime_experiments.docker_criu import collect_criu_probe, collect_docker_criu_integration
 from ai_runtime_experiments.utils.paths import ensure_run_dir
 
@@ -43,6 +44,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     integration_record = collect_docker_criu_integration(
         run_id=args.run_id,
         criu_probe=criu_record,
+        debug_capture_hook=lambda record: capture_criu_logs_for_record(
+            run_dir=output_dir,
+            artifact_name="docker_criu_integration.json",
+            record=record,
+        ),
     )
 
     write_json(output_dir / "criu_check.json", criu_record)

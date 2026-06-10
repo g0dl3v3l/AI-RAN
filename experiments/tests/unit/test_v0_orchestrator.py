@@ -7,6 +7,8 @@ import textwrap
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from ai_runtime_experiments.runtime_adapters import RuntimeSession
 from ai_runtime_experiments.schemas import (
     ProbeStatus,
@@ -73,6 +75,18 @@ def _git_metadata() -> dict[str, object]:
     }
 
 
+@pytest.fixture(autouse=True)
+def _stub_collect_debug_bundle(monkeypatch):
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_debug_bundle",
+        lambda **_: {"status": "ok", "commands": {}},
+        raising=False,
+    )
+
+
 def test_dry_run_creates_all_required_v0_artifacts(tmp_path: Path):
     from ai_runtime_experiments.config import load_config
     from ai_runtime_experiments.v0_orchestrator import (
@@ -118,6 +132,30 @@ def test_dry_run_creates_all_required_v0_artifacts(tmp_path: Path):
     assert run_metadata["dry_run"] is True
     assert run_metadata["model"] == "meta-llama/Meta-Llama-3-8B-Instruct"
     assert run_metadata["git"]["commit"] == "abc123"
+
+
+def test_dry_run_writes_debug_bundle_and_metadata_pointer(tmp_path: Path):
+    from ai_runtime_experiments.config import load_config
+    from ai_runtime_experiments.v0_orchestrator import run_v0_orchestrator
+
+    run_dir = tmp_path / "dry-run-debug-bundle"
+    config_path = _write_config(tmp_path / "config.yaml", output_dir=run_dir)
+    config = load_config(config_path, dry_run=True)
+
+    result = run_v0_orchestrator(
+        config, git_metadata_getter=lambda **_: _git_metadata()
+    )
+
+    debug_bundle_path = run_dir / "debug" / "debug_bundle.json"
+    assert _read_json(debug_bundle_path) == {"status": "ok", "commands": {}}
+
+    run_metadata = _read_json(run_dir / "run_metadata.json")
+    assert run_metadata["debug_bundle"] == {
+        "status": "ok",
+        "artifact_path": str(debug_bundle_path),
+    }
+    assert result.metadata["debug_bundle"]["artifact_path"] == str(debug_bundle_path)
+
 
 
 def test_unsupported_probe_does_not_abort_orchestration(tmp_path: Path, monkeypatch):
@@ -1152,13 +1190,14 @@ def test_capture_criu_logs_copies_paths_from_failed_command_stderr(tmp_path: Pat
 
     copied = run_dir / "criu_logs" / "smoke_preemption" / "01-criu-dump.log"
     assert copied.read_text(encoding="utf-8") == "root cause from criu\n"
-    assert record["details"]["diagnostics"]["criu_logs"] == [
-        {
-            "source_path": str(source_log),
-            "destination_path": str(copied),
-            "status": ProbeStatus.OK.value,
-        }
-    ]
+    assert copied.stat().st_mode & 0o777 == 0o600
+    entry = record["details"]["diagnostics"]["criu_logs"][0]
+    assert entry["source_path"] == str(source_log)
+    assert entry["destination_path"] == str(copied)
+    assert entry["artifact_path"] == str(copied)
+    assert entry["status"] == ProbeStatus.OK.value
+    assert entry["redacted"] is False
+    assert entry["truncated"] is False
 
 
 def test_capture_criu_logs_uses_sudo_cat_when_direct_copy_denied(

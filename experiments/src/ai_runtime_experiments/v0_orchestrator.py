@@ -11,6 +11,10 @@ from typing import Any
 
 from ai_runtime_experiments.artifacts import append_jsonl, write_json
 from ai_runtime_experiments.config import ResolvedConfig, dump_config_yaml
+from ai_runtime_experiments.debug_capture import (
+    capture_criu_logs_for_record,
+    collect_debug_bundle,
+)
 from ai_runtime_experiments.docker_criu.probe import (
     collect_criu_probe,
     collect_docker_criu_integration,
@@ -171,47 +175,13 @@ def _capture_criu_logs_for_record(
     artifact_name: str,
     record: dict[str, Any],
 ) -> None:
-    details = _probe_details(record)
-    if isinstance(details.get("diagnostics"), dict) and details["diagnostics"].get("criu_logs"):
-        return
-    log_paths = _extract_criu_log_paths(record)
-    if not log_paths:
-        return
-
-    capture_dir = run_dir / "criu_logs" / artifact_name.removesuffix(".json")
-    capture_dir.mkdir(parents=True, exist_ok=True)
-    captured: list[dict[str, Any]] = []
-    for index, source_path in enumerate(log_paths, start=1):
-        destination = capture_dir / f"{index:02d}-{source_path.name}"
-        entry: dict[str, Any] = {
-            "source_path": str(source_path),
-            "destination_path": str(destination),
-        }
-        try:
-            shutil.copyfile(source_path, destination)
-        except OSError as exc:
-            if isinstance(exc, PermissionError):
-                trusted_source_path = _trusted_criu_log_path(source_path)
-                if trusted_source_path is not None:
-                    entry["direct_copy_error_type"] = type(exc).__name__
-                    entry["direct_copy_error_message"] = str(exc)
-                    entry.update(
-                        _copy_criu_log_with_sudo_cat(trusted_source_path, destination)
-                    )
-                else:
-                    entry["status"] = ProbeStatus.ERROR.value
-                    entry["error_type"] = type(exc).__name__
-                    entry["error_message"] = str(exc)
-                    entry["fallback"] = "skipped-untrusted-path"
-            else:
-                entry["status"] = ProbeStatus.ERROR.value
-                entry["error_type"] = type(exc).__name__
-                entry["error_message"] = str(exc)
-        else:
-            entry["status"] = ProbeStatus.OK.value
-        captured.append(entry)
-
-    details.setdefault("diagnostics", {})["criu_logs"] = captured
+    capture_criu_logs_for_record(
+        run_dir=run_dir,
+        artifact_name=artifact_name,
+        record=record,
+        runner=run_command,
+        copyfile=shutil.copyfile,
+    )
 
 
 def _capture_criu_logs(*, run_dir: Path, records: dict[str, dict[str, Any]]) -> None:
@@ -580,6 +550,11 @@ def _run_real_sequence(
         post_checkpoint_delay_s=float(
             probe_options["docker_criu_integration"].get("post_checkpoint_delay_s", 5.0)
         ),
+        debug_capture_hook=lambda record: capture_criu_logs_for_record(
+            run_dir=run_dir,
+            artifact_name="docker_criu_integration.json",
+            record=record,
+        ),
     )
     records["cuda_check.json"] = collect_cuda_container_probe(
         run_id=config.run_id,
@@ -725,6 +700,7 @@ def _build_run_metadata(
     started_at_utc: str,
     started_monotonic_ns: int,
     cleanup_record: dict[str, Any] | None,
+    debug_bundle: dict[str, Any],
 ) -> dict[str, Any]:
     hardware_summary = _build_hardware_summary(records)
     docker_version = _docker_version(records)
@@ -756,6 +732,10 @@ def _build_run_metadata(
         "probe_statuses": {
             path.rsplit(".", 1)[0]: _probe_status(record)
             for path, record in records.items()
+        },
+        "debug_bundle": {
+            "status": debug_bundle.get("status"),
+            "artifact_path": str(run_dir / "debug" / "debug_bundle.json"),
         },
         "git": git,
         "cleanup": cleanup_record,
@@ -817,6 +797,19 @@ def run_v0_orchestrator(
 
     _capture_criu_logs(run_dir=run_dir, records=records)
 
+    try:
+        debug_bundle = collect_debug_bundle(run_dir=run_dir)
+    except Exception as exc:
+        debug_bundle = {
+            "status": ProbeStatus.ERROR.value,
+            "error_type": type(exc).__name__,
+            "error_message": str(exc),
+            "commands": {},
+        }
+    debug_bundle_path = run_dir / "debug" / "debug_bundle.json"
+    write_json(debug_bundle_path, debug_bundle)
+    debug_bundle_path.chmod(0o600)
+
     artifact_paths = {
         name: _write_probe_artifact(run_dir, name, record)
         for name, record in records.items()
@@ -831,11 +824,13 @@ def run_v0_orchestrator(
         started_at_utc=started_at_utc,
         started_monotonic_ns=started_monotonic_ns,
         cleanup_record=cleanup_record,
+        debug_bundle=debug_bundle,
     )
     metadata_path = _artifact_path(run_dir, "run_metadata.json")
     write_json(metadata_path, metadata)
     artifact_paths["run_metadata.json"] = metadata_path
     artifact_paths["config.yaml"] = _artifact_path(run_dir, "config.yaml")
+    artifact_paths["debug_bundle.json"] = debug_bundle_path
 
     found_artifacts = {path.name for path in run_dir.iterdir() if path.is_file()}
     missing = REQUIRED_V0_ARTIFACTS - found_artifacts
