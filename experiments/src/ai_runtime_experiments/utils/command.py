@@ -37,6 +37,7 @@ def run_command(
     cwd: str | Path | None = None,
     env: Mapping[str, str] | None = None,
     shell: bool = False,
+    input_text: str | None = None,
 ) -> CommandResult:
     """Run a command safely and return a structured result.
 
@@ -58,6 +59,7 @@ def run_command(
             cwd=str(cwd) if cwd is not None else None,
             env=dict(env) if env is not None else None,
             shell=shell,
+            input=input_text,
             check=False,
         )
 
