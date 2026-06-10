@@ -1,6 +1,7 @@
 import importlib.util
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -391,9 +392,153 @@ def test_ensure_experiment_owned_container_accepts_expected_label_and_name():
 
 
 
+def test_docker_criu_captures_checkpoint_log_before_cleanup(tmp_path: Path):
+    (
+        _,
+        collect_docker_criu_integration,
+        build_experiment_container_name,
+        build_experiment_labels,
+        _,
+    ) = _load_docker_criu_functions()
+
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    source_log = tmp_path / "criu-dump.log"
+    source_log.write_text("dump failed before cleanup\n", encoding="utf-8")
+    container_name = build_experiment_container_name("task-5", token="fixed")
+    labels = build_experiment_labels("task-5")
+
+    mapping = {
+        ("docker", "checkpoint", "--help"): _result(
+            ["docker", "checkpoint", "--help"],
+            status=ProbeStatus.OK,
+            stdout="Usage: docker checkpoint COMMAND\n",
+        ),
+        (
+            "docker",
+            "run",
+            "-d",
+            "--runtime",
+            "runc",
+            "--network",
+            "host",
+            "--name",
+            container_name,
+            "--label",
+            f"ai-edge-experiment={labels['ai-edge-experiment']}",
+            "--label",
+            f"ai-edge-component={labels['ai-edge-component']}",
+            "--label",
+            f"ai-edge-run-id={labels['ai-edge-run-id']}",
+            "busybox:1.36",
+            "sh",
+            "-c",
+            "while true; do sleep 1; done",
+        ): _result(
+            [
+                "docker",
+                "run",
+                "-d",
+                "--runtime",
+                "runc",
+                "--network",
+                "host",
+                "--name",
+                container_name,
+                "--label",
+                f"ai-edge-experiment={labels['ai-edge-experiment']}",
+                "--label",
+                f"ai-edge-component={labels['ai-edge-component']}",
+                "--label",
+                f"ai-edge-run-id={labels['ai-edge-run-id']}",
+                "busybox:1.36",
+                "sh",
+                "-c",
+                "while true; do sleep 1; done",
+            ],
+            status=ProbeStatus.OK,
+            stdout="container-id\n",
+        ),
+        (
+            "docker",
+            "inspect",
+            "--format",
+            "{{json .Config.Labels}}",
+            container_name,
+        ): _result(
+            ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name],
+            status=ProbeStatus.OK,
+            stdout=json.dumps(labels) + "\n",
+        ),
+        (
+            "docker",
+            "checkpoint",
+            "create",
+            container_name,
+            "ai-edge-v0-criu-checkpoint",
+        ): _result(
+            [
+                "docker",
+                "checkpoint",
+                "create",
+                container_name,
+                "ai-edge-v0-criu-checkpoint",
+            ],
+            status=ProbeStatus.ERROR,
+            returncode=1,
+            stderr=f"criu failed: type DUMP errno 0 path= {source_log}\n",
+        ),
+        ("docker", "rm", "-f", container_name): _result(
+            ["docker", "rm", "-f", container_name],
+            status=ProbeStatus.OK,
+            stdout=container_name + "\n",
+        ),
+    }
+
+    events: list[object] = []
+
+    def runner(argv, *, timeout_s=None, cwd=None, env=None, shell=False):
+        del timeout_s, cwd, env, shell
+        argv_list = list(argv)
+        events.append(tuple(argv_list))
+        if argv_list[:3] == ["docker", "rm", "-f"]:
+            source_log.unlink(missing_ok=True)
+        key = tuple(argv_list)
+        if key not in mapping:
+            raise AssertionError(f"unexpected command: {argv_list}")
+        return mapping[key]
+
+    captured: dict[str, Any] = {}
+
+    def hook(record: dict[str, Any]):
+        events.append("hook")
+        copied = run_dir / "captured.log"
+        copied.write_text(source_log.read_text(encoding="utf-8"), encoding="utf-8")
+        captured["record"] = record
+        captured["copied"] = copied
+
+    record = collect_docker_criu_integration(
+        run_id="task-5",
+        runner=runner,
+        criu_probe=_ok_criu_probe(),
+        container_name=container_name,
+        post_checkpoint_delay_s=0,
+        debug_capture_hook=hook,
+    )
+
+    assert record["status"] == "error"
+    assert events.index("hook") < events.index(("docker", "rm", "-f", container_name))
+    assert not source_log.exists()
+    assert captured["record"]["details"]["commands"]["docker_checkpoint_create"]["status"] == "error"
+    assert captured["copied"].read_text(encoding="utf-8") == "dump failed before cleanup\n"
+
+
+
 def test_check_docker_criu_cli_writes_artifacts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     module = _load_check_docker_criu_script()
 
+    source_log = tmp_path / "criu-dump.log"
+    source_log.write_text("captured before cleanup\n", encoding="utf-8")
     criu_record = make_probe_result(
         run_id="cli-test",
         component="criu_check",
@@ -403,22 +548,44 @@ def test_check_docker_criu_cli_writes_artifacts(tmp_path: Path, monkeypatch: pyt
     integration_record = make_probe_result(
         run_id="cli-test",
         component="docker_criu_integration",
-        status=ProbeStatus.UNSUPPORTED,
-        details={"reason": "docker checkpoint is unavailable", "commands": {}, "smoke": {"attempted": False}},
+        status=ProbeStatus.ERROR,
+        details={
+            "reason": "docker checkpoint failed",
+            "commands": {
+                "docker_checkpoint_create": {
+                    "stderr": f"criu failed: type DUMP errno 0 path= {source_log}\n"
+                }
+            },
+            "smoke": {"attempted": True},
+        },
     )
 
     monkeypatch.setattr(module, "collect_criu_probe", lambda run_id: criu_record)
+
+    callback_seen: dict[str, object] = {"called": False}
+
+    def _collect_docker_criu_integration(run_id, criu_probe=None, debug_capture_hook=None):
+        del run_id, criu_probe
+        callback_seen["called"] = callable(debug_capture_hook)
+        if debug_capture_hook is not None:
+            debug_capture_hook(integration_record)
+        return integration_record
+
     monkeypatch.setattr(
         module,
         "collect_docker_criu_integration",
-        lambda run_id, criu_probe=None: integration_record,
+        _collect_docker_criu_integration,
     )
 
     exit_code = module.main(["--output-dir", str(tmp_path), "--run-id", "cli-test"])
 
     assert exit_code == 0
+    assert callback_seen["called"] is True
     assert json.loads((tmp_path / "criu_check.json").read_text(encoding="utf-8"))["component"] == "criu_check"
     assert (
         json.loads((tmp_path / "docker_criu_integration.json").read_text(encoding="utf-8"))["status"]
-        == "unsupported"
+        == "error"
     )
+    assert (
+        tmp_path / "criu_logs" / "docker_criu_integration" / "01-criu-dump.log"
+    ).read_text(encoding="utf-8") == "captured before cleanup\n"

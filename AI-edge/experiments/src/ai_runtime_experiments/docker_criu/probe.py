@@ -35,6 +35,7 @@ _UNSUPPORTED_MARKERS = (
 )
 
 CommandRunner = Callable[..., CommandResult]
+DebugCaptureHook = Callable[[dict[str, Any]], None]
 
 
 
@@ -133,6 +134,35 @@ def _finalize_record(
 
 
 
+def _run_debug_capture_hook(
+    *,
+    debug_capture_hook: DebugCaptureHook | None,
+    run_id: str,
+    details: dict[str, Any],
+) -> None:
+    if debug_capture_hook is None:
+        return
+    record = _finalize_record(run_id=run_id, status=ProbeStatus.ERROR, details=details)
+    try:
+        debug_capture_hook(record)
+    except Exception as exc:
+        diagnostics = details.setdefault("diagnostics", {})
+        if not isinstance(diagnostics, dict):
+            diagnostics = {}
+            details["diagnostics"] = diagnostics
+        errors = diagnostics.setdefault("debug_capture_errors", [])
+        if not isinstance(errors, list):
+            errors = []
+            diagnostics["debug_capture_errors"] = errors
+        errors.append(
+            {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+        )
+
+
+
 def _cleanup_owned_container(
     *,
     container_name: str,
@@ -194,6 +224,7 @@ def collect_docker_criu_integration(
     smoke_runtime: str | None = DEFAULT_SMOKE_RUNTIME,
     smoke_network_mode: str | None = DEFAULT_SMOKE_NETWORK_MODE,
     post_checkpoint_delay_s: float = DEFAULT_POST_CHECKPOINT_DELAY_S,
+    debug_capture_hook: DebugCaptureHook | None = None,
 ) -> dict[str, Any]:
     resolved_container_name = container_name or build_experiment_container_name(run_id)
     if not resolved_container_name.startswith(EXPERIMENT_CONTAINER_NAME_PREFIX):
@@ -305,6 +336,11 @@ def collect_docker_criu_integration(
         capability_sensitive=True,
     )
     if checkpoint_status != ProbeStatus.OK:
+        _run_debug_capture_hook(
+            debug_capture_hook=debug_capture_hook,
+            run_id=run_id,
+            details=details,
+        )
         cleanup_result = _cleanup_owned_container(
             container_name=resolved_container_name,
             labels=labels,
@@ -339,6 +375,11 @@ def collect_docker_criu_integration(
         capability_sensitive=True,
     )
     if start_status != ProbeStatus.OK:
+        _run_debug_capture_hook(
+            debug_capture_hook=debug_capture_hook,
+            run_id=run_id,
+            details=details,
+        )
         cleanup_result = _cleanup_owned_container(
             container_name=resolved_container_name,
             labels=labels,
@@ -365,6 +406,11 @@ def collect_docker_criu_integration(
         command_label="docker inspect state",
     )
     if state_status != ProbeStatus.OK:
+        _run_debug_capture_hook(
+            debug_capture_hook=debug_capture_hook,
+            run_id=run_id,
+            details=details,
+        )
         cleanup_result = _cleanup_owned_container(
             container_name=resolved_container_name,
             labels=labels,
