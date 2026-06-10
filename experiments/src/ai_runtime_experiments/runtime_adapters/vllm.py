@@ -110,6 +110,7 @@ def build_vllm_docker_command(
     network_mode: str | None = None,
     extra_args: Sequence[str] | None = None,
     gpu_mode: str = "gpus_flag",
+    gpu_device: str = "nvidia.com/gpu=all",
 ) -> list[str]:
     command = [
         "docker",
@@ -128,6 +129,8 @@ def build_vllm_docker_command(
         ])
     if gpu_mode == "nvidia_runtime":
         command.extend(["--runtime", "nvidia", "-e", "NVIDIA_VISIBLE_DEVICES=all"])
+    elif gpu_mode == "cdi":
+        command.extend(["--device", gpu_device])
     else:
         command.extend(["--gpus", "all"])
     command.extend([
@@ -449,6 +452,11 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
         image_pull_timeout_s = float(
             docker_config.get("image_pull_timeout_s") or DEFAULT_IMAGE_PULL_TIMEOUT_S
         )
+        gpu_mode = str(docker_config.get("gpu_mode") or "gpus_flag").strip() or "gpus_flag"
+        gpu_device = (
+            str(docker_config.get("gpu_device") or "nvidia.com/gpu=all").strip()
+            or "nvidia.com/gpu=all"
+        )
 
         if not model:
             status = ProbeStatus.ERROR
@@ -497,6 +505,8 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
                 "host_port": host_port,
                 "container_port": DEFAULT_CONTAINER_PORT,
                 "network_mode": network_mode,
+                "gpu_mode": gpu_mode,
+                "gpu_device": gpu_device,
             },
         }
 
@@ -574,11 +584,12 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
             host_port=host_port,
             network_mode=network_mode,
             extra_args=docker_config.get("extra_args"),
-            gpu_mode="gpus_flag",
+            gpu_mode=gpu_mode,
+            gpu_device=gpu_device,
         )
         result = self.runner(command, timeout_s=self.timeout_s)
         details["commands"]["docker_run"] = _command_details(result)
-        if result.status != ProbeStatus.OK and _is_cdi_gpu_vendor_failure(result):
+        if gpu_mode == "gpus_flag" and result.status != ProbeStatus.OK and _is_cdi_gpu_vendor_failure(result):
             fallback_command = build_vllm_docker_command(
                 run_id=run_id,
                 image=image,
@@ -588,6 +599,7 @@ class VLLMRuntimeAdapter(BaseRuntimeAdapter):
                 network_mode=network_mode,
                 extra_args=docker_config.get("extra_args"),
                 gpu_mode="nvidia_runtime",
+                gpu_device=gpu_device,
             )
             result = self.runner(fallback_command, timeout_s=self.timeout_s)
             details["commands"]["docker_run_nvidia_runtime_fallback"] = _command_details(result)

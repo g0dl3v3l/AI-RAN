@@ -350,6 +350,139 @@ def test_docker_server_start_uses_host_network_without_port_publish():
     assert probe_calls == [{"base_url": "http://127.0.0.1:8000/v1", "timeout_s": 9.0}]
 
 
+def test_docker_server_start_uses_cdi_gpu_device():
+    from ai_runtime_experiments.runtime_adapters.vllm import VLLMRuntimeAdapter
+
+    image_inspect = ["docker", "image", "inspect", DEFAULT_IMAGE]
+    command = [
+        "docker",
+        "run",
+        "-d",
+        "--name",
+        "ai-edge-v0-vllm-fixed",
+        "--label",
+        "ai-edge-experiment=v0",
+        "--label",
+        "ai-edge-component=vllm-runtime",
+        "--label",
+        "ai-edge-run-id=task-7",
+        "--network",
+        "host",
+        "--device",
+        "nvidia.com/gpu=all",
+        DEFAULT_IMAGE,
+        "--model",
+        DEFAULT_MODEL,
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+    ]
+    probe_calls: list[dict[str, object]] = []
+
+    def readiness_probe(*, base_url: str, timeout_s: float):
+        probe_calls.append({"base_url": base_url, "timeout_s": timeout_s})
+        return ProbeStatus.OK, {"models_url": f"{base_url}/models", "attempts": 1}
+
+    runner = RecordingRunner(
+        {
+            tuple(image_inspect): _result(image_inspect, status=ProbeStatus.OK, stdout="[]\n"),
+            tuple(command): _result(command, status=ProbeStatus.OK, stdout="container-123\n"),
+        }
+    )
+    adapter = VLLMRuntimeAdapter(
+        config={
+            "docker_server": {
+                "enabled": True,
+                "image": DEFAULT_IMAGE,
+                "model": DEFAULT_MODEL,
+                "port": 8000,
+                "network_mode": "host",
+                "gpu_mode": "cdi",
+                "gpu_device": "nvidia.com/gpu=all",
+                "container_name": "ai-edge-v0-vllm-fixed",
+            }
+        },
+        runner=runner,
+        timeout_s=9.0,
+        readiness_probe=readiness_probe,
+    )
+
+    session = adapter.start(run_id="task-7")
+
+    assert session.status == ProbeStatus.OK
+    assert session.base_url == "http://127.0.0.1:8000/v1"
+    assert session.runtime_check["details"]["container"]["gpu_mode"] == "cdi"
+    assert session.runtime_check["details"]["container"]["gpu_device"] == "nvidia.com/gpu=all"
+    assert "docker_run_nvidia_runtime_fallback" not in session.runtime_check["details"]["commands"]
+    assert runner.calls == [image_inspect, command]
+    assert probe_calls == [{"base_url": "http://127.0.0.1:8000/v1", "timeout_s": 9.0}]
+
+
+def test_explicit_cdi_gpu_mode_does_not_fallback_to_legacy_runtime():
+    from ai_runtime_experiments.runtime_adapters import VLLMRuntimeAdapter
+
+    image_inspect = ["docker", "image", "inspect", DEFAULT_IMAGE]
+    cdi_command = [
+        "docker",
+        "run",
+        "-d",
+        "--name",
+        "ai-edge-v0-vllm-fixed",
+        "--label",
+        "ai-edge-experiment=v0",
+        "--label",
+        "ai-edge-component=vllm-runtime",
+        "--label",
+        "ai-edge-run-id=task-7",
+        "--network",
+        "host",
+        "--device",
+        "nvidia.com/gpu=all",
+        DEFAULT_IMAGE,
+        "--model",
+        DEFAULT_MODEL,
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+    ]
+
+    runner = RecordingRunner(
+        {
+            tuple(image_inspect): _result(image_inspect, status=ProbeStatus.OK, stdout="[]\n"),
+            tuple(cdi_command): _result(
+                cdi_command,
+                status=ProbeStatus.ERROR,
+                returncode=125,
+                stderr="failed to discover GPU vendor from CDI: no known GPU vendor found\n",
+            ),
+        }
+    )
+    adapter = VLLMRuntimeAdapter(
+        config={
+            "docker_server": {
+                "enabled": True,
+                "image": DEFAULT_IMAGE,
+                "model": DEFAULT_MODEL,
+                "port": 8000,
+                "network_mode": "host",
+                "gpu_mode": "cdi",
+                "gpu_device": "nvidia.com/gpu=all",
+                "container_name": "ai-edge-v0-vllm-fixed",
+            }
+        },
+        runner=runner,
+        timeout_s=9.0,
+    )
+
+    session = adapter.start(run_id="task-7")
+
+    assert session.status == ProbeStatus.ERROR
+    assert "docker_run_nvidia_runtime_fallback" not in session.runtime_check["details"]["commands"]
+    assert runner.calls == [image_inspect, cdi_command]
+
+
 def test_docker_server_retries_with_nvidia_runtime_when_cdi_gpu_discovery_fails():
     from ai_runtime_experiments.runtime_adapters import VLLMRuntimeAdapter
 
