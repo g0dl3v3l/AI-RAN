@@ -1431,3 +1431,132 @@ def test_orchestrator_copies_criu_log_before_runtime_cleanup_deletes_source(
     smoke_preemption = _read_json(run_dir / "smoke_preemption.json")
     assert smoke_preemption["details"]["diagnostics"]["criu_logs"][0]["status"] == "ok"
     assert not source_log.exists()
+
+
+
+def test_orchestrator_passes_criu_phase_switch_config_to_smoke_preemption(
+    tmp_path: Path, monkeypatch
+):
+    from ai_runtime_experiments.config import load_config
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+
+    run_dir = tmp_path / "criu-phase-switch-run"
+    config_path = _write_config(
+        tmp_path / "config.yaml",
+        output_dir=run_dir,
+        external_base_url="http://127.0.0.1:8000/v1",
+    )
+    config_text = config_path.read_text(encoding="utf-8")
+    config_text += textwrap.dedent(
+        """
+        probe_options:
+          preemption:
+            criu_config_mode: cdi_restore_compat
+            criu_config_allow_sudo: true
+        """
+    )
+    config_path.write_text(config_text, encoding="utf-8")
+    config = load_config(config_path)
+
+    def _probe(component: str, status: ProbeStatus) -> dict[str, object]:
+        return make_probe_result(
+            run_id=config.run_id,
+            component=component,
+            status=status,
+            details={"reason": f"{component} -> {status.value}"},
+        )
+
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_hardware_probe",
+        lambda **_: _probe("hardware", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_docker_probe",
+        lambda **_: _probe("docker", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_criu_probe",
+        lambda **_: _probe("criu_check", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_docker_criu_integration",
+        lambda **_: _probe("docker_criu_integration", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_cuda_container_probe",
+        lambda **_: _probe("cuda_check", ProbeStatus.OK),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "collect_mps_probe",
+        lambda **_: _probe("mps_check", ProbeStatus.OK),
+    )
+
+    class FakeRuntimeAdapter:
+        def __init__(self, *, config, runner=None, timeout_s=30.0):
+            del config, runner, timeout_s
+
+        def start(self, *, run_id: str) -> RuntimeSession:
+            return RuntimeSession(
+                runtime="vllm",
+                mode="external_server",
+                status=ProbeStatus.OK,
+                base_url="http://127.0.0.1:8000/v1",
+                runtime_check=make_probe_result(
+                    run_id=run_id,
+                    component="runtime_check",
+                    status=ProbeStatus.OK,
+                    details={"runtime": "vllm", "mode": "external_server"},
+                ),
+            )
+
+        def stop(self, session: RuntimeSession):
+            del session
+            return None
+
+    monkeypatch.setattr(orchestrator, "VLLMRuntimeAdapter", FakeRuntimeAdapter)
+
+    def _transport(
+        *, url: str, payload: dict[str, object], timeout_s: float, api_key: str
+    ):
+        del url, payload, timeout_s, api_key
+        return {"choices": [{"message": {"content": "smoke ok"}}]}
+
+    monkeypatch.setattr(
+        orchestrator,
+        "LLMSmokeClient",
+        lambda *args, **kwargs: LLMSmokeClient(transport=_transport),
+    )
+
+    captured: dict[str, object] = {}
+
+    def _smoke_preemption(**kwargs):
+        captured.update(kwargs)
+        return make_probe_result(
+            run_id=config.run_id,
+            component="smoke_preemption",
+            status=ProbeStatus.SKIPPED,
+            details={
+                "reason": "runtime session has no experiment-owned container",
+                "outcome": "not_attempted",
+                "smoke": {"attempted": False},
+                "checkpoint": {"attempted": False},
+                "restore": {"attempted": False},
+            },
+        )
+
+    monkeypatch.setattr(orchestrator, "collect_smoke_preemption", _smoke_preemption)
+
+    result = orchestrator.run_v0_orchestrator(
+        config,
+        git_metadata_getter=lambda **_: _git_metadata(),
+    )
+
+    assert result.metadata["status"] == "completed"
+    assert captured["criu_config_mode"] == "cdi_restore_compat"
+    assert captured["criu_config_allow_sudo"] is True
