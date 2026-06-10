@@ -88,6 +88,9 @@ _DEFAULT_RUNTIME_OPTIONS = {
             "extra_args": [],
             "image_pull_timeout_s": DEFAULT_IMAGE_PULL_TIMEOUT_S,
             "model": None,
+            "network_mode": None,
+            "gpu_mode": "gpus_flag",
+            "gpu_device": "nvidia.com/gpu=all",
         },
     }
 }
@@ -117,6 +120,8 @@ _DEFAULT_PROBE_OPTIONS = {
     "preemption": {
         "timeout_s": 180.0,
         "checkpoint_name": DEFAULT_CHECKPOINT_NAME,
+        "criu_config_mode": None,
+        "criu_config_allow_sudo": False,
     },
 }
 

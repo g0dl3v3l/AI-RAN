@@ -53,6 +53,9 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
         "meta-llama/Meta-Llama-3-8B-Instruct"
     )
     assert resolved.runtime_options["vllm"]["docker_server"]["image_pull_timeout_s"] == 1800.0
+    assert resolved.runtime_options["vllm"]["docker_server"]["network_mode"] is None
+    assert resolved.runtime_options["vllm"]["docker_server"]["gpu_mode"] == "gpus_flag"
+    assert resolved.runtime_options["vllm"]["docker_server"]["gpu_device"] == "nvidia.com/gpu=all"
     assert resolved.probe_options["cuda"]["image"] == "nvidia/cuda:12.4.1-base-ubuntu22.04"
     assert resolved.probe_options["docker_criu_integration"]["smoke_runtime"] == "runc"
     assert resolved.probe_options["docker_criu_integration"]["network_mode"] == "host"
@@ -60,6 +63,8 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     assert resolved.probe_options["docker_criu_integration"]["timeout_s"] == 60.0
     assert resolved.probe_options["runtime"]["timeout_s"] == 180.0
     assert resolved.probe_options["preemption"]["timeout_s"] == 180.0
+    assert resolved.probe_options["preemption"]["criu_config_mode"] is None
+    assert resolved.probe_options["preemption"]["criu_config_allow_sudo"] is False
 
     dumped = resolved.to_dict()
     assert dumped["output_dir"] == str(override_output_dir.resolve())
