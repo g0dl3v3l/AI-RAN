@@ -655,6 +655,10 @@ def _run_real_sequence(
                         "post_checkpoint_delay_s", 5.0
                     )
                 ),
+                criu_config_mode=probe_options["preemption"].get("criu_config_mode"),
+                criu_config_allow_sudo=bool(
+                    probe_options["preemption"].get("criu_config_allow_sudo", False)
+                ),
             )
             _capture_criu_logs_for_record(
                 run_dir=run_dir,

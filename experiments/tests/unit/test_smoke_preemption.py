@@ -32,18 +32,34 @@ def _result(
 
 
 class RecordingRunner:
-    def __init__(self, mapping: dict[tuple[str, ...], CommandResult]):
-        self._mapping = mapping
+    def __init__(
+        self,
+        mapping: dict[tuple[str, ...], CommandResult | list[CommandResult]],
+    ):
+        self._mapping: dict[tuple[str, ...], list[CommandResult]] = {}
+        for key, value in mapping.items():
+            if isinstance(value, list):
+                self._mapping[key] = list(value)
+            else:
+                self._mapping[key] = [value]
         self.calls: list[list[str]] = []
+        self.call_details: list[dict[str, object]] = []
 
-    def __call__(self, argv, *, timeout_s=None, cwd=None, env=None, shell=False):
-        del timeout_s, cwd, env, shell
+    def __call__(self, argv, *, timeout_s=None, cwd=None, env=None, shell=False, input_text=None):
+        del cwd, env, shell
         argv_list = list(argv)
         self.calls.append(argv_list)
+        self.call_details.append(
+            {
+                "argv": argv_list,
+                "timeout_s": timeout_s,
+                "input_text": input_text,
+            }
+        )
         key = tuple(argv_list)
-        if key not in self._mapping:
+        if key not in self._mapping or not self._mapping[key]:
             raise AssertionError(f"unexpected command: {argv_list}")
-        return self._mapping[key]
+        return self._mapping[key].pop(0)
 
 
 def _runtime_session(
@@ -236,3 +252,366 @@ def test_llama_cpp_experiment_owned_container_can_attempt_preemption():
         start_command,
         state_command,
     ]
+
+
+def test_smoke_preemption_switches_criu_config_before_dump_and_restore_and_restores_original():
+    from ai_runtime_experiments.preemption import collect_smoke_preemption
+
+    container_name = "ai-edge-v0-vllm-fixed"
+    inspect_command = ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name]
+    capture_original_command = ["sudo", "-n", "cat", "/etc/criu/runc.conf"]
+    write_command = ["sudo", "-n", "tee", "/etc/criu/runc.conf"]
+    checkpoint_command = ["docker", "checkpoint", "create", container_name, "cp1"]
+    start_command = ["docker", "start", "--checkpoint", "cp1", container_name]
+    state_command = ["docker", "inspect", "--format", "{{.State.Status}}", container_name]
+
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout=(
+                    '{"ai-edge-experiment":"v0",'
+                    '"ai-edge-component":"vllm-runtime",'
+                    '"ai-edge-run-id":"task-8"}\n'
+                ),
+            ),
+            tuple(capture_original_command): _result(
+                capture_original_command,
+                status=ProbeStatus.OK,
+                stdout="original\n",
+            ),
+            tuple(write_command): [
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+            ],
+            tuple(checkpoint_command): _result(
+                checkpoint_command,
+                status=ProbeStatus.OK,
+                stdout="cp1\n",
+            ),
+            tuple(start_command): _result(
+                start_command,
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+            tuple(state_command): _result(
+                state_command,
+                status=ProbeStatus.OK,
+                stdout="running\n",
+            ),
+        }
+    )
+
+    record = collect_smoke_preemption(
+        run_id="task-8",
+        runtime_session=_runtime_session(container_name=container_name),
+        docker_criu_integration=_docker_criu_probe(),
+        runner=runner,
+        checkpoint_name="cp1",
+        post_checkpoint_delay_s=0,
+        criu_config_mode="cdi_restore_compat",
+        criu_config_allow_sudo=True,
+    )
+
+    assert record["status"] == "ok"
+    assert runner.calls == [
+        inspect_command,
+        capture_original_command,
+        write_command,
+        checkpoint_command,
+        write_command,
+        start_command,
+        state_command,
+        write_command,
+    ]
+    assert (
+        "mntns-compat-mode"
+        not in record["details"]["commands"]["write_criu_runc_conf_dump"]["stdin"]
+    )
+    assert (
+        "mntns-compat-mode"
+        in record["details"]["commands"]["write_criu_runc_conf_restore"]["stdin"]
+    )
+    assert record["details"]["commands"]["restore_criu_runc_conf_original"]["stdin"] == "original\n"
+    assert record["details"]["diagnostics"]["criu_config"]["lock"]["status"] == "ok"
+
+
+
+def test_smoke_preemption_restores_original_criu_config_when_restore_start_fails():
+    from ai_runtime_experiments.preemption import collect_smoke_preemption
+
+    container_name = "ai-edge-v0-vllm-fixed"
+    inspect_command = ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name]
+    capture_original_command = ["sudo", "-n", "cat", "/etc/criu/runc.conf"]
+    write_command = ["sudo", "-n", "tee", "/etc/criu/runc.conf"]
+    checkpoint_command = ["docker", "checkpoint", "create", container_name, "cp1"]
+    start_command = ["docker", "start", "--checkpoint", "cp1", container_name]
+
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout=(
+                    '{"ai-edge-experiment":"v0",'
+                    '"ai-edge-component":"vllm-runtime",'
+                    '"ai-edge-run-id":"task-8"}\n'
+                ),
+            ),
+            tuple(capture_original_command): _result(
+                capture_original_command,
+                status=ProbeStatus.OK,
+                stdout="original\n",
+            ),
+            tuple(write_command): [
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+            ],
+            tuple(checkpoint_command): _result(
+                checkpoint_command,
+                status=ProbeStatus.OK,
+                stdout="cp1\n",
+            ),
+            tuple(start_command): _result(
+                start_command,
+                status=ProbeStatus.ERROR,
+                returncode=1,
+                stderr="restore failed\n",
+            ),
+        }
+    )
+
+    record = collect_smoke_preemption(
+        run_id="task-8",
+        runtime_session=_runtime_session(container_name=container_name),
+        docker_criu_integration=_docker_criu_probe(),
+        runner=runner,
+        checkpoint_name="cp1",
+        post_checkpoint_delay_s=0,
+        criu_config_mode="cdi_restore_compat",
+        criu_config_allow_sudo=True,
+    )
+
+    assert record["status"] == "error"
+    assert record["details"]["outcome"] == "restore_failed"
+    assert runner.calls == [
+        inspect_command,
+        capture_original_command,
+        write_command,
+        checkpoint_command,
+        write_command,
+        start_command,
+        write_command,
+    ]
+    assert record["details"]["commands"]["restore_criu_runc_conf_original"]["stdin"] == "original\n"
+
+
+
+def test_smoke_preemption_reports_cleanup_failed_when_original_restore_fails():
+    from ai_runtime_experiments.preemption import collect_smoke_preemption
+
+    container_name = "ai-edge-v0-vllm-fixed"
+    inspect_command = ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name]
+    capture_original_command = ["sudo", "-n", "cat", "/etc/criu/runc.conf"]
+    write_command = ["sudo", "-n", "tee", "/etc/criu/runc.conf"]
+    checkpoint_command = ["docker", "checkpoint", "create", container_name, "cp1"]
+    start_command = ["docker", "start", "--checkpoint", "cp1", container_name]
+    state_command = ["docker", "inspect", "--format", "{{.State.Status}}", container_name]
+
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout=(
+                    '{"ai-edge-experiment":"v0",'
+                    '"ai-edge-component":"vllm-runtime",'
+                    '"ai-edge-run-id":"task-8"}\n'
+                ),
+            ),
+            tuple(capture_original_command): _result(
+                capture_original_command,
+                status=ProbeStatus.OK,
+                stdout="original\n",
+            ),
+            tuple(write_command): [
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+                _result(write_command, status=ProbeStatus.OK, stdout="ok\n"),
+                _result(
+                    write_command,
+                    status=ProbeStatus.ERROR,
+                    returncode=1,
+                    stderr="restore original failed\n",
+                    error_type="RuntimeError",
+                    error_message="restore original failed",
+                ),
+            ],
+            tuple(checkpoint_command): _result(
+                checkpoint_command,
+                status=ProbeStatus.OK,
+                stdout="cp1\n",
+            ),
+            tuple(start_command): _result(
+                start_command,
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+            tuple(state_command): _result(
+                state_command,
+                status=ProbeStatus.OK,
+                stdout="running\n",
+            ),
+        }
+    )
+
+    record = collect_smoke_preemption(
+        run_id="task-8",
+        runtime_session=_runtime_session(container_name=container_name),
+        docker_criu_integration=_docker_criu_probe(),
+        runner=runner,
+        checkpoint_name="cp1",
+        post_checkpoint_delay_s=0,
+        criu_config_mode="cdi_restore_compat",
+        criu_config_allow_sudo=True,
+    )
+
+    assert record["status"] == "error"
+    assert record["details"]["outcome"] == "cleanup_failed"
+    assert "restore_original" in record["details"]["reason"]
+    assert (
+        record["details"]["commands"]["restore_criu_runc_conf_original"]["status"]
+        == "error"
+    )
+    assert (
+        record["details"]["diagnostics"]["criu_config"]["restore_original"]["status"]
+        == "error"
+    )
+
+
+
+def test_smoke_preemption_reports_cleanup_failed_when_lock_release_fails(monkeypatch):
+    import ai_runtime_experiments.preemption.smoke as smoke_module
+
+    container_name = "ai-edge-v0-vllm-fixed"
+    inspect_command = ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name]
+    checkpoint_command = ["docker", "checkpoint", "create", container_name, "cp1"]
+    start_command = ["docker", "start", "--checkpoint", "cp1", container_name]
+    state_command = ["docker", "inspect", "--format", "{{.State.Status}}", container_name]
+
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout=(
+                    '{"ai-edge-experiment":"v0",'
+                    '"ai-edge-component":"vllm-runtime",'
+                    '"ai-edge-run-id":"task-8"}\n'
+                ),
+            ),
+            tuple(checkpoint_command): _result(
+                checkpoint_command,
+                status=ProbeStatus.OK,
+                stdout="cp1\n",
+            ),
+            tuple(start_command): _result(
+                start_command,
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+            tuple(state_command): _result(
+                state_command,
+                status=ProbeStatus.OK,
+                stdout="running\n",
+            ),
+        }
+    )
+
+    class FakeSwitcher:
+        def __init__(self, *, runner, timeout_s, use_sudo):
+            del runner, timeout_s, use_sudo
+            self.lock_result = _result(["flock", "/tmp/mock.lock"], status=ProbeStatus.OK)
+            self.capture_original_result = _result(
+                ["cat", "/etc/criu/runc.conf"], status=ProbeStatus.OK, stdout="original\n"
+            )
+            self.restore_original_result = None
+            self.release_result = None
+            self.original_text = "original\n"
+            self.original_exists = True
+            self.diagnostics = {
+                "lock": {
+                    "path": "/tmp/mock.lock",
+                    "status": "ok",
+                    "acquired": True,
+                },
+                "original": {
+                    "path": "/etc/criu/runc.conf",
+                    "status": "ok",
+                    "exists": True,
+                },
+                "restore_original": {
+                    "path": "/etc/criu/runc.conf",
+                    "status": "not_attempted",
+                },
+            }
+
+        def acquire(self):
+            return self.lock_result
+
+        def write_phase(self, phase):
+            return _result(
+                ["tee", "/etc/criu/runc.conf", phase],
+                status=ProbeStatus.OK,
+                stdout="ok\n",
+            )
+
+        def restore_original(self):
+            self.restore_original_result = _result(
+                ["tee", "/etc/criu/runc.conf"],
+                status=ProbeStatus.OK,
+                stdout="ok\n",
+            )
+            self.diagnostics["restore_original"].update({
+                "status": "ok",
+                "exists": True,
+            })
+            return self.restore_original_result
+
+        def release(self):
+            self.release_result = _result(
+                ["funlock", "/tmp/mock.lock"],
+                status=ProbeStatus.ERROR,
+                returncode=1,
+                stderr="release failed\n",
+                error_type="RuntimeError",
+                error_message="release failed",
+            )
+            self.diagnostics["lock"].update({
+                "released": False,
+                "release_error": "release failed",
+            })
+            return self.release_result
+
+    monkeypatch.setattr(smoke_module, "CriuRuncConfigPhaseSwitcher", FakeSwitcher)
+
+    record = smoke_module.collect_smoke_preemption(
+        run_id="task-8",
+        runtime_session=_runtime_session(container_name=container_name),
+        docker_criu_integration=_docker_criu_probe(),
+        runner=runner,
+        checkpoint_name="cp1",
+        post_checkpoint_delay_s=0,
+        criu_config_mode="cdi_restore_compat",
+        criu_config_allow_sudo=True,
+    )
+
+    assert record["status"] == "error"
+    assert record["details"]["outcome"] == "cleanup_failed"
+    assert "release_lock" in record["details"]["reason"]
+    assert (
+        record["details"]["commands"]["release_criu_runc_conf_lock"]["status"]
+        == "error"
+    )
