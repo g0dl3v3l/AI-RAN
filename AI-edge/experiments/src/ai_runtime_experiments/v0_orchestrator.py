@@ -175,7 +175,7 @@ def _run_post_restore_probe(
             else None
         ),
     }
-    enabled = bool(config.workload.get("post_restore_probe_enabled", False))
+    enabled = bool(config.workload.get("post_restore_probe_enabled", True))
     if not enabled:
         details["reason"] = "post-restore probe disabled by config"
         return make_probe_result(
@@ -585,6 +585,8 @@ def _annotate_smoke_preemption_response_timing(
     *,
     run_dir: Path,
     smoke_preemption: dict[str, Any],
+    smoke_request_record: dict[str, Any] | None = None,
+    smoke_response_record: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     details = smoke_preemption.get("details")
     if not isinstance(details, dict):
@@ -595,7 +597,7 @@ def _annotate_smoke_preemption_response_timing(
     if not isinstance(smoke_details, dict) or not isinstance(restore_details, dict):
         return smoke_preemption
 
-    request_record = _latest_smoke_request_record(run_dir)
+    request_record = smoke_request_record or _latest_smoke_request_record(run_dir)
     if request_record is not None:
         request_status = request_record.get("status")
         request_monotonic_ns = request_record.get("monotonic_ns")
@@ -618,7 +620,7 @@ def _annotate_smoke_preemption_response_timing(
                     request_monotonic_ns <= restore_start_monotonic_ns
                 )
 
-    response_record = _latest_smoke_response_record(run_dir)
+    response_record = smoke_response_record or _latest_smoke_response_record(run_dir)
     if response_record is None:
         return smoke_preemption
 
@@ -1075,6 +1077,9 @@ def _run_real_sequence(
             if smoke_request_executor is not None:
                 smoke_request_executor.shutdown(wait=True)
 
+        initial_smoke_request_record = _latest_smoke_request_record(run_dir)
+        initial_smoke_response_record = _latest_smoke_response_record(run_dir)
+
         _emit_stage_event(
             run_dir=run_dir,
             run_id=config.run_id,
@@ -1112,6 +1117,8 @@ def _run_real_sequence(
         records["smoke_preemption.json"] = _annotate_smoke_preemption_response_timing(
             run_dir=run_dir,
             smoke_preemption=records["smoke_preemption.json"],
+            smoke_request_record=initial_smoke_request_record,
+            smoke_response_record=initial_smoke_response_record,
         )
         _emit_stage_event(
             run_dir=run_dir,
@@ -1125,8 +1132,8 @@ def _run_real_sequence(
             runtime_session=runtime_session,
             smoke_preemption=records["smoke_preemption.json"],
             request_id=request_id,
-            smoke_response=_latest_smoke_response_record(run_dir),
-            smoke_request=_latest_smoke_request_record(run_dir),
+            smoke_response=initial_smoke_response_record,
+            smoke_request=initial_smoke_request_record,
         )
         _capture_criu_logs_for_record(
             run_dir=run_dir,

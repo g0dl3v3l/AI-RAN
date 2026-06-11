@@ -29,7 +29,6 @@ def _write_config(path: Path, content: str = MINIMAL_CONFIG) -> Path:
     return path
 
 
-
 def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     config_path = _write_config(tmp_path / "config.yaml")
     override_output_dir = tmp_path / "cli-run"
@@ -52,14 +51,26 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     assert resolved.runtime_options["vllm"]["docker_server"]["model"] == (
         "meta-llama/Meta-Llama-3-8B-Instruct"
     )
-    assert resolved.runtime_options["vllm"]["docker_server"]["image_pull_timeout_s"] == 1800.0
+    assert (
+        resolved.runtime_options["vllm"]["docker_server"]["image_pull_timeout_s"]
+        == 1800.0
+    )
     assert resolved.runtime_options["vllm"]["docker_server"]["network_mode"] is None
     assert resolved.runtime_options["vllm"]["docker_server"]["gpu_mode"] == "gpus_flag"
-    assert resolved.runtime_options["vllm"]["docker_server"]["gpu_device"] == "nvidia.com/gpu=all"
-    assert resolved.probe_options["cuda"]["image"] == "nvidia/cuda:12.4.1-base-ubuntu22.04"
+    assert (
+        resolved.runtime_options["vllm"]["docker_server"]["gpu_device"]
+        == "nvidia.com/gpu=all"
+    )
+    assert resolved.workload["post_restore_probe_enabled"] is True
+    assert (
+        resolved.probe_options["cuda"]["image"] == "nvidia/cuda:12.4.1-base-ubuntu22.04"
+    )
     assert resolved.probe_options["docker_criu_integration"]["smoke_runtime"] == "runc"
     assert resolved.probe_options["docker_criu_integration"]["network_mode"] == "host"
-    assert resolved.probe_options["docker_criu_integration"]["post_checkpoint_delay_s"] == 5.0
+    assert (
+        resolved.probe_options["docker_criu_integration"]["post_checkpoint_delay_s"]
+        == 5.0
+    )
     assert resolved.probe_options["docker_criu_integration"]["timeout_s"] == 60.0
     assert resolved.probe_options["runtime"]["timeout_s"] == 180.0
     assert resolved.probe_options["preemption"]["timeout_s"] == 180.0
@@ -70,7 +81,6 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     assert dumped["output_dir"] == str(override_output_dir.resolve())
     assert dumped["run_id"] == "cli-run"
     assert dumped["dry_run"] is True
-
 
 
 def test_top_level_model_overrides_docker_server_model(tmp_path: Path):
@@ -99,8 +109,10 @@ def test_top_level_model_overrides_docker_server_model(tmp_path: Path):
     resolved = load_config(config_path)
 
     assert resolved.model == "authoritative/model"
-    assert resolved.runtime_options["vllm"]["docker_server"]["model"] == "authoritative/model"
-
+    assert (
+        resolved.runtime_options["vllm"]["docker_server"]["model"]
+        == "authoritative/model"
+    )
 
 
 def test_load_config_uses_safe_yaml_loader(tmp_path: Path):
@@ -111,7 +123,6 @@ def test_load_config_uses_safe_yaml_loader(tmp_path: Path):
 
     with pytest.raises(ValueError, match="safe YAML"):
         load_config(config_path)
-
 
 
 def test_load_config_supports_llama_cpp_runtime(tmp_path: Path):
@@ -140,11 +151,21 @@ def test_load_config_supports_llama_cpp_runtime(tmp_path: Path):
     resolved = load_config(config_path)
 
     assert resolved.runtime == "llama_cpp"
-    assert resolved.runtime_options["llama_cpp"]["docker_server"]["model_file"] == "gemma-3-1b-it-f16.gguf"
-    assert resolved.runtime_options["llama_cpp"]["docker_server"]["host_model_dir"] == "/home/netsys/llama-models"
-    assert resolved.runtime_options["llama_cpp"]["docker_server"]["image"] == "ghcr.io/ggml-org/llama.cpp:server"
-    assert resolved.runtime_options["llama_cpp"]["docker_server"]["network_mode"] == "host"
-
+    assert (
+        resolved.runtime_options["llama_cpp"]["docker_server"]["model_file"]
+        == "gemma-3-1b-it-f16.gguf"
+    )
+    assert (
+        resolved.runtime_options["llama_cpp"]["docker_server"]["host_model_dir"]
+        == "/home/netsys/llama-models"
+    )
+    assert (
+        resolved.runtime_options["llama_cpp"]["docker_server"]["image"]
+        == "ghcr.io/ggml-org/llama.cpp:server"
+    )
+    assert (
+        resolved.runtime_options["llama_cpp"]["docker_server"]["network_mode"] == "host"
+    )
 
 
 def test_load_config_rejects_unsupported_runtime(tmp_path: Path):

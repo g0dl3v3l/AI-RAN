@@ -52,6 +52,7 @@ _DEFAULT_WORKLOAD = {
     "temperature": 0.0,
     "max_tokens": 64,
     "timeout_s": 30.0,
+    "post_restore_probe_enabled": True,
 }
 _DEFAULT_RUNTIME_OPTIONS = {
     "llama_cpp": {

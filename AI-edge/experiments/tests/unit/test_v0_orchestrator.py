@@ -87,6 +87,21 @@ def _stub_collect_debug_bundle(monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+def _stub_post_restore_readiness(monkeypatch):
+    import ai_runtime_experiments.v0_orchestrator as orchestrator
+
+    monkeypatch.setattr(
+        orchestrator,
+        "_probe_post_restore_readiness",
+        lambda **_: (
+            ProbeStatus.OK,
+            {"models_url": "http://127.0.0.1:8000/v1/models", "attempts": 1},
+        ),
+        raising=False,
+    )
+
+
 def test_dry_run_creates_all_required_v0_artifacts(tmp_path: Path):
     from ai_runtime_experiments.config import load_config
     from ai_runtime_experiments.v0_orchestrator import (
@@ -155,7 +170,6 @@ def test_dry_run_writes_debug_bundle_and_metadata_pointer(tmp_path: Path):
         "artifact_path": str(debug_bundle_path),
     }
     assert result.metadata["debug_bundle"]["artifact_path"] == str(debug_bundle_path)
-
 
 
 def test_unsupported_probe_does_not_abort_orchestration(tmp_path: Path, monkeypatch):
@@ -1039,6 +1053,11 @@ def test_orchestrator_uses_request_jsonl_to_prove_request_started_before_checkpo
         smoke_validation["classification"]
         == SmokeClassification.SMOKE_COMPLETED_AFTER_RESTORE.value
     )
+    post_restore_probe = _read_json(run_dir / "post_restore_probe.json")
+    assert post_restore_probe["status"] == ProbeStatus.OK.value
+    assert (
+        result.metadata["probe_statuses"]["post_restore_probe"] == ProbeStatus.OK.value
+    )
 
 
 def test_orchestrator_uses_llama_cpp_runtime_adapter(tmp_path: Path, monkeypatch):
@@ -1431,7 +1450,6 @@ def test_orchestrator_copies_criu_log_before_runtime_cleanup_deletes_source(
     smoke_preemption = _read_json(run_dir / "smoke_preemption.json")
     assert smoke_preemption["details"]["diagnostics"]["criu_logs"][0]["status"] == "ok"
     assert not source_log.exists()
-
 
 
 def test_orchestrator_passes_criu_phase_switch_config_to_smoke_preemption(
