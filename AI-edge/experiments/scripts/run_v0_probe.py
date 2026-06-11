@@ -6,13 +6,17 @@ from pathlib import Path
 from typing import Sequence
 
 from ai_runtime_experiments.config import load_config
+from ai_runtime_experiments.utils.time import utc_now_iso_z
 from ai_runtime_experiments.v0_orchestrator import run_v0_orchestrator
 
 
-
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run the V0 AI runtime probe orchestrator.")
-    parser.add_argument("--config", required=True, help="Path to the V0 probe config YAML file.")
+    parser = argparse.ArgumentParser(
+        description="Run the V0 AI runtime probe orchestrator."
+    )
+    parser.add_argument(
+        "--config", required=True, help="Path to the V0 probe config YAML file."
+    )
     parser.add_argument(
         "--output-dir",
         help="Optional run-directory override. Artifacts are written directly into this path.",
@@ -25,12 +29,15 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
     try:
+        print(
+            f"[{utc_now_iso_z()}] [run_v0_probe] start config={args.config} output_dir={args.output_dir}",
+            flush=True,
+        )
         config = load_config(
             Path(args.config),
             output_dir_override=Path(args.output_dir) if args.output_dir else None,
@@ -41,7 +48,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    print(f"V0 orchestration complete: {result.run_dir}")
+    print(f"[{utc_now_iso_z()}] V0 orchestration complete: {result.run_dir}")
     return 0
 
 

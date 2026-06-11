@@ -38,7 +38,6 @@ CommandRunner = Callable[..., CommandResult]
 DebugCaptureHook = Callable[[dict[str, Any]], None]
 
 
-
 def _command_details(result: CommandResult) -> dict[str, Any]:
     return {
         "argv": result.argv,
@@ -53,12 +52,12 @@ def _command_details(result: CommandResult) -> dict[str, Any]:
     }
 
 
-
 def _combined_text(result: CommandResult) -> str:
     return "\n".join(
-        part for part in (result.stdout, result.stderr, result.error_message or "") if part
+        part
+        for part in (result.stdout, result.stderr, result.error_message or "")
+        if part
     ).lower()
-
 
 
 def _classify_result(
@@ -75,10 +74,11 @@ def _classify_result(
         return ProbeStatus.TIMEOUT, f"command timeout(s): {command_label}"
     if result.status == ProbeStatus.SKIPPED:
         return ProbeStatus.SKIPPED, f"skipped command(s): {command_label}"
-    if capability_sensitive and any(marker in _combined_text(result) for marker in _UNSUPPORTED_MARKERS):
+    if capability_sensitive and any(
+        marker in _combined_text(result) for marker in _UNSUPPORTED_MARKERS
+    ):
         return ProbeStatus.UNSUPPORTED, f"unsupported capability: {command_label}"
     return ProbeStatus.ERROR, f"command failure(s): {command_label}"
-
 
 
 def _extract_criu_version(stdout: str) -> str | None:
@@ -86,7 +86,6 @@ def _extract_criu_version(stdout: str) -> str | None:
     if match is None:
         return None
     return match.group(1)
-
 
 
 def _status_from_probe(record: Mapping[str, Any] | None) -> ProbeStatus | None:
@@ -103,7 +102,6 @@ def _status_from_probe(record: Mapping[str, Any] | None) -> ProbeStatus | None:
     return None
 
 
-
 def _parse_label_mapping(text: str) -> dict[str, str] | None:
     try:
         value = json.loads(text)
@@ -118,7 +116,6 @@ def _parse_label_mapping(text: str) -> dict[str, str] | None:
     return parsed
 
 
-
 def _finalize_record(
     *,
     run_id: str,
@@ -131,7 +128,6 @@ def _finalize_record(
         status=status,
         details=details,
     )
-
 
 
 def _run_debug_capture_hook(
@@ -162,7 +158,6 @@ def _run_debug_capture_hook(
         )
 
 
-
 def _cleanup_owned_container(
     *,
     container_name: str,
@@ -175,7 +170,6 @@ def _cleanup_owned_container(
     result = runner(["docker", "rm", "-f", container_name], timeout_s=timeout_s)
     details["commands"]["docker_rm_force"] = _command_details(result)
     return result
-
 
 
 def collect_criu_probe(
@@ -211,7 +205,6 @@ def collect_criu_probe(
     )
 
 
-
 def collect_docker_criu_integration(
     *,
     run_id: str,
@@ -220,6 +213,7 @@ def collect_docker_criu_integration(
     criu_probe: Mapping[str, Any] | None = None,
     container_name: str | None = None,
     checkpoint_name: str = DEFAULT_CHECKPOINT_NAME,
+    checkpoint_dir: str | None = None,
     smoke_image: str = DEFAULT_SMOKE_IMAGE,
     smoke_runtime: str | None = DEFAULT_SMOKE_RUNTIME,
     smoke_network_mode: str | None = DEFAULT_SMOKE_NETWORK_MODE,
@@ -237,6 +231,7 @@ def collect_docker_criu_integration(
         "container": {
             "name": resolved_container_name,
             "checkpoint_name": checkpoint_name,
+            "checkpoint_dir": checkpoint_dir,
             "image": smoke_image,
             "runtime": smoke_runtime,
             "network_mode": smoke_network_mode,
@@ -249,7 +244,11 @@ def collect_docker_criu_integration(
     if criu_probe is not None:
         details["prerequisites"] = {"criu_status": criu_probe.get("status")}
     if criu_status is not None and criu_status != ProbeStatus.OK:
-        status = ProbeStatus.UNSUPPORTED if criu_status == ProbeStatus.UNSUPPORTED else criu_status
+        status = (
+            ProbeStatus.UNSUPPORTED
+            if criu_status == ProbeStatus.UNSUPPORTED
+            else criu_status
+        )
         details["reason"] = f"criu prerequisite is not available: {status.value}"
         return _finalize_record(run_id=run_id, status=status, details=details)
 
@@ -300,10 +299,18 @@ def collect_docker_criu_integration(
         details["smoke"]["container_id"] = container_id
 
     inspect_labels_result = runner(
-        ["docker", "inspect", "--format", "{{json .Config.Labels}}", resolved_container_name],
+        [
+            "docker",
+            "inspect",
+            "--format",
+            "{{json .Config.Labels}}",
+            resolved_container_name,
+        ],
         timeout_s=timeout_s,
     )
-    details["commands"]["docker_inspect_labels"] = _command_details(inspect_labels_result)
+    details["commands"]["docker_inspect_labels"] = _command_details(
+        inspect_labels_result
+    )
     inspect_status, inspect_reason = _classify_result(
         inspect_labels_result,
         command_label="docker inspect labels",
@@ -315,21 +322,34 @@ def collect_docker_criu_integration(
     labels = _parse_label_mapping(inspect_labels_result.stdout)
     if labels is None:
         details["reason"] = "unable to parse docker inspect labels JSON"
-        return _finalize_record(run_id=run_id, status=ProbeStatus.ERROR, details=details)
+        return _finalize_record(
+            run_id=run_id, status=ProbeStatus.ERROR, details=details
+        )
 
     details["container"]["inspected_labels"] = labels
 
     try:
-        ensure_experiment_owned_container(container_name=resolved_container_name, labels=labels)
+        ensure_experiment_owned_container(
+            container_name=resolved_container_name, labels=labels
+        )
     except ValueError as exc:
         details["reason"] = str(exc)
-        return _finalize_record(run_id=run_id, status=ProbeStatus.ERROR, details=details)
+        return _finalize_record(
+            run_id=run_id, status=ProbeStatus.ERROR, details=details
+        )
+
+    checkpoint_argv = ["docker", "checkpoint", "create"]
+    if checkpoint_dir:
+        checkpoint_argv.extend(["--checkpoint-dir", checkpoint_dir])
+    checkpoint_argv.extend([resolved_container_name, checkpoint_name])
 
     checkpoint_result = runner(
-        ["docker", "checkpoint", "create", resolved_container_name, checkpoint_name],
+        checkpoint_argv,
         timeout_s=timeout_s,
     )
-    details["commands"]["docker_checkpoint_create"] = _command_details(checkpoint_result)
+    details["commands"]["docker_checkpoint_create"] = _command_details(
+        checkpoint_result
+    )
     checkpoint_status, checkpoint_reason = _classify_result(
         checkpoint_result,
         command_label="docker checkpoint create",
@@ -355,7 +375,9 @@ def collect_docker_criu_integration(
         details["reason"] = checkpoint_reason
         if cleanup_status != ProbeStatus.OK:
             details["cleanup_reason"] = cleanup_reason
-        return _finalize_record(run_id=run_id, status=checkpoint_status, details=details)
+        return _finalize_record(
+            run_id=run_id, status=checkpoint_status, details=details
+        )
 
     if post_checkpoint_delay_s > 0:
         time.sleep(post_checkpoint_delay_s)
@@ -364,8 +386,13 @@ def collect_docker_criu_integration(
             "status": ProbeStatus.OK.value,
         }
 
+    start_argv = ["docker", "start"]
+    if checkpoint_dir:
+        start_argv.extend(["--checkpoint-dir", checkpoint_dir])
+    start_argv.extend(["--checkpoint", checkpoint_name, resolved_container_name])
+
     start_result = runner(
-        ["docker", "start", "--checkpoint", checkpoint_name, resolved_container_name],
+        start_argv,
         timeout_s=timeout_s,
     )
     details["commands"]["docker_start_checkpoint"] = _command_details(start_result)
