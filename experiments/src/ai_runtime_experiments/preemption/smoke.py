@@ -34,7 +34,11 @@ def _parse_label_mapping(text: str) -> dict[str, str] | None:
         return None
     if not isinstance(value, dict):
         return None
-    return {key: item for key, item in value.items() if isinstance(key, str) and isinstance(item, str)}
+    return {
+        key: item
+        for key, item in value.items()
+        if isinstance(key, str) and isinstance(item, str)
+    }
 
 
 def _ensure_experiment_owned_runtime_container(
@@ -65,11 +69,11 @@ def _ensure_experiment_owned_runtime_container(
         )
 
 
-
 def _base_details(
     *,
     runtime_session: RuntimeSession,
     checkpoint_name: str,
+    checkpoint_dir: str | None,
     docker_criu_integration: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     details: dict[str, Any] = {
@@ -83,6 +87,7 @@ def _base_details(
             "name": runtime_session.container_name,
             "id": runtime_session.container_id,
             "checkpoint_name": checkpoint_name,
+            "checkpoint_dir": checkpoint_dir,
         },
         "prerequisites": {
             "runtime_status": runtime_session.status.value,
@@ -91,25 +96,34 @@ def _base_details(
     }
     prerequisite_status = _status_from_probe(docker_criu_integration)
     if prerequisite_status is not None:
-        details["prerequisites"]["docker_criu_integration_status"] = prerequisite_status.value
+        details["prerequisites"]["docker_criu_integration_status"] = (
+            prerequisite_status.value
+        )
     if docker_criu_integration is not None:
         prerequisite_details = docker_criu_integration.get("details")
-        if isinstance(prerequisite_details, Mapping) and prerequisite_details.get("reason"):
-            details["prerequisites"]["docker_criu_integration_reason"] = prerequisite_details["reason"]
+        if isinstance(prerequisite_details, Mapping) and prerequisite_details.get(
+            "reason"
+        ):
+            details["prerequisites"]["docker_criu_integration_reason"] = (
+                prerequisite_details["reason"]
+            )
     return details
 
 
-
-def _mark_phase_start(phase: dict[str, Any]) -> None:
+def _mark_phase_start(phase: dict[str, Any], *, phase_name: str) -> None:
     phase["attempted"] = True
     phase["start_timestamp_utc"] = utc_now_iso_z()
     phase["start_monotonic_ns"] = monotonic_ns()
-
+    print(
+        f"[{phase['start_timestamp_utc']}] [preemption.{phase_name}] start",
+        flush=True,
+    )
 
 
 def _mark_phase_end(
     phase: dict[str, Any],
     *,
+    phase_name: str,
     status: ProbeStatus,
     reason: str | None = None,
     command: str | None = None,
@@ -121,7 +135,11 @@ def _mark_phase_end(
         phase["reason"] = reason
     if command is not None:
         phase["command"] = command
-
+    print(
+        f"[{phase['end_timestamp_utc']}] [preemption.{phase_name}] end status={status.value}"
+        + (f" reason={reason}" if reason else ""),
+        flush=True,
+    )
 
 
 def _finalize_smoke_preemption(
@@ -138,7 +156,6 @@ def _finalize_smoke_preemption(
     )
 
 
-
 def _command_details_with_input(
     result: CommandResult,
     *,
@@ -150,10 +167,141 @@ def _command_details_with_input(
     return details
 
 
-
 def _command_failed(result: CommandResult) -> bool:
     return result.status != ProbeStatus.OK or result.returncode not in (None, 0)
 
+
+def _safe_runner_command(
+    *,
+    runner: CommandRunner,
+    argv: list[str],
+    timeout_s: float,
+) -> CommandResult:
+    try:
+        return runner(argv, timeout_s=timeout_s)
+    except Exception as exc:
+        return CommandResult(
+            argv=argv,
+            status=ProbeStatus.ERROR,
+            returncode=None,
+            stdout="",
+            stderr="",
+            timed_out=False,
+            duration_s=0.0,
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+        )
+
+
+def _capture_checkpoint_storage_details(
+    *,
+    details: dict[str, Any],
+    runner: CommandRunner,
+    timeout_s: float,
+    checkpoint_dir: str | None,
+) -> None:
+    storage = details.setdefault("checkpoint_storage", {})
+
+    docker_root_result = _safe_runner_command(
+        runner=runner,
+        argv=["docker", "info", "--format", "{{.DockerRootDir}}"],
+        timeout_s=timeout_s,
+    )
+    details["commands"]["docker_info_root_dir"] = _command_details(docker_root_result)
+    docker_root = docker_root_result.stdout.strip()
+    if docker_root_result.status == ProbeStatus.OK and docker_root:
+        storage["docker_root_dir"] = docker_root
+        docker_root_mount = _safe_runner_command(
+            runner=runner,
+            argv=["findmnt", "-no", "TARGET,SOURCE,FSTYPE,OPTIONS", docker_root],
+            timeout_s=timeout_s,
+        )
+        details["commands"]["docker_root_findmnt"] = _command_details(docker_root_mount)
+        if (
+            docker_root_mount.status == ProbeStatus.OK
+            and docker_root_mount.stdout.strip()
+        ):
+            storage["docker_root_mount"] = docker_root_mount.stdout.strip()
+
+    if checkpoint_dir:
+        storage["checkpoint_dir"] = checkpoint_dir
+        checkpoint_mount = _safe_runner_command(
+            runner=runner,
+            argv=["findmnt", "-no", "TARGET,SOURCE,FSTYPE,OPTIONS", checkpoint_dir],
+            timeout_s=timeout_s,
+        )
+        details["commands"]["checkpoint_dir_findmnt"] = _command_details(
+            checkpoint_mount
+        )
+        if (
+            checkpoint_mount.status == ProbeStatus.OK
+            and checkpoint_mount.stdout.strip()
+        ):
+            storage["checkpoint_dir_mount"] = checkpoint_mount.stdout.strip()
+
+
+def _capture_memory_snapshot(
+    *,
+    details: dict[str, Any],
+    runner: CommandRunner,
+    timeout_s: float,
+    container_name: str,
+    label: str,
+) -> None:
+    snapshots = details.setdefault("memory", {}).setdefault("snapshots", {})
+    snapshot: dict[str, Any] = {
+        "timestamp_utc": utc_now_iso_z(),
+        "monotonic_ns": monotonic_ns(),
+        "commands": {},
+    }
+    command_timeout_s = max(5.0, min(timeout_s, 30.0))
+
+    free_result = _safe_runner_command(
+        runner=runner,
+        argv=["free", "-b"],
+        timeout_s=command_timeout_s,
+    )
+    snapshot["commands"]["free_b"] = _command_details(free_result)
+
+    gpu_result = _safe_runner_command(
+        runner=runner,
+        argv=[
+            "nvidia-smi",
+            "--query-gpu=name,memory.total,memory.used",
+            "--format=csv,noheader",
+        ],
+        timeout_s=command_timeout_s,
+    )
+    snapshot["commands"]["nvidia_smi_gpu"] = _command_details(gpu_result)
+
+    proc_result = _safe_runner_command(
+        runner=runner,
+        argv=[
+            "nvidia-smi",
+            "--query-compute-apps=pid,process_name,used_memory",
+            "--format=csv,noheader",
+        ],
+        timeout_s=command_timeout_s,
+    )
+    snapshot["commands"]["nvidia_smi_compute_apps"] = _command_details(proc_result)
+
+    docker_stats_result = _safe_runner_command(
+        runner=runner,
+        argv=[
+            "docker",
+            "stats",
+            "--no-stream",
+            "--format",
+            "{{json .}}",
+            container_name,
+        ],
+        timeout_s=command_timeout_s,
+    )
+    snapshot["commands"]["docker_stats_no_stream"] = _command_details(
+        docker_stats_result
+    )
+
+    snapshots[label] = snapshot
 
 
 def collect_smoke_preemption(
@@ -164,6 +312,8 @@ def collect_smoke_preemption(
     runner: CommandRunner = run_command,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     checkpoint_name: str = DEFAULT_CHECKPOINT_NAME,
+    checkpoint_dir: str | None = None,
+    capture_memory_telemetry: bool = False,
     post_checkpoint_delay_s: float = DEFAULT_POST_CHECKPOINT_DELAY_S,
     criu_config_mode: str | None = None,
     criu_config_allow_sudo: bool = False,
@@ -171,6 +321,7 @@ def collect_smoke_preemption(
     details = _base_details(
         runtime_session=runtime_session,
         checkpoint_name=checkpoint_name,
+        checkpoint_dir=checkpoint_dir,
         docker_criu_integration=docker_criu_integration,
     )
     criu_config_switcher: CriuRuncConfigPhaseSwitcher | None = None
@@ -195,13 +346,17 @@ def collect_smoke_preemption(
         )
 
     if prerequisite_status == ProbeStatus.UNSUPPORTED:
-        prerequisite_details = docker_criu_integration.get("details") if docker_criu_integration else None
+        prerequisite_details = (
+            docker_criu_integration.get("details") if docker_criu_integration else None
+        )
         prerequisite_reason = None
         if isinstance(prerequisite_details, Mapping):
             raw_reason = prerequisite_details.get("reason")
             if isinstance(raw_reason, str) and raw_reason.strip():
                 prerequisite_reason = raw_reason.strip()
-        details["reason"] = prerequisite_reason or "docker_criu_integration prerequisite is unsupported"
+        details["reason"] = (
+            prerequisite_reason or "docker_criu_integration prerequisite is unsupported"
+        )
         details["outcome"] = "not_supported"
         return _finalize_smoke_preemption(
             run_id=run_id,
@@ -222,7 +377,9 @@ def collect_smoke_preemption(
         )
 
     if runtime_session.status != ProbeStatus.OK:
-        details["reason"] = f"runtime session is not preemptible: {runtime_session.status.value}"
+        details["reason"] = (
+            f"runtime session is not preemptible: {runtime_session.status.value}"
+        )
         details["outcome"] = "not_attempted"
         return _finalize_smoke_preemption(
             run_id=run_id,
@@ -272,7 +429,9 @@ def collect_smoke_preemption(
         ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name],
         timeout_s=timeout_s,
     )
-    details["commands"]["docker_inspect_labels"] = _command_details(inspect_labels_result)
+    details["commands"]["docker_inspect_labels"] = _command_details(
+        inspect_labels_result
+    )
     inspect_status, inspect_reason = _classify_result(
         inspect_labels_result,
         command_label="docker inspect labels",
@@ -298,7 +457,9 @@ def collect_smoke_preemption(
 
     details["container"]["inspected_labels"] = labels
     try:
-        _ensure_experiment_owned_runtime_container(container_name=container_name, labels=labels)
+        _ensure_experiment_owned_runtime_container(
+            container_name=container_name, labels=labels
+        )
     except ValueError as exc:
         details["reason"] = str(exc)
         details["outcome"] = "not_attempted"
@@ -309,6 +470,20 @@ def collect_smoke_preemption(
         )
 
     details["smoke"]["attempted"] = True
+    if capture_memory_telemetry:
+        _capture_checkpoint_storage_details(
+            details=details,
+            runner=runner,
+            timeout_s=timeout_s,
+            checkpoint_dir=checkpoint_dir,
+        )
+        _capture_memory_snapshot(
+            details=details,
+            runner=runner,
+            timeout_s=timeout_s,
+            container_name=container_name,
+            label="pre_checkpoint",
+        )
 
     try:
         if criu_config_mode == "cdi_restore_compat":
@@ -325,13 +500,15 @@ def collect_smoke_preemption(
                     criu_config_switcher.lock_result
                 )
             if criu_config_switcher.capture_original_result is not None:
-                details["commands"]["capture_criu_runc_conf_original"] = _command_details(
-                    criu_config_switcher.capture_original_result
+                details["commands"]["capture_criu_runc_conf_original"] = (
+                    _command_details(criu_config_switcher.capture_original_result)
                 )
             if acquire_result.status != ProbeStatus.OK:
                 details["reason"] = str(
                     criu_config_switcher.diagnostics.get("lock", {}).get("reason")
-                    or criu_config_switcher.diagnostics.get("original", {}).get("error_message")
+                    or criu_config_switcher.diagnostics.get("original", {}).get(
+                        "error_message"
+                    )
                     or "failed to prepare CRIU runc.conf switching"
                 )
                 details["outcome"] = "not_attempted"
@@ -342,17 +519,23 @@ def collect_smoke_preemption(
                 )
 
         checkpoint_phase = details["checkpoint"]
-        _mark_phase_start(checkpoint_phase)
+        _mark_phase_start(checkpoint_phase, phase_name="checkpoint")
         if criu_config_switcher is not None:
             dump_text = build_runc_conf_text(phase="dump")
             dump_conf_result = criu_config_switcher.write_phase("dump")
-            details["commands"]["write_criu_runc_conf_dump"] = _command_details_with_input(
-                dump_conf_result,
-                input_text=dump_text,
+            details["commands"]["write_criu_runc_conf_dump"] = (
+                _command_details_with_input(
+                    dump_conf_result,
+                    input_text=dump_text,
+                )
             )
-            if dump_conf_result.status != ProbeStatus.OK or dump_conf_result.returncode != 0:
+            if (
+                dump_conf_result.status != ProbeStatus.OK
+                or dump_conf_result.returncode != 0
+            ):
                 _mark_phase_end(
                     checkpoint_phase,
+                    phase_name="checkpoint",
                     status=ProbeStatus.ERROR,
                     reason="failed to write dump CRIU runc.conf",
                     command="write_criu_runc_conf_dump",
@@ -365,11 +548,17 @@ def collect_smoke_preemption(
                     details=details,
                 )
 
+        checkpoint_argv = ["docker", "checkpoint", "create"]
+        if checkpoint_dir:
+            checkpoint_argv.extend(["--checkpoint-dir", checkpoint_dir])
+        checkpoint_argv.extend([container_name, checkpoint_name])
         checkpoint_result = runner(
-            ["docker", "checkpoint", "create", container_name, checkpoint_name],
+            checkpoint_argv,
             timeout_s=timeout_s,
         )
-        details["commands"]["docker_checkpoint_create"] = _command_details(checkpoint_result)
+        details["commands"]["docker_checkpoint_create"] = _command_details(
+            checkpoint_result
+        )
         checkpoint_status, checkpoint_reason = _classify_result(
             checkpoint_result,
             command_label="docker checkpoint create",
@@ -377,11 +566,20 @@ def collect_smoke_preemption(
         )
         _mark_phase_end(
             checkpoint_phase,
+            phase_name="checkpoint",
             status=checkpoint_status,
             reason=checkpoint_reason,
             command="docker_checkpoint_create",
         )
         if checkpoint_status != ProbeStatus.OK:
+            if capture_memory_telemetry:
+                _capture_memory_snapshot(
+                    details=details,
+                    runner=runner,
+                    timeout_s=timeout_s,
+                    container_name=container_name,
+                    label="checkpoint_failed",
+                )
             details["reason"] = checkpoint_reason or "smoke checkpoint failed"
             if checkpoint_status == ProbeStatus.UNSUPPORTED:
                 details["outcome"] = "not_supported"
@@ -396,7 +594,15 @@ def collect_smoke_preemption(
             )
 
         restore_phase = details["restore"]
-        _mark_phase_start(restore_phase)
+        _mark_phase_start(restore_phase, phase_name="restore")
+        if capture_memory_telemetry:
+            _capture_memory_snapshot(
+                details=details,
+                runner=runner,
+                timeout_s=timeout_s,
+                container_name=container_name,
+                label="pre_restore",
+            )
         if post_checkpoint_delay_s > 0:
             time.sleep(post_checkpoint_delay_s)
             details["commands"]["post_checkpoint_delay"] = {
@@ -407,13 +613,19 @@ def collect_smoke_preemption(
         if criu_config_switcher is not None:
             restore_text = build_runc_conf_text(phase="restore")
             restore_conf_result = criu_config_switcher.write_phase("restore")
-            details["commands"]["write_criu_runc_conf_restore"] = _command_details_with_input(
-                restore_conf_result,
-                input_text=restore_text,
+            details["commands"]["write_criu_runc_conf_restore"] = (
+                _command_details_with_input(
+                    restore_conf_result,
+                    input_text=restore_text,
+                )
             )
-            if restore_conf_result.status != ProbeStatus.OK or restore_conf_result.returncode != 0:
+            if (
+                restore_conf_result.status != ProbeStatus.OK
+                or restore_conf_result.returncode != 0
+            ):
                 _mark_phase_end(
                     restore_phase,
+                    phase_name="restore",
                     status=ProbeStatus.ERROR,
                     reason="failed to write restore CRIU runc.conf",
                     command="write_criu_runc_conf_restore",
@@ -426,8 +638,12 @@ def collect_smoke_preemption(
                     details=details,
                 )
 
+        start_argv = ["docker", "start"]
+        if checkpoint_dir:
+            start_argv.extend(["--checkpoint-dir", checkpoint_dir])
+        start_argv.extend(["--checkpoint", checkpoint_name, container_name])
         start_result = runner(
-            ["docker", "start", "--checkpoint", checkpoint_name, container_name],
+            start_argv,
             timeout_s=timeout_s,
         )
         details["commands"]["docker_start_checkpoint"] = _command_details(start_result)
@@ -439,6 +655,7 @@ def collect_smoke_preemption(
         if start_status != ProbeStatus.OK:
             _mark_phase_end(
                 restore_phase,
+                phase_name="restore",
                 status=start_status,
                 reason=start_reason,
                 command="docker_start_checkpoint",
@@ -468,11 +685,14 @@ def collect_smoke_preemption(
         if state_status != ProbeStatus.OK:
             _mark_phase_end(
                 restore_phase,
+                phase_name="restore",
                 status=state_status,
                 reason=state_reason,
                 command="docker_inspect_state",
             )
-            details["reason"] = state_reason or "unable to inspect restored runtime state"
+            details["reason"] = (
+                state_reason or "unable to inspect restored runtime state"
+            )
             if state_status == ProbeStatus.TIMEOUT:
                 details["outcome"] = "hung"
             else:
@@ -489,6 +709,7 @@ def collect_smoke_preemption(
             reason = f"runtime container not running after restore: {container_state}"
             _mark_phase_end(
                 restore_phase,
+                phase_name="restore",
                 status=ProbeStatus.ERROR,
                 reason=reason,
                 command="docker_inspect_state",
@@ -503,9 +724,18 @@ def collect_smoke_preemption(
 
         _mark_phase_end(
             restore_phase,
+            phase_name="restore",
             status=ProbeStatus.OK,
             command="docker_inspect_state",
         )
+        if capture_memory_telemetry:
+            _capture_memory_snapshot(
+                details=details,
+                runner=runner,
+                timeout_s=timeout_s,
+                container_name=container_name,
+                label="post_restore",
+            )
         details["reason"] = "checkpoint and restore completed"
         details["outcome"] = "restored"
         return _finalize_smoke_preemption(
@@ -519,9 +749,11 @@ def collect_smoke_preemption(
             restore_original_input = None
             if criu_config_switcher.original_exists:
                 restore_original_input = criu_config_switcher.original_text or ""
-            details["commands"]["restore_criu_runc_conf_original"] = _command_details_with_input(
-                restore_original_result,
-                input_text=restore_original_input,
+            details["commands"]["restore_criu_runc_conf_original"] = (
+                _command_details_with_input(
+                    restore_original_result,
+                    input_text=restore_original_input,
+                )
             )
             release_result = criu_config_switcher.release()
             details["commands"]["release_criu_runc_conf_lock"] = _command_details(
@@ -547,8 +779,8 @@ def collect_smoke_preemption(
             if failed_cleanup_steps:
                 previous_outcome = details.get("outcome")
                 previous_reason = details.get("reason")
-                cleanup_reason = (
-                    "CRIU cleanup failed: " + ", ".join(failed_cleanup_steps)
+                cleanup_reason = "CRIU cleanup failed: " + ", ".join(
+                    failed_cleanup_steps
                 )
                 if isinstance(previous_reason, str) and previous_reason.strip():
                     cleanup_reason = f"{cleanup_reason} (after {previous_reason})"

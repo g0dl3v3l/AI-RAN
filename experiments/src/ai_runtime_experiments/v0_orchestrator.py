@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import time
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib import error, request
 
 from ai_runtime_experiments.artifacts import append_jsonl, write_json
 from ai_runtime_experiments.config import ResolvedConfig, dump_config_yaml
@@ -64,6 +66,8 @@ REQUIRED_V0_ARTIFACTS = {
     "smoke_response.jsonl",
     "smoke_preemption.json",
     "smoke_validation.json",
+    "post_restore_probe.json",
+    "stage_events.jsonl",
     "run_metadata.json",
     "config.yaml",
 }
@@ -75,6 +79,195 @@ class OrchestratorResult:
     run_dir: Path
     metadata: dict[str, Any]
     artifacts: dict[str, Path]
+
+
+def _emit_stage_event(
+    *,
+    run_dir: Path,
+    run_id: str,
+    stage: str,
+    status: str,
+    message: str,
+    details: dict[str, Any] | None = None,
+) -> None:
+    event = {
+        "schema_version": SCHEMA_VERSION,
+        "run_id": run_id,
+        "component": "stage_event",
+        "stage": stage,
+        "status": status,
+        "message": message,
+        "details": details or {},
+        "timestamp_utc": utc_now_iso_z(),
+        "monotonic_ns": monotonic_ns(),
+    }
+    append_jsonl(_artifact_path(run_dir, "stage_events.jsonl"), event)
+    suffix = f" details={event['details']}" if event["details"] else ""
+    print(
+        f"[{event['timestamp_utc']}] [{stage}] {status}: {message}{suffix}",
+        flush=True,
+    )
+
+
+def _status_from_raw(value: Any) -> ProbeStatus:
+    if isinstance(value, ProbeStatus):
+        return value
+    if isinstance(value, str):
+        try:
+            return ProbeStatus(value)
+        except ValueError:
+            return ProbeStatus.ERROR
+    return ProbeStatus.ERROR
+
+
+def _probe_post_restore_readiness(
+    *,
+    base_url: str,
+    timeout_s: float,
+    poll_interval_s: float,
+) -> tuple[ProbeStatus, dict[str, Any]]:
+    models_url = f"{base_url.rstrip('/')}/v1/models"
+    request_timeout_s = max(0.5, min(2.0, timeout_s if timeout_s > 0 else 2.0))
+    deadline = monotonic_ns() + int(max(timeout_s, 0.0) * 1_000_000_000)
+    attempts = 0
+    last_error: str | None = None
+
+    while True:
+        attempts += 1
+        try:
+            with request.urlopen(models_url, timeout=request_timeout_s) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            if isinstance(payload, dict) and isinstance(payload.get("data"), list):
+                return ProbeStatus.OK, {
+                    "models_url": models_url,
+                    "attempts": attempts,
+                }
+            last_error = "response missing models list"
+        except (error.URLError, TimeoutError, OSError, ValueError) as exc:
+            last_error = f"{type(exc).__name__}: {exc}"
+
+        if monotonic_ns() >= deadline:
+            return ProbeStatus.TIMEOUT, {
+                "models_url": models_url,
+                "attempts": attempts,
+                "reason": "timed out waiting for post-restore /v1/models readiness",
+                "last_error": last_error,
+            }
+
+        if poll_interval_s > 0:
+            time.sleep(poll_interval_s)
+
+
+def _run_post_restore_probe(
+    *,
+    config: ResolvedConfig,
+    run_dir: Path,
+    runtime_session: RuntimeSession,
+    smoke_preemption: dict[str, Any],
+    base_request_id: str,
+) -> dict[str, Any]:
+    details: dict[str, Any] = {
+        "runtime": config.runtime,
+        "base_url": runtime_session.base_url,
+        "preemption_outcome": (
+            (smoke_preemption.get("details") or {}).get("outcome")
+            if isinstance(smoke_preemption.get("details"), dict)
+            else None
+        ),
+    }
+    enabled = bool(config.workload.get("post_restore_probe_enabled", False))
+    if not enabled:
+        details["reason"] = "post-restore probe disabled by config"
+        return make_probe_result(
+            run_id=config.run_id,
+            component="post_restore_probe",
+            status=ProbeStatus.SKIPPED,
+            details=details,
+        )
+
+    outcome = details.get("preemption_outcome")
+    if outcome != "restored":
+        details["reason"] = (
+            f"post-restore probe skipped because preemption outcome is {outcome!r}"
+        )
+        return make_probe_result(
+            run_id=config.run_id,
+            component="post_restore_probe",
+            status=ProbeStatus.SKIPPED,
+            details=details,
+        )
+
+    if runtime_session.base_url is None:
+        details["reason"] = (
+            "post-restore probe skipped because runtime base_url is unavailable"
+        )
+        return make_probe_result(
+            run_id=config.run_id,
+            component="post_restore_probe",
+            status=ProbeStatus.ERROR,
+            details=details,
+        )
+
+    if not config.model:
+        details["reason"] = "post-restore probe skipped because model is not configured"
+        return make_probe_result(
+            run_id=config.run_id,
+            component="post_restore_probe",
+            status=ProbeStatus.SKIPPED,
+            details=details,
+        )
+
+    readiness_status, readiness_details = _probe_post_restore_readiness(
+        base_url=runtime_session.base_url,
+        timeout_s=float(config.workload.get("post_restore_readiness_timeout_s", 120.0)),
+        poll_interval_s=float(
+            config.workload.get("post_restore_readiness_poll_interval_s", 1.0)
+        ),
+    )
+    details["readiness"] = readiness_details
+    details["readiness_status"] = readiness_status.value
+    if readiness_status != ProbeStatus.OK:
+        details["reason"] = (
+            readiness_details.get("reason") or "post-restore readiness probe failed"
+        )
+        return make_probe_result(
+            run_id=config.run_id,
+            component="post_restore_probe",
+            status=readiness_status,
+            details=details,
+        )
+
+    post_restore_request_id = f"{base_request_id}-post-restore"
+    smoke_client = LLMSmokeClient(
+        timeout_s=float(config.workload.get("timeout_s", 30.0))
+    )
+    response_record = smoke_client.send_smoke_request(
+        run_id=config.run_id,
+        output_dir=run_dir,
+        base_url=runtime_session.base_url,
+        model=config.model,
+        prompt=config.workload.get("prompt"),
+        messages=config.workload.get("messages"),
+        request_id=post_restore_request_id,
+        runtime=config.runtime,
+        temperature=float(config.workload.get("temperature", 0.0)),
+        max_tokens=int(config.workload.get("max_tokens", 64)),
+    )
+    response_status = _status_from_raw(response_record.get("status"))
+    details["post_restore_request_id"] = post_restore_request_id
+    details["post_restore_response_status"] = response_status.value
+    details["post_restore_response_monotonic_ns"] = response_record.get("monotonic_ns")
+    details["reason"] = (
+        "post-restore smoke request completed"
+        if response_status == ProbeStatus.OK
+        else "post-restore smoke request failed"
+    )
+    return make_probe_result(
+        run_id=config.run_id,
+        component="post_restore_probe",
+        status=response_status,
+        details=details,
+    )
 
 
 def _probe_status(record: dict[str, Any]) -> str:
@@ -138,7 +331,9 @@ def _command_result_details(result: CommandResult) -> dict[str, Any]:
     }
 
 
-def _copy_criu_log_with_sudo_cat(source_path: Path, destination: Path) -> dict[str, Any]:
+def _copy_criu_log_with_sudo_cat(
+    source_path: Path, destination: Path
+) -> dict[str, Any]:
     trusted_source_path = _trusted_criu_log_path(source_path)
     if trusted_source_path is None:
         return {
@@ -511,6 +706,12 @@ def _dry_run_probe_records(config: ResolvedConfig) -> dict[str, dict[str, Any]]:
             reason=smoke_reason,
             details={"runtime": config.runtime, "mode": "dry_run"},
         ),
+        "post_restore_probe.json": _make_skipped_probe(
+            run_id=config.run_id,
+            component="post_restore_probe",
+            reason=smoke_reason,
+            details={"runtime": config.runtime, "mode": "dry_run"},
+        ),
     }
 
 
@@ -523,17 +724,80 @@ def _run_real_sequence(
     runtime_session: RuntimeSession | None = None
     cleanup_record: dict[str, Any] | None = None
 
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="probe_sequence",
+        status="start",
+        message="running environment and runtime probes",
+    )
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="hardware_probe",
+        status="start",
+        message="collecting hardware probe",
+    )
     records["hardware.json"] = collect_hardware_probe(
         run_id=config.run_id,
         timeout_s=float(probe_options["hardware"]["timeout_s"]),
+    )
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="hardware_probe",
+        status="done",
+        message="hardware probe completed",
+        details={"probe_status": _probe_status(records["hardware.json"])},
+    )
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="docker_probe",
+        status="start",
+        message="collecting docker probe",
     )
     records["docker.json"] = collect_docker_probe(
         run_id=config.run_id,
         timeout_s=float(probe_options["docker"]["timeout_s"]),
     )
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="docker_probe",
+        status="done",
+        message="docker probe completed",
+        details={"probe_status": _probe_status(records["docker.json"])},
+    )
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="criu_probe",
+        status="start",
+        message="collecting criu probe",
+    )
     records["criu_check.json"] = collect_criu_probe(
         run_id=config.run_id,
         timeout_s=float(probe_options["criu"]["timeout_s"]),
+    )
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="criu_probe",
+        status="done",
+        message="criu probe completed",
+        details={"probe_status": _probe_status(records["criu_check.json"])},
+    )
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="docker_criu_integration",
+        status="start",
+        message="running docker CRIU integration probe",
     )
     records["docker_criu_integration.json"] = collect_docker_criu_integration(
         run_id=config.run_id,
@@ -541,6 +805,11 @@ def _run_real_sequence(
         timeout_s=float(probe_options["docker_criu_integration"]["timeout_s"]),
         checkpoint_name=str(
             probe_options["docker_criu_integration"]["checkpoint_name"]
+        ),
+        checkpoint_dir=(
+            str(probe_options["docker_criu_integration"].get("checkpoint_dir"))
+            if probe_options["docker_criu_integration"].get("checkpoint_dir")
+            else None
         ),
         smoke_image=str(probe_options["docker_criu_integration"]["smoke_image"]),
         smoke_runtime=probe_options["docker_criu_integration"].get("smoke_runtime")
@@ -556,10 +825,44 @@ def _run_real_sequence(
             record=record,
         ),
     )
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="docker_criu_integration",
+        status="done",
+        message="docker CRIU integration probe completed",
+        details={
+            "probe_status": _probe_status(records["docker_criu_integration.json"])
+        },
+    )
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="cuda_probe",
+        status="start",
+        message="collecting cuda probe",
+    )
     records["cuda_check.json"] = collect_cuda_container_probe(
         run_id=config.run_id,
         timeout_s=float(probe_options["cuda"]["timeout_s"]),
         image=str(probe_options["cuda"]["image"]),
+    )
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="cuda_probe",
+        status="done",
+        message="cuda probe completed",
+        details={"probe_status": _probe_status(records["cuda_check.json"])},
+    )
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="mps_probe",
+        status="start",
+        message="collecting mps probe",
     )
     records["mps_check.json"] = collect_mps_probe(
         run_id=config.run_id,
@@ -568,8 +871,23 @@ def _run_real_sequence(
         control_binary=str(probe_options["mps"]["control_binary"]),
         control_pipe_path=str(probe_options["mps"]["control_pipe_path"]),
     )
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="mps_probe",
+        status="done",
+        message="mps probe completed",
+        details={"probe_status": _probe_status(records["mps_check.json"])},
+    )
 
     try:
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="runtime_start",
+            status="start",
+            message="starting runtime adapter",
+        )
         if config.runtime == "vllm":
             runtime_adapter = VLLMRuntimeAdapter(
                 config=deepcopy(config.runtime_options["vllm"]),
@@ -584,6 +902,18 @@ def _run_real_sequence(
             raise ValueError(f"unsupported runtime: {config.runtime!r}")
         runtime_session = runtime_adapter.start(run_id=config.run_id)
         records["runtime_check.json"] = runtime_session.runtime_check
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="runtime_start",
+            status="done",
+            message="runtime adapter start completed",
+            details={
+                "probe_status": _probe_status(records["runtime_check.json"]),
+                "runtime_mode": runtime_session.mode,
+                "base_url": runtime_session.base_url,
+            },
+        )
 
         request_id = str(
             config.workload.get("request_id") or f"{config.run_id}-smoke-request"
@@ -596,6 +926,14 @@ def _run_real_sequence(
                 and runtime_session.base_url
                 and config.model
             ):
+                _emit_stage_event(
+                    run_dir=run_dir,
+                    run_id=config.run_id,
+                    stage="smoke_request",
+                    status="start",
+                    message="issuing initial smoke request",
+                    details={"request_id": request_id},
+                )
                 smoke_client = LLMSmokeClient(
                     timeout_s=float(config.workload.get("timeout_s", 30.0))
                 )
@@ -623,8 +961,24 @@ def _run_real_sequence(
                         smoke_client.send_smoke_request,
                         **smoke_request_kwargs,
                     )
+                    _emit_stage_event(
+                        run_dir=run_dir,
+                        run_id=config.run_id,
+                        stage="smoke_request",
+                        status="in_progress",
+                        message="smoke request running concurrently with preemption",
+                        details={"request_id": request_id},
+                    )
                 else:
                     smoke_client.send_smoke_request(**smoke_request_kwargs)
+                    _emit_stage_event(
+                        run_dir=run_dir,
+                        run_id=config.run_id,
+                        stage="smoke_request",
+                        status="done",
+                        message="initial smoke request completed",
+                        details={"request_id": request_id},
+                    )
             else:
                 reason = (
                     str(runtime_session.runtime_check.get("details", {}).get("reason"))
@@ -643,13 +997,36 @@ def _run_real_sequence(
                     request_id=request_id,
                     base_url=runtime_session.base_url,
                 )
+                _emit_stage_event(
+                    run_dir=run_dir,
+                    run_id=config.run_id,
+                    stage="smoke_request",
+                    status="skipped",
+                    message=reason,
+                    details={"request_id": request_id},
+                )
 
+            _emit_stage_event(
+                run_dir=run_dir,
+                run_id=config.run_id,
+                stage="smoke_preemption",
+                status="start",
+                message="running checkpoint/restore preemption probe",
+            )
             records["smoke_preemption.json"] = collect_smoke_preemption(
                 run_id=config.run_id,
                 runtime_session=runtime_session,
                 docker_criu_integration=records["docker_criu_integration.json"],
                 timeout_s=float(probe_options["preemption"]["timeout_s"]),
                 checkpoint_name=str(probe_options["preemption"]["checkpoint_name"]),
+                checkpoint_dir=(
+                    str(probe_options["preemption"].get("checkpoint_dir"))
+                    if probe_options["preemption"].get("checkpoint_dir")
+                    else None
+                ),
+                capture_memory_telemetry=bool(
+                    probe_options["preemption"].get("capture_memory_telemetry", False)
+                ),
                 post_checkpoint_delay_s=float(
                     probe_options["docker_criu_integration"].get(
                         "post_checkpoint_delay_s", 5.0
@@ -665,14 +1042,83 @@ def _run_real_sequence(
                 artifact_name="smoke_preemption.json",
                 record=records["smoke_preemption.json"],
             )
+            _emit_stage_event(
+                run_dir=run_dir,
+                run_id=config.run_id,
+                stage="smoke_preemption",
+                status="done",
+                message="checkpoint/restore preemption probe completed",
+                details={
+                    "probe_status": _probe_status(records["smoke_preemption.json"]),
+                    "outcome": (
+                        (records["smoke_preemption.json"].get("details") or {}).get(
+                            "outcome"
+                        )
+                        if isinstance(
+                            records["smoke_preemption.json"].get("details"), dict
+                        )
+                        else None
+                    ),
+                },
+            )
             if smoke_request_future is not None:
                 smoke_request_future.result()
+                _emit_stage_event(
+                    run_dir=run_dir,
+                    run_id=config.run_id,
+                    stage="smoke_request",
+                    status="done",
+                    message="initial in-flight smoke request completed",
+                    details={"request_id": request_id},
+                )
         finally:
             if smoke_request_executor is not None:
                 smoke_request_executor.shutdown(wait=True)
+
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="post_restore_probe",
+            status="start",
+            message="running explicit post-restore readiness+smoke proof",
+        )
+        records["post_restore_probe.json"] = _run_post_restore_probe(
+            config=config,
+            run_dir=run_dir,
+            runtime_session=runtime_session,
+            smoke_preemption=records["smoke_preemption.json"],
+            base_request_id=request_id,
+        )
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="post_restore_probe",
+            status="done",
+            message="post-restore probe completed",
+            details={
+                "probe_status": _probe_status(records["post_restore_probe.json"]),
+                "reason": (
+                    (records["post_restore_probe.json"].get("details") or {}).get(
+                        "reason"
+                    )
+                    if isinstance(
+                        records["post_restore_probe.json"].get("details"), dict
+                    )
+                    else None
+                ),
+            },
+        )
+
         records["smoke_preemption.json"] = _annotate_smoke_preemption_response_timing(
             run_dir=run_dir,
             smoke_preemption=records["smoke_preemption.json"],
+        )
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="smoke_validation",
+            status="start",
+            message="classifying smoke validation",
         )
         records["smoke_validation.json"] = classify_smoke_validation(
             run_id=config.run_id,
@@ -687,9 +1133,56 @@ def _run_real_sequence(
             artifact_name="smoke_validation.json",
             record=records["smoke_validation.json"],
         )
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="smoke_validation",
+            status="done",
+            message="smoke validation completed",
+            details={
+                "probe_status": _probe_status(records["smoke_validation.json"]),
+                "classification": records["smoke_validation.json"].get(
+                    "classification"
+                ),
+                "reason": (
+                    (records["smoke_validation.json"].get("details") or {}).get(
+                        "reason"
+                    )
+                    if isinstance(records["smoke_validation.json"].get("details"), dict)
+                    else None
+                ),
+            },
+        )
     finally:
         if runtime_adapter is not None and runtime_session is not None:
+            _emit_stage_event(
+                run_dir=run_dir,
+                run_id=config.run_id,
+                stage="runtime_teardown",
+                status="start",
+                message="stopping runtime adapter",
+            )
             cleanup_record = runtime_adapter.stop(runtime_session)
+            _emit_stage_event(
+                run_dir=run_dir,
+                run_id=config.run_id,
+                stage="runtime_teardown",
+                status="done",
+                message="runtime adapter stopped",
+                details={
+                    "cleanup_status": cleanup_record.get("status")
+                    if isinstance(cleanup_record, dict)
+                    else None
+                },
+            )
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="probe_sequence",
+        status="done",
+        message="real probe sequence completed",
+    )
 
     return records, cleanup_record
 
@@ -752,6 +1245,14 @@ def run_v0_orchestrator(
     git_metadata_getter=get_git_metadata,
 ) -> OrchestratorResult:
     run_dir = _create_run_dir(config)
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="orchestrator",
+        status="start",
+        message="starting V0 orchestration",
+        details={"config_path": str(config.config_path), "output_dir": str(run_dir)},
+    )
     dump_config_yaml(config, _artifact_path(run_dir, "config.yaml"))
 
     started_at_utc = utc_now_iso_z()
@@ -785,6 +1286,13 @@ def run_v0_orchestrator(
     )
 
     if config.dry_run:
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="dry_run",
+            status="start",
+            message="generating deterministic dry-run artifacts",
+        )
         request_id = f"{config.run_id}-dry-run-request"
         _write_smoke_placeholder_records(
             config=config,
@@ -796,11 +1304,39 @@ def run_v0_orchestrator(
         )
         records = _dry_run_probe_records(config)
         cleanup_record = None
+        _emit_stage_event(
+            run_dir=run_dir,
+            run_id=config.run_id,
+            stage="dry_run",
+            status="done",
+            message="dry-run artifacts generated",
+        )
     else:
         records, cleanup_record = _run_real_sequence(config, run_dir)
 
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="criu_log_capture",
+        status="start",
+        message="capturing CRIU logs from probe artifacts",
+    )
     _capture_criu_logs(run_dir=run_dir, records=records)
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="criu_log_capture",
+        status="done",
+        message="CRIU log capture finished",
+    )
 
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="debug_bundle",
+        status="start",
+        message="collecting debug bundle",
+    )
     try:
         debug_bundle = collect_debug_bundle(run_dir=run_dir)
     except Exception as exc:
@@ -813,6 +1349,14 @@ def run_v0_orchestrator(
     debug_bundle_path = run_dir / "debug" / "debug_bundle.json"
     write_json(debug_bundle_path, debug_bundle)
     debug_bundle_path.chmod(0o600)
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="debug_bundle",
+        status="done",
+        message="debug bundle collected",
+        details={"debug_bundle_status": debug_bundle.get("status")},
+    )
 
     artifact_paths = {
         name: _write_probe_artifact(run_dir, name, record)
@@ -840,6 +1384,14 @@ def run_v0_orchestrator(
     missing = REQUIRED_V0_ARTIFACTS - found_artifacts
     if missing:
         raise RuntimeError(f"missing required V0 artifacts: {sorted(missing)}")
+
+    _emit_stage_event(
+        run_dir=run_dir,
+        run_id=config.run_id,
+        stage="orchestrator",
+        status="done",
+        message="V0 orchestration completed",
+    )
 
     return OrchestratorResult(
         run_id=config.run_id,

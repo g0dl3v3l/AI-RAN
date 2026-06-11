@@ -92,7 +92,7 @@ _DEFAULT_RUNTIME_OPTIONS = {
             "gpu_mode": "gpus_flag",
             "gpu_device": "nvidia.com/gpu=all",
         },
-    }
+    },
 }
 _DEFAULT_PROBE_OPTIONS = {
     "hardware": {"timeout_s": 5.0},
@@ -101,6 +101,7 @@ _DEFAULT_PROBE_OPTIONS = {
     "docker_criu_integration": {
         "timeout_s": 60.0,
         "checkpoint_name": DEFAULT_CHECKPOINT_NAME,
+        "checkpoint_dir": None,
         "smoke_image": DEFAULT_SMOKE_IMAGE,
         "smoke_runtime": DEFAULT_SMOKE_RUNTIME,
         "network_mode": DEFAULT_SMOKE_NETWORK_MODE,
@@ -120,6 +121,8 @@ _DEFAULT_PROBE_OPTIONS = {
     "preemption": {
         "timeout_s": 180.0,
         "checkpoint_name": DEFAULT_CHECKPOINT_NAME,
+        "checkpoint_dir": None,
+        "capture_memory_telemetry": False,
         "criu_config_mode": None,
         "criu_config_allow_sudo": False,
     },
@@ -166,8 +169,9 @@ class ResolvedConfig:
         }
 
 
-
-def _deep_merge(defaults: Mapping[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
+def _deep_merge(
+    defaults: Mapping[str, Any], overrides: Mapping[str, Any]
+) -> dict[str, Any]:
     merged: dict[str, Any] = deepcopy(dict(defaults))
     for key, value in overrides.items():
         if isinstance(value, Mapping) and isinstance(merged.get(key), Mapping):
@@ -175,7 +179,6 @@ def _deep_merge(defaults: Mapping[str, Any], overrides: Mapping[str, Any]) -> di
         else:
             merged[key] = deepcopy(value)
     return merged
-
 
 
 def _ensure_mapping(value: Any, *, field_name: str) -> dict[str, Any]:
@@ -186,16 +189,13 @@ def _ensure_mapping(value: Any, *, field_name: str) -> dict[str, Any]:
     return dict(value)
 
 
-
 def _normalize_output_dir(value: str | Path) -> Path:
     return Path(value).expanduser().resolve()
-
 
 
 def _derive_run_id(*, output_dir: Path, experiment_id: str) -> str:
     run_id = output_dir.name.strip()
     return run_id or experiment_id
-
 
 
 def _load_yaml_mapping(config_path: Path) -> dict[str, Any]:
@@ -209,12 +209,10 @@ def _load_yaml_mapping(config_path: Path) -> dict[str, Any]:
     return dict(loaded)
 
 
-
 def _validate_required_keys(raw_config: Mapping[str, Any]) -> None:
     missing = [key for key in _REQUIRED_KEYS if key not in raw_config]
     if missing:
         raise ValueError(f"config is missing required keys: {missing}")
-
 
 
 def load_config(
@@ -235,14 +233,23 @@ def load_config(
     if not experiment_id:
         raise ValueError("experiment_id must be non-empty")
 
-    output_dir_value = output_dir_override if output_dir_override is not None else raw_config["output_dir"]
+    output_dir_value = (
+        output_dir_override
+        if output_dir_override is not None
+        else raw_config["output_dir"]
+    )
     output_dir = _normalize_output_dir(output_dir_value)
     run_id = _derive_run_id(output_dir=output_dir, experiment_id=experiment_id)
 
-    workload = _deep_merge(_DEFAULT_WORKLOAD, _ensure_mapping(raw_config.get("workload"), field_name="workload"))
+    workload = _deep_merge(
+        _DEFAULT_WORKLOAD,
+        _ensure_mapping(raw_config.get("workload"), field_name="workload"),
+    )
     runtime_options = _deep_merge(
         _DEFAULT_RUNTIME_OPTIONS,
-        _ensure_mapping(raw_config.get("runtime_options"), field_name="runtime_options"),
+        _ensure_mapping(
+            raw_config.get("runtime_options"), field_name="runtime_options"
+        ),
     )
     probe_options = _deep_merge(
         _DEFAULT_PROBE_OPTIONS,
@@ -267,8 +274,12 @@ def load_config(
         model=normalized_model,
         arm=str(raw_config.get("arm") or "").strip(),
         workload=workload,
-        preemption_policy=_ensure_mapping(raw_config.get("preemption_policy"), field_name="preemption_policy"),
-        resource_delta=_ensure_mapping(raw_config.get("resource_delta"), field_name="resource_delta"),
+        preemption_policy=_ensure_mapping(
+            raw_config.get("preemption_policy"), field_name="preemption_policy"
+        ),
+        resource_delta=_ensure_mapping(
+            raw_config.get("resource_delta"), field_name="resource_delta"
+        ),
         telemetry=_ensure_mapping(raw_config.get("telemetry"), field_name="telemetry"),
         output_dir=output_dir,
         seed=int(seed_value),
@@ -277,7 +288,6 @@ def load_config(
         runtime_options=runtime_options,
         probe_options=probe_options,
     )
-
 
 
 def dump_config_yaml(config: ResolvedConfig, path: str | Path) -> None:
