@@ -83,6 +83,21 @@ def test_load_config_resolves_defaults_and_cli_overrides(tmp_path: Path):
     assert dumped["dry_run"] is True
 
 
+@pytest.mark.parametrize(
+    "config_name",
+    ["v0_env_probe.yaml", "v0_env_probe.llama_cpp.yaml"],
+)
+def test_v0_probe_configs_enable_criu_phase_switch(config_name: str):
+    config_path = Path(__file__).resolve().parents[2] / "configs" / config_name
+
+    resolved = load_config(config_path)
+
+    assert resolved.probe_options["preemption"]["criu_config_mode"] == (
+        "cdi_restore_compat"
+    )
+    assert resolved.probe_options["preemption"]["criu_config_allow_sudo"] is True
+
+
 def test_top_level_model_overrides_docker_server_model(tmp_path: Path):
     config_path = _write_config(
         tmp_path / "config.yaml",

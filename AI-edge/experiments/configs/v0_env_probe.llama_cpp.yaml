@@ -62,3 +62,5 @@ probe_options:
   preemption:
     timeout_s: 180.0
     checkpoint_name: ai-edge-v0-criu-checkpoint
+    criu_config_mode: cdi_restore_compat
+    criu_config_allow_sudo: true
