@@ -194,6 +194,10 @@ dst.parent.mkdir(parents=True, exist_ok=True)
 dst.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
 PY
 
+if [[ -e "$ARTIFACT_DIR" ]]; then
+  rm -rf "$ARTIFACT_DIR"
+fi
+
 log_stage "probe_run" "starting run_v0_probe.py (live stage output expected)"
 set +e
 PYTHONPATH=experiments/src python -u experiments/scripts/run_v0_probe.py \
