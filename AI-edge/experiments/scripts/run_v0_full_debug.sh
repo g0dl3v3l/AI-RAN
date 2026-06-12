@@ -12,12 +12,113 @@ log_stage() {
   printf '[%s] [%s] %s\n' "$(timestamp_utc)" "$stage" "$msg" | tee -a "$MASTER_LOG"
 }
 
+root_free_gb() {
+  local avail_bytes
+  avail_bytes="$(df -B1 --output=avail / | awk 'NR==2 {print $1}')"
+  if [[ -z "$avail_bytes" ]]; then
+    echo 0
+    return
+  fi
+  echo $((avail_bytes / 1024 / 1024 / 1024))
+}
+
+size_to_kib() {
+  local raw="$1"
+  local upper num unit
+  upper="${raw^^}"
+  num="${upper//[^0-9.]/}"
+  unit="${upper//[0-9.]/}"
+  if [[ -z "$num" ]]; then
+    echo 0
+    return
+  fi
+  case "$unit" in
+    T|TB) awk -v n="$num" 'BEGIN {printf "%.0f", n*1024*1024*1024}' ;;
+    G|GB) awk -v n="$num" 'BEGIN {printf "%.0f", n*1024*1024}' ;;
+    M|MB) awk -v n="$num" 'BEGIN {printf "%.0f", n*1024}' ;;
+    K|KB|"") awk -v n="$num" 'BEGIN {printf "%.0f", n}' ;;
+    *) echo 0 ;;
+  esac
+}
+
+cleanup_old_runs() {
+  local search_root="$1"
+  local keep="$2"
+  [[ -d "$search_root" ]] || return 0
+
+  mapfile -t old_run_dirs < <(ls -1dt "$search_root"/ai-edge-v0-* 2>/dev/null || true)
+  if (( ${#old_run_dirs[@]} > keep )); then
+    for stale in "${old_run_dirs[@]:keep}"; do
+      [[ "$stale" == "$RUN_DIR" ]] && continue
+      rm -rf "$stale" 2>/dev/null || true
+    done
+  fi
+
+  mapfile -t old_bundles < <(ls -1t "$search_root"/ai-edge-v0-*-debug.tar.gz 2>/dev/null || true)
+  if (( ${#old_bundles[@]} > keep )); then
+    for stale in "${old_bundles[@]:keep}"; do
+      [[ "$stale" == "$FINAL_BUNDLE" ]] && continue
+      rm -f "$stale" 2>/dev/null || true
+    done
+  fi
+}
+
+run_cleanup_phase() {
+  log_stage "cleanup_phase" "starting preflight cleanup (keep_recent=$CLEANUP_KEEP_RECENT min_free_gb=$CLEANUP_MIN_FREE_GB aggressive=$CLEANUP_AGGRESSIVE)"
+
+  cleanup_old_runs "$OUTPUT_ROOT" "$CLEANUP_KEEP_RECENT"
+  cleanup_old_runs "/tmp" "$CLEANUP_KEEP_RECENT"
+
+  docker container prune -f >/dev/null 2>&1 || true
+  docker volume prune -f >/dev/null 2>&1 || true
+
+  if [[ "$CLEANUP_AGGRESSIVE" == "true" ]]; then
+    docker builder prune -af >/dev/null 2>&1 || true
+    docker image prune -af >/dev/null 2>&1 || true
+  else
+    docker builder prune -f >/dev/null 2>&1 || true
+    docker image prune -f >/dev/null 2>&1 || true
+  fi
+
+  local free_gb
+  free_gb="$(root_free_gb)"
+  if (( free_gb < CLEANUP_MIN_FREE_GB )); then
+    log_stage "cleanup_phase" "free space low after light cleanup (${free_gb}G < ${CLEANUP_MIN_FREE_GB}G); running aggressive docker prune"
+    docker system prune -af --volumes >/dev/null 2>&1 || true
+    free_gb="$(root_free_gb)"
+  fi
+
+  log_stage "cleanup_phase" "free space after cleanup: ${free_gb}G"
+}
+
+validate_ram_checkpoint_headroom() {
+  [[ "$CHECKPOINT_TARGET" == "ram" ]] || return 0
+
+  local requested_kib mem_available_kib max_safe_kib
+  requested_kib="$(size_to_kib "$CHECKPOINT_RAM_SIZE")"
+  mem_available_kib="$(awk '/MemAvailable:/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)"
+
+  if (( requested_kib <= 0 || mem_available_kib <= 0 )); then
+    log_stage "checkpoint_target" "warning: could not validate RAM headroom (requested=${CHECKPOINT_RAM_SIZE}, MemAvailable=${mem_available_kib}KiB)"
+    return 0
+  fi
+
+  max_safe_kib=$((mem_available_kib * 80 / 100))
+  if (( requested_kib > max_safe_kib )); then
+    log_stage "error" "requested RAM checkpoint size (${CHECKPOINT_RAM_SIZE}) exceeds safe headroom (MemAvailable=$((mem_available_kib/1024/1024))GiB, safe_max=$((max_safe_kib/1024/1024))GiB)"
+    exit 1
+  fi
+}
+
 CONFIG_PATH="/tmp/v0_vllm_cdi_restore.yaml"
 CHECKPOINT_TARGET="ram"
 CHECKPOINT_RAM_SIZE="80G"
 CHECKPOINT_DIR_OVERRIDE=""
 OUTPUT_ROOT="/tmp"
 RUN_ID=""
+CLEANUP_KEEP_RECENT=3
+CLEANUP_MIN_FREE_GB=120
+CLEANUP_AGGRESSIVE=false
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 while [[ $# -gt 0 ]]; do
@@ -46,6 +147,18 @@ while [[ $# -gt 0 ]]; do
       RUN_ID="$2"
       shift 2
       ;;
+    --cleanup-keep-recent)
+      CLEANUP_KEEP_RECENT="$2"
+      shift 2
+      ;;
+    --cleanup-min-free-gb)
+      CLEANUP_MIN_FREE_GB="$2"
+      shift 2
+      ;;
+    --cleanup-aggressive)
+      CLEANUP_AGGRESSIVE=true
+      shift 1
+      ;;
     --repo-root)
       REPO_ROOT="$2"
       shift 2
@@ -61,12 +174,21 @@ if [[ -z "$RUN_ID" ]]; then
   RUN_ID="ai-edge-v0-vllm-real-$(date -u +%Y%m%d-%H%M%S)"
 fi
 
+if ! [[ "$CLEANUP_KEEP_RECENT" =~ ^[0-9]+$ ]]; then
+  echo "--cleanup-keep-recent must be a non-negative integer" >&2
+  exit 2
+fi
+if ! [[ "$CLEANUP_MIN_FREE_GB" =~ ^[0-9]+$ ]]; then
+  echo "--cleanup-min-free-gb must be a non-negative integer" >&2
+  exit 2
+fi
+
 RUN_DIR="${OUTPUT_ROOT%/}/${RUN_ID}"
 ARTIFACT_DIR="$RUN_DIR/artifacts"
 MASTER_LOG="$RUN_DIR/full_debug_runner.log"
 EFFECTIVE_CFG="$RUN_DIR/v0_effective.yaml"
 SYSTEM_DEBUG_OUT="$RUN_DIR/system-debug"
-FINAL_BUNDLE="/tmp/${RUN_ID}-debug.tar.gz"
+FINAL_BUNDLE="${RUN_DIR}-debug.tar.gz"
 
 if [[ -e "$RUN_DIR" ]]; then
   rm -rf "$RUN_DIR"
@@ -78,6 +200,7 @@ log_stage "init" "run_id=$RUN_ID"
 log_stage "init" "repo_root=$REPO_ROOT"
 log_stage "init" "config_path=$CONFIG_PATH"
 log_stage "init" "artifact_dir=$ARTIFACT_DIR"
+log_stage "init" "cleanup_keep_recent=$CLEANUP_KEEP_RECENT cleanup_min_free_gb=$CLEANUP_MIN_FREE_GB cleanup_aggressive=$CLEANUP_AGGRESSIVE"
 
 if [[ ! -f "$CONFIG_PATH" ]]; then
   log_stage "error" "config not found: $CONFIG_PATH"
@@ -88,6 +211,8 @@ cd "$REPO_ROOT"
 
 log_stage "sudo" "refreshing sudo credentials (interactive prompt allowed)"
 sudo -v
+
+run_cleanup_phase
 
 log_stage "criu_config" "writing /etc/criu/runc.conf"
 cat <<'EOF' | sudo tee /etc/criu/runc.conf >/dev/null
@@ -114,6 +239,8 @@ if [[ -n "$CHECKPOINT_DIR_OVERRIDE" ]]; then
 elif [[ "$CHECKPOINT_TARGET" == "ram" ]]; then
   CHECKPOINT_DIR="/mnt/ckpt-ram/$RUN_ID"
 fi
+
+validate_ram_checkpoint_headroom
 
 if [[ "$CHECKPOINT_TARGET" == "ram" ]]; then
   log_stage "checkpoint_target" "configuring RAM-backed checkpoint dir"
