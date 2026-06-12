@@ -291,6 +291,37 @@ if not isinstance(cfg, dict):
 
 cfg["output_dir"] = artifact_dir
 
+runtime = str(cfg.get("runtime") or "").strip().lower()
+runtime_options = cfg.setdefault("runtime_options", {})
+if not isinstance(runtime_options, dict):
+    raise SystemExit("runtime_options must be mapping")
+
+if runtime == "vllm":
+    vllm = runtime_options.setdefault("vllm", {})
+    if not isinstance(vllm, dict):
+        raise SystemExit("runtime_options.vllm must be mapping")
+
+    external = vllm.setdefault("external_server", {})
+    if not isinstance(external, dict):
+        raise SystemExit("runtime_options.vllm.external_server must be mapping")
+    external["enabled"] = False
+    external["base_url"] = None
+
+    docker_server = vllm.setdefault("docker_server", {})
+    if not isinstance(docker_server, dict):
+        raise SystemExit("runtime_options.vllm.docker_server must be mapping")
+    docker_server["enabled"] = True
+
+    docker_model = str(docker_server.get("model") or "").strip()
+    if not docker_model:
+        docker_model = "Qwen/Qwen2-0.5B-Instruct"
+        docker_server["model"] = docker_model
+
+    if not str(cfg.get("model") or "").strip():
+        cfg["model"] = docker_model
+
+    docker_server["network_mode"] = "host"
+
 probe = cfg.setdefault("probe_options", {})
 if not isinstance(probe, dict):
     raise SystemExit("probe_options must be mapping")
@@ -303,12 +334,17 @@ pre["criu_config_allow_sudo"] = True
 pre["capture_memory_telemetry"] = True
 if checkpoint_dir:
     pre["checkpoint_dir"] = checkpoint_dir
+else:
+    pre.pop("checkpoint_dir", None)
 
 dci = probe.setdefault("docker_criu_integration", {})
 if not isinstance(dci, dict):
     raise SystemExit("probe_options.docker_criu_integration must be mapping")
+dci.setdefault("network_mode", "host")
 if checkpoint_dir:
     dci["checkpoint_dir"] = checkpoint_dir
+else:
+    dci.pop("checkpoint_dir", None)
 
 workload = cfg.setdefault("workload", {})
 if not isinstance(workload, dict):
