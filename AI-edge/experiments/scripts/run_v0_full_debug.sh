@@ -68,7 +68,10 @@ EFFECTIVE_CFG="$RUN_DIR/v0_effective.yaml"
 SYSTEM_DEBUG_OUT="$RUN_DIR/system-debug"
 FINAL_BUNDLE="/tmp/${RUN_ID}-debug.tar.gz"
 
-mkdir -p "$RUN_DIR" "$ARTIFACT_DIR"
+if [[ -e "$RUN_DIR" ]]; then
+  rm -rf "$RUN_DIR"
+fi
+mkdir -p "$RUN_DIR"
 touch "$MASTER_LOG"
 
 log_stage "init" "run_id=$RUN_ID"
