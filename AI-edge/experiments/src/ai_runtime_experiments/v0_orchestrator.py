@@ -466,11 +466,11 @@ def _docker_version(records: dict[str, dict[str, Any]]) -> str | None:
     return str(docker_version)
 
 
-def _create_run_dir(config: ResolvedConfig) -> Path:
+def _create_run_dir(config: ResolvedConfig, *, overwrite: bool = False) -> Path:
     return ensure_run_dir(
         output_root=config.output_dir.parent,
         run_id=config.output_dir.name,
-        overwrite=False,
+        overwrite=overwrite,
     ).resolve()
 
 
@@ -1250,8 +1250,9 @@ def run_v0_orchestrator(
     config: ResolvedConfig,
     *,
     git_metadata_getter=get_git_metadata,
+    overwrite_output_dir: bool = False,
 ) -> OrchestratorResult:
-    run_dir = _create_run_dir(config)
+    run_dir = _create_run_dir(config, overwrite=overwrite_output_dir)
     _emit_stage_event(
         run_dir=run_dir,
         run_id=config.run_id,

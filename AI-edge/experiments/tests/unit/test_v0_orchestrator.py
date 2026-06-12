@@ -149,6 +149,42 @@ def test_dry_run_creates_all_required_v0_artifacts(tmp_path: Path):
     assert run_metadata["git"]["commit"] == "abc123"
 
 
+def test_orchestrator_refuses_existing_output_dir_without_overwrite(tmp_path: Path):
+    from ai_runtime_experiments.config import load_config
+    from ai_runtime_experiments.v0_orchestrator import run_v0_orchestrator
+
+    run_dir = tmp_path / "existing-run-dir"
+    run_dir.mkdir(parents=True, exist_ok=False)
+    config_path = _write_config(tmp_path / "config-existing.yaml", output_dir=run_dir)
+    config = load_config(config_path, dry_run=True)
+
+    with pytest.raises(FileExistsError):
+        run_v0_orchestrator(config, git_metadata_getter=lambda **_: _git_metadata())
+
+
+def test_orchestrator_overwrites_existing_output_dir_when_enabled(tmp_path: Path):
+    from ai_runtime_experiments.config import load_config
+    from ai_runtime_experiments.v0_orchestrator import run_v0_orchestrator
+
+    run_dir = tmp_path / "existing-run-dir-overwrite"
+    run_dir.mkdir(parents=True, exist_ok=False)
+    stale_file = run_dir / "stale.txt"
+    stale_file.write_text("stale", encoding="utf-8")
+
+    config_path = _write_config(tmp_path / "config-overwrite.yaml", output_dir=run_dir)
+    config = load_config(config_path, dry_run=True)
+
+    result = run_v0_orchestrator(
+        config,
+        git_metadata_getter=lambda **_: _git_metadata(),
+        overwrite_output_dir=True,
+    )
+
+    assert result.run_dir == run_dir.resolve()
+    assert not stale_file.exists()
+    assert (run_dir / "run_metadata.json").exists()
+
+
 def test_dry_run_writes_debug_bundle_and_metadata_pointer(tmp_path: Path):
     from ai_runtime_experiments.config import load_config
     from ai_runtime_experiments.v0_orchestrator import run_v0_orchestrator

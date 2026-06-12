@@ -203,6 +203,7 @@ set +e
 PYTHONPATH=experiments/src python -u experiments/scripts/run_v0_probe.py \
   --config "$EFFECTIVE_CFG" \
   --output-dir "$ARTIFACT_DIR" \
+  --overwrite-output-dir \
   2>&1 | tee -a "$MASTER_LOG"
 PROBE_RC=${PIPESTATUS[0]}
 set -e

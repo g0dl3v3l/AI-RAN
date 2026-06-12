@@ -26,6 +26,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Write a complete deterministic artifact set without running Docker/GPU/vLLM probes.",
     )
+    parser.add_argument(
+        "--overwrite-output-dir",
+        action="store_true",
+        help="If set, remove an existing output directory before creating probe artifacts.",
+    )
     return parser
 
 
@@ -43,7 +48,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir_override=Path(args.output_dir) if args.output_dir else None,
             dry_run=bool(args.dry_run),
         )
-        result = run_v0_orchestrator(config)
+        result = run_v0_orchestrator(
+            config,
+            overwrite_output_dir=bool(args.overwrite_output_dir),
+        )
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
