@@ -1,0 +1,10 @@
+0,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g0-opt125m,2412960,0
+1,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g1-opt350m,2412961,0
+2,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g2-opt13b-c64-256,2412962,0
+3,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g3-opt13b-c512-1024,2412963,0
+4,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g4-opt27b-c64-256,2412965,0
+5,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g5-opt27b-c512-1024,2412967,0
+6,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g6-opt67b-c64-256,2412969,0
+7,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-004915-g7-opt67b-c512-1024,2412970,0
+LOG_DIR=/mnt/data/dheeraj/dicertation/inference-profile/runs/parallel_logs/revised-rerun-20260415-004915
+ALL_JOBS_SUCCEEDED

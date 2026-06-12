@@ -1,0 +1,29 @@
+===== containerd-journal =====
+SCRIPT: sudo journalctl -u containerd --since '2 hours ago' --no-pager || journalctl -u containerd --since '2 hours ago' --no-pager || true
+SINCE: 2 hours ago
+TIME: 2026-06-12T01:25:13+01:00
+Jun 12 00:44:44 ubuntu containerd[1413]: time="2026-06-12T00:44:44.556695610+01:00" level=error msg="resuming exited container from paused state" error="runc did not terminate successfully: exit status 1: container does not exist\n"
+Jun 12 00:44:44 ubuntu containerd[1413]: time="2026-06-12T00:44:44.567902689+01:00" level=info msg="shim disconnected" id=655354ae1d1be53ff7ac0bd33c1ec50a4a60c067132319c55030f770acca87e1 namespace=moby
+Jun 12 00:44:44 ubuntu containerd[1413]: time="2026-06-12T00:44:44.567959179+01:00" level=warning msg="cleaning up after shim disconnected" id=655354ae1d1be53ff7ac0bd33c1ec50a4a60c067132319c55030f770acca87e1 namespace=moby
+Jun 12 00:44:44 ubuntu containerd[1413]: time="2026-06-12T00:44:44.567969381+01:00" level=info msg="cleaning up dead shim" namespace=moby
+Jun 12 00:44:50 ubuntu containerd[1413]: time="2026-06-12T00:44:50.118888608+01:00" level=info msg="shim disconnected" id=655354ae1d1be53ff7ac0bd33c1ec50a4a60c067132319c55030f770acca87e1 namespace=moby
+Jun 12 00:44:50 ubuntu containerd[1413]: time="2026-06-12T00:44:50.119029410+01:00" level=warning msg="cleaning up after shim disconnected" id=655354ae1d1be53ff7ac0bd33c1ec50a4a60c067132319c55030f770acca87e1 namespace=moby
+Jun 12 00:44:50 ubuntu containerd[1413]: time="2026-06-12T00:44:50.119053771+01:00" level=info msg="cleaning up dead shim" namespace=moby
+Jun 12 00:44:50 ubuntu containerd[1413]: time="2026-06-12T00:44:50.873335965+01:00" level=info msg="shim disconnected" id=9d66781ad8911ab74a0b0190a0ae1a5215786bbf715583aad5921ed2b5832fe3 namespace=moby
+Jun 12 00:44:50 ubuntu containerd[1413]: time="2026-06-12T00:44:50.873419745+01:00" level=warning msg="cleaning up after shim disconnected" id=9d66781ad8911ab74a0b0190a0ae1a5215786bbf715583aad5921ed2b5832fe3 namespace=moby
+Jun 12 00:44:50 ubuntu containerd[1413]: time="2026-06-12T00:44:50.873440754+01:00" level=info msg="cleaning up dead shim" namespace=moby
+Jun 12 00:47:48 ubuntu containerd[1413]: time="2026-06-12T00:47:48.317355139+01:00" level=error msg="resuming exited container from paused state" error="runc did not terminate successfully: exit status 1: container does not exist\n"
+Jun 12 00:47:48 ubuntu containerd[1413]: time="2026-06-12T00:47:48.326042091+01:00" level=info msg="shim disconnected" id=aae9f0f9241d7bea97ed7010b25d8ea63337f3fc5ddfe8ce4149fc78f4c76b45 namespace=moby
+Jun 12 00:47:48 ubuntu containerd[1413]: time="2026-06-12T00:47:48.326081719+01:00" level=warning msg="cleaning up after shim disconnected" id=aae9f0f9241d7bea97ed7010b25d8ea63337f3fc5ddfe8ce4149fc78f4c76b45 namespace=moby
+Jun 12 00:47:48 ubuntu containerd[1413]: time="2026-06-12T00:47:48.326091953+01:00" level=info msg="cleaning up dead shim" namespace=moby
+Jun 12 01:23:20 ubuntu containerd[1413]: time="2026-06-12T01:23:20.481513738+01:00" level=error msg="resuming exited container from paused state" error="runc did not terminate successfully: exit status 1: container does not exist\n"
+Jun 12 01:23:20 ubuntu containerd[1413]: time="2026-06-12T01:23:20.497684000+01:00" level=info msg="shim disconnected" id=170917a309bb76686ea5a472806acab1c03978e918f6b576f95df64d0b6f31ec namespace=moby
+Jun 12 01:23:20 ubuntu containerd[1413]: time="2026-06-12T01:23:20.497760231+01:00" level=warning msg="cleaning up after shim disconnected" id=170917a309bb76686ea5a472806acab1c03978e918f6b576f95df64d0b6f31ec namespace=moby
+Jun 12 01:23:20 ubuntu containerd[1413]: time="2026-06-12T01:23:20.497771405+01:00" level=info msg="cleaning up dead shim" namespace=moby
+Jun 12 01:23:26 ubuntu containerd[1413]: time="2026-06-12T01:23:26.355340597+01:00" level=info msg="shim disconnected" id=a9ae265db7638543e4f2a214279542a74b2a2c36e24c57f2ecce425c0bf2e6f8 namespace=moby
+Jun 12 01:23:26 ubuntu containerd[1413]: time="2026-06-12T01:23:26.355458036+01:00" level=warning msg="cleaning up after shim disconnected" id=a9ae265db7638543e4f2a214279542a74b2a2c36e24c57f2ecce425c0bf2e6f8 namespace=moby
+Jun 12 01:23:26 ubuntu containerd[1413]: time="2026-06-12T01:23:26.355481176+01:00" level=info msg="cleaning up dead shim" namespace=moby
+Jun 12 01:25:12 ubuntu containerd[1413]: time="2026-06-12T01:25:12.180865158+01:00" level=info msg="shim disconnected" id=f2b91c958b114473efb55e3d2fddce1ad0dabe15d4b0b188f6bba209ecb3281e namespace=moby
+Jun 12 01:25:12 ubuntu containerd[1413]: time="2026-06-12T01:25:12.180914929+01:00" level=warning msg="cleaning up after shim disconnected" id=f2b91c958b114473efb55e3d2fddce1ad0dabe15d4b0b188f6bba209ecb3281e namespace=moby
+Jun 12 01:25:12 ubuntu containerd[1413]: time="2026-06-12T01:25:12.180926338+01:00" level=info msg="cleaning up dead shim" namespace=moby
+EXIT_CODE: 0

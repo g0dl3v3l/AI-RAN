@@ -1,0 +1,20 @@
+{
+  "bundle_layout": {
+    "checksum_manifest": "checksums/sha256sums.txt",
+    "checksums": "checksums",
+    "derived": "derived",
+    "environment": "environment.json",
+    "logs": "logs",
+    "plots": "plots",
+    "raw": "raw",
+    "report": "ran_inference_profiling_report.md",
+    "run_manifest": "run_manifest.json"
+  },
+  "created_at": "2026-04-14T07:05:11Z",
+  "final_status": null,
+  "final_status_history": [],
+  "run_id": "legacy-audit",
+  "schema_version": 1,
+  "stages": {},
+  "updated_at": "2026-04-14T07:05:11Z"
+}

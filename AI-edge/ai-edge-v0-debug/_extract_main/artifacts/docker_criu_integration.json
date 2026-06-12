@@ -1,0 +1,155 @@
+{
+  "component": "docker_criu_integration",
+  "details": {
+    "commands": {
+      "docker_checkpoint_create": {
+        "argv": [
+          "docker",
+          "checkpoint",
+          "create",
+          "--checkpoint-dir",
+          "/mnt/ckpt-ram/ai-edge-v0-vllm-real-20260612-002318",
+          "ai-edge-v0-criu-artifacts-c6acd3bc",
+          "ai-edge-v0-criu-checkpoint"
+        ],
+        "duration_s": 0.40778780699474737,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "ai-edge-v0-criu-checkpoint\n",
+        "timed_out": false
+      },
+      "docker_checkpoint_help": {
+        "argv": [
+          "docker",
+          "checkpoint",
+          "--help"
+        ],
+        "duration_s": 0.07533377897925675,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "Usage:  docker checkpoint COMMAND\n\nManage checkpoints\n\nCommands:\n  create      Create a checkpoint from a running container\n  ls          List checkpoints for a container\n  rm          Remove a checkpoint\n\nRun 'docker checkpoint COMMAND --help' for more information on a command.\n",
+        "timed_out": false
+      },
+      "docker_inspect_labels": {
+        "argv": [
+          "docker",
+          "inspect",
+          "--format",
+          "{{json .Config.Labels}}",
+          "ai-edge-v0-criu-artifacts-c6acd3bc"
+        ],
+        "duration_s": 0.03429693594807759,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "{\"ai-edge-component\":\"docker-criu\",\"ai-edge-experiment\":\"v0\",\"ai-edge-run-id\":\"artifacts\"}\n",
+        "timed_out": false
+      },
+      "docker_rm_force": {
+        "argv": [
+          "docker",
+          "rm",
+          "-f",
+          "ai-edge-v0-criu-artifacts-c6acd3bc"
+        ],
+        "duration_s": 0.04651899199234322,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "ai-edge-v0-criu-artifacts-c6acd3bc\n",
+        "timed_out": false
+      },
+      "docker_run": {
+        "argv": [
+          "docker",
+          "run",
+          "-d",
+          "--runtime",
+          "runc",
+          "--network",
+          "host",
+          "--name",
+          "ai-edge-v0-criu-artifacts-c6acd3bc",
+          "--label",
+          "ai-edge-experiment=v0",
+          "--label",
+          "ai-edge-component=docker-criu",
+          "--label",
+          "ai-edge-run-id=artifacts",
+          "busybox:1.36",
+          "sh",
+          "-c",
+          "while true; do sleep 1; done"
+        ],
+        "duration_s": 0.2550528359715827,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "170917a309bb76686ea5a472806acab1c03978e918f6b576f95df64d0b6f31ec\n",
+        "timed_out": false
+      },
+      "docker_start_checkpoint": {
+        "argv": [
+          "docker",
+          "start",
+          "--checkpoint-dir",
+          "/mnt/ckpt-ram/ai-edge-v0-vllm-real-20260612-002318",
+          "--checkpoint",
+          "ai-edge-v0-criu-checkpoint",
+          "ai-edge-v0-criu-artifacts-c6acd3bc"
+        ],
+        "duration_s": 0.04027495300397277,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 1,
+        "status": "error",
+        "stderr": "Error response from daemon: custom checkpointdir is not supported\n",
+        "stdout": "",
+        "timed_out": false
+      },
+      "post_checkpoint_delay": {
+        "duration_s": 5.0,
+        "status": "ok"
+      }
+    },
+    "container": {
+      "checkpoint_dir": "/mnt/ckpt-ram/ai-edge-v0-vllm-real-20260612-002318",
+      "checkpoint_name": "ai-edge-v0-criu-checkpoint",
+      "image": "busybox:1.36",
+      "inspected_labels": {
+        "ai-edge-component": "docker-criu",
+        "ai-edge-experiment": "v0",
+        "ai-edge-run-id": "artifacts"
+      },
+      "name": "ai-edge-v0-criu-artifacts-c6acd3bc",
+      "network_mode": "host",
+      "post_checkpoint_delay_s": 5.0,
+      "runtime": "runc"
+    },
+    "prerequisites": {
+      "criu_status": "ok"
+    },
+    "reason": "unsupported capability: docker start --checkpoint",
+    "smoke": {
+      "attempted": true,
+      "container_id": "170917a309bb76686ea5a472806acab1c03978e918f6b576f95df64d0b6f31ec"
+    }
+  },
+  "monotonic_ns": 298097877459409,
+  "run_id": "artifacts",
+  "schema_version": "0.1.0",
+  "status": "unsupported",
+  "timestamp_utc": "2026-06-12T00:23:25.696415Z"
+}

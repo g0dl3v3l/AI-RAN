@@ -1,0 +1,6 @@
+===== v0-containers =====
+SCRIPT: docker ps -a --filter label=ai-edge-experiment=v0 || true
+SINCE: 2 hours ago
+TIME: 2026-06-12T01:25:13+01:00
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+EXIT_CODE: 0

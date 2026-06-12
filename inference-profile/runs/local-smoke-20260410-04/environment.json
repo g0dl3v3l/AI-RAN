@@ -1,0 +1,26 @@
+{
+  "cache_root": null,
+  "captured_at": "2026-04-10T13:52:58Z",
+  "chunk_sizes": [
+    64
+  ],
+  "cuda_available": true,
+  "cuda_device_count": 8,
+  "cwd": "/mnt/data/dheeraj/dicertation/inference-profile",
+  "gpu_id": 0,
+  "models": [
+    "facebook/opt-125m"
+  ],
+  "platform": "Linux-6.8.0-106-generic-x86_64-with-glibc2.35",
+  "python_executable": "/home/dheeraj/miniconda3/bin/python",
+  "python_version": "3.13.12",
+  "run_root": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-04",
+  "sequence_lengths": [
+    1024
+  ],
+  "stage": "profile",
+  "timed_iterations": 5,
+  "torch_available": true,
+  "torch_version": "2.11.0+cu130",
+  "warmup_iterations": 3
+}

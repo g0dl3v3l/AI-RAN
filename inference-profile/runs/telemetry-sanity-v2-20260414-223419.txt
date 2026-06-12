@@ -1,0 +1,26 @@
+runs=11
+revised-full-20260414-g0-opt125m: scaling_groups=40 flat_groups=0
+revised-full-20260414-g0-opt125m: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g1-opt350m: scaling_groups=40 flat_groups=0
+revised-full-20260414-g1-opt350m: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g2-opt13b-c64-256: scaling_groups=24 flat_groups=0
+revised-full-20260414-g2-opt13b-c64-256: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g3-opt13b-c512-1024: scaling_groups=16 flat_groups=0
+revised-full-20260414-g3-opt13b-c512-1024: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g4-opt27b-c64-256: scaling_groups=24 flat_groups=0
+revised-full-20260414-g4-opt27b-c64-256: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g5-opt27b-c512-1024: scaling_groups=16 flat_groups=0
+revised-full-20260414-g5-opt27b-c512-1024: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g6-opt67b-c64-256: scaling_groups=24 flat_groups=0
+revised-full-20260414-g6-opt67b-c64-256: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g7-opt67b-c512-1024: scaling_groups=16 flat_groups=0
+revised-full-20260414-g7-opt67b-c512-1024: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-opt13b-combined: scaling_groups=40 flat_groups=0
+revised-full-20260414-opt13b-combined: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-opt27b-combined: scaling_groups=40 flat_groups=0
+revised-full-20260414-opt27b-combined: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-opt67b-combined: scaling_groups=40 flat_groups=0
+revised-full-20260414-opt67b-combined: telemetry_cols=16 out_of_range=0 identical_pairs=0
+
+issues:
+- none

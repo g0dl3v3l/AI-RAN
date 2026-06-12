@@ -1,0 +1,31 @@
+{
+  "cuda_cleanup": {
+    "empty_cache_attempted": true,
+    "empty_cache_error": null,
+    "raw_close_error": null,
+    "raw_flush_attempted": true,
+    "raw_flush_error": null,
+    "synchronize_attempted": true,
+    "synchronize_error": null
+  },
+  "error_class": null,
+  "error_message": null,
+  "failure_kind": null,
+  "point_id": "decode-facebook-opt-1-3b-seq-1024-block-512-mode-vram-sm-24",
+  "raw_output_exists": true,
+  "raw_output_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-145100-g3-opt13b-c512-1024/raw/points/decode/decode-facebook-opt-1-3b-seq-1024-block-512-mode-vram-sm-24.csv",
+  "raw_row_count": 40,
+  "result_payload": {
+    "block_size": 512,
+    "decode_mode": "vram",
+    "family": "decode",
+    "model_id": "facebook/opt-1.3b",
+    "row_count": 40,
+    "sequence_length": 1024,
+    "sm_ai_partition": 24
+  },
+  "success": true,
+  "worker_parent_pid": 3423608,
+  "worker_pid": 3434243,
+  "worker_start_method": "spawn"
+}

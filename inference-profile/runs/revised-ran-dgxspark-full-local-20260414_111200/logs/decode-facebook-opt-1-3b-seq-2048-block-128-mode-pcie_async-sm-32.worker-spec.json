@@ -1,0 +1,29 @@
+{
+  "block_size": 128,
+  "cache_root": null,
+  "callable_path": "inference_profile.profile_orchestrator._run_decode_point_worker",
+  "decode_mode": "pcie_async",
+  "experiment_type": "ran-dgxspark-v1",
+  "gpu_id": 0,
+  "model_id": "facebook/opt-1.3b",
+  "point_id": "decode-facebook-opt-1-3b-seq-2048-block-128-mode-pcie_async-sm-32",
+  "raw_fieldnames": [
+    "model_id",
+    "sequence_length",
+    "block_size",
+    "op_type",
+    "op_name",
+    "sm_ai_partition",
+    "timed_iteration",
+    "duration_us",
+    "baseline_vram_bytes",
+    "peak_vram_bytes",
+    "dynamic_workspace_bytes",
+    "output_bytes"
+  ],
+  "raw_output_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-ran-dgxspark-full-local-20260414_111200/raw/points/decode/decode-facebook-opt-1-3b-seq-2048-block-128-mode-pcie_async-sm-32.csv",
+  "sequence_length": 2048,
+  "sm_ai_partition": 32,
+  "timed_iterations": 5,
+  "warmup_iterations": 3
+}

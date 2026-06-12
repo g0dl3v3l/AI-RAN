@@ -380,6 +380,191 @@ def test_docker_run_uses_expected_labels_and_prefix():
 
 
 
+def test_docker_criu_falls_back_when_custom_checkpoint_dir_is_unsupported_on_start():
+    (
+        _,
+        collect_docker_criu_integration,
+        build_experiment_container_name,
+        build_experiment_labels,
+        _,
+    ) = _load_docker_criu_functions()
+
+    container_name = build_experiment_container_name("task-5", token="fixed")
+    labels = build_experiment_labels("task-5")
+    checkpoint_dir = "/dev/shm/ai-edge-v0"
+
+    runner = RecordingRunner(
+        {
+            ("docker", "checkpoint", "--help"): _result(
+                ["docker", "checkpoint", "--help"],
+                status=ProbeStatus.OK,
+                stdout="Usage: docker checkpoint COMMAND\n",
+            ),
+            (
+                "docker",
+                "run",
+                "-d",
+                "--runtime",
+                "runc",
+                "--network",
+                "host",
+                "--name",
+                container_name,
+                "--label",
+                f"ai-edge-experiment={labels['ai-edge-experiment']}",
+                "--label",
+                f"ai-edge-component={labels['ai-edge-component']}",
+                "--label",
+                f"ai-edge-run-id={labels['ai-edge-run-id']}",
+                "busybox:1.36",
+                "sh",
+                "-c",
+                "while true; do sleep 1; done",
+            ): _result(
+                [
+                    "docker",
+                    "run",
+                    "-d",
+                    "--runtime",
+                    "runc",
+                    "--network",
+                    "host",
+                    "--name",
+                    container_name,
+                    "--label",
+                    f"ai-edge-experiment={labels['ai-edge-experiment']}",
+                    "--label",
+                    f"ai-edge-component={labels['ai-edge-component']}",
+                    "--label",
+                    f"ai-edge-run-id={labels['ai-edge-run-id']}",
+                    "busybox:1.36",
+                    "sh",
+                    "-c",
+                    "while true; do sleep 1; done",
+                ],
+                status=ProbeStatus.OK,
+                stdout="container-id\n",
+            ),
+            (
+                "docker",
+                "inspect",
+                "--format",
+                "{{json .Config.Labels}}",
+                container_name,
+            ): _result(
+                ["docker", "inspect", "--format", "{{json .Config.Labels}}", container_name],
+                status=ProbeStatus.OK,
+                stdout=json.dumps(labels) + "\n",
+            ),
+            (
+                "docker",
+                "checkpoint",
+                "create",
+                "--checkpoint-dir",
+                checkpoint_dir,
+                container_name,
+                "ai-edge-v0-criu-checkpoint",
+            ): _result(
+                [
+                    "docker",
+                    "checkpoint",
+                    "create",
+                    "--checkpoint-dir",
+                    checkpoint_dir,
+                    container_name,
+                    "ai-edge-v0-criu-checkpoint",
+                ],
+                status=ProbeStatus.OK,
+                stdout="ai-edge-v0-criu-checkpoint\n",
+            ),
+            (
+                "docker",
+                "start",
+                "--checkpoint-dir",
+                checkpoint_dir,
+                "--checkpoint",
+                "ai-edge-v0-criu-checkpoint",
+                container_name,
+            ): _result(
+                [
+                    "docker",
+                    "start",
+                    "--checkpoint-dir",
+                    checkpoint_dir,
+                    "--checkpoint",
+                    "ai-edge-v0-criu-checkpoint",
+                    container_name,
+                ],
+                status=ProbeStatus.ERROR,
+                returncode=1,
+                stderr="Error response from daemon: custom checkpointdir is not supported\n",
+            ),
+            ("docker", "start", container_name): _result(
+                ["docker", "start", container_name],
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+            (
+                "docker",
+                "checkpoint",
+                "create",
+                container_name,
+                "ai-edge-v0-criu-checkpoint-default-fallback",
+            ): _result(
+                [
+                    "docker",
+                    "checkpoint",
+                    "create",
+                    container_name,
+                    "ai-edge-v0-criu-checkpoint-default-fallback",
+                ],
+                status=ProbeStatus.OK,
+                stdout="ai-edge-v0-criu-checkpoint-default-fallback\n",
+            ),
+            (
+                "docker",
+                "start",
+                "--checkpoint",
+                "ai-edge-v0-criu-checkpoint-default-fallback",
+                container_name,
+            ): _result(
+                [
+                    "docker",
+                    "start",
+                    "--checkpoint",
+                    "ai-edge-v0-criu-checkpoint-default-fallback",
+                    container_name,
+                ],
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+            ("docker", "inspect", "--format", "{{.State.Status}}", container_name): _result(
+                ["docker", "inspect", "--format", "{{.State.Status}}", container_name],
+                status=ProbeStatus.OK,
+                stdout="running\n",
+            ),
+            ("docker", "rm", "-f", container_name): _result(
+                ["docker", "rm", "-f", container_name],
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+        }
+    )
+
+    record = collect_docker_criu_integration(
+        run_id="task-5",
+        runner=runner,
+        criu_probe=_ok_criu_probe(),
+        container_name=container_name,
+        checkpoint_dir=checkpoint_dir,
+        post_checkpoint_delay_s=0,
+    )
+
+    assert record["status"] == "ok"
+    assert record["details"]["fallback"]["used"] is True
+    assert record["details"]["fallback"]["original_checkpoint_dir"] == checkpoint_dir
+
+
 def test_ensure_experiment_owned_container_accepts_expected_label_and_name():
     _, _, build_experiment_container_name, build_experiment_labels, ensure_experiment_owned_container = (
         _load_docker_criu_functions()

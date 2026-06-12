@@ -1,0 +1,45 @@
+{
+  "component": "smoke_preemption",
+  "details": {
+    "checkpoint": {
+      "attempted": false
+    },
+    "commands": {},
+    "container": {
+      "checkpoint_dir": "/mnt/ckpt-ram/ai-edge-v0-vllm-real-20260612-002318",
+      "checkpoint_name": "ai-edge-v0-criu-checkpoint",
+      "id": "f2b91c958b114473efb55e3d2fddce1ad0dabe15d4b0b188f6bba209ecb3281e",
+      "name": "ai-edge-v0-vllm-artifacts-ae63b274"
+    },
+    "diagnostics": {
+      "criu_config": {
+        "allow_sudo": true,
+        "mode": "cdi_restore_compat"
+      }
+    },
+    "mode": "docker_server",
+    "outcome": "not_supported",
+    "prerequisites": {
+      "docker_criu_integration_reason": "unsupported capability: docker start --checkpoint",
+      "docker_criu_integration_status": "unsupported",
+      "runtime_status": "ok"
+    },
+    "reason": "unsupported capability: docker start --checkpoint",
+    "restore": {
+      "attempted": false
+    },
+    "runtime": "vllm",
+    "smoke": {
+      "attempted": false,
+      "request_monotonic_ns": 298202820465919,
+      "request_status": "ok",
+      "response_monotonic_ns": 298203883896083,
+      "response_status": "ok"
+    }
+  },
+  "monotonic_ns": 298203885202262,
+  "run_id": "artifacts",
+  "schema_version": "0.1.0",
+  "status": "unsupported",
+  "timestamp_utc": "2026-06-12T00:25:11.704186Z"
+}

@@ -25,6 +25,10 @@ from ai_runtime_experiments.utils.time import monotonic_ns, utc_now_iso_z
 CommandRunner = Callable[..., CommandResult]
 DEFAULT_TIMEOUT_S = 10.0
 _ALLOWED_RUNTIME_COMPONENTS = {"vllm-runtime", "llama-cpp-runtime"}
+_CUSTOM_CHECKPOINTDIR_UNSUPPORTED_MARKERS = (
+    "custom checkpointdir is not supported",
+    "custom checkpoint dir is not supported",
+)
 
 
 def _parse_label_mapping(text: str) -> dict[str, str] | None:
@@ -169,6 +173,15 @@ def _command_details_with_input(
 
 def _command_failed(result: CommandResult) -> bool:
     return result.status != ProbeStatus.OK or result.returncode not in (None, 0)
+
+
+def _is_custom_checkpointdir_unsupported(result: CommandResult) -> bool:
+    combined = "\n".join(
+        part
+        for part in (result.stdout, result.stderr, result.error_message or "")
+        if part
+    ).lower()
+    return any(marker in combined for marker in _CUSTOM_CHECKPOINTDIR_UNSUPPORTED_MARKERS)
 
 
 def _safe_runner_command(
@@ -652,6 +665,97 @@ def collect_smoke_preemption(
             command_label="docker start --checkpoint",
             capability_sensitive=True,
         )
+
+        fallback_used = False
+        if (
+            start_status != ProbeStatus.OK
+            and checkpoint_dir
+            and start_status == ProbeStatus.UNSUPPORTED
+            and _is_custom_checkpointdir_unsupported(start_result)
+        ):
+            fallback_details = details.setdefault("fallback", {})
+            fallback_details["reason"] = (
+                "docker start does not support custom checkpointdir on this host; "
+                "retrying with default checkpoint storage"
+            )
+            fallback_details["triggered_by"] = "docker_start_checkpoint"
+            fallback_details["original_checkpoint_dir"] = checkpoint_dir
+
+            recover_start_result = runner(
+                ["docker", "start", container_name],
+                timeout_s=timeout_s,
+            )
+            details["commands"]["docker_start_recover_after_checkpointdir_failure"] = (
+                _command_details(recover_start_result)
+            )
+            recover_start_status, recover_start_reason = _classify_result(
+                recover_start_result,
+                command_label="docker start",
+                capability_sensitive=True,
+            )
+            if recover_start_status == ProbeStatus.OK:
+                fallback_checkpoint_name = f"{checkpoint_name}-default-fallback"
+                fallback_details["checkpoint_name"] = fallback_checkpoint_name
+
+                fallback_checkpoint_result = runner(
+                    [
+                        "docker",
+                        "checkpoint",
+                        "create",
+                        container_name,
+                        fallback_checkpoint_name,
+                    ],
+                    timeout_s=timeout_s,
+                )
+                details["commands"]["docker_checkpoint_create_fallback"] = (
+                    _command_details(fallback_checkpoint_result)
+                )
+                fallback_checkpoint_status, fallback_checkpoint_reason = _classify_result(
+                    fallback_checkpoint_result,
+                    command_label="docker checkpoint create (fallback)",
+                    capability_sensitive=True,
+                )
+                if fallback_checkpoint_status == ProbeStatus.OK:
+                    fallback_start_result = runner(
+                        [
+                            "docker",
+                            "start",
+                            "--checkpoint",
+                            fallback_checkpoint_name,
+                            container_name,
+                        ],
+                        timeout_s=timeout_s,
+                    )
+                    details["commands"]["docker_start_checkpoint_fallback"] = (
+                        _command_details(fallback_start_result)
+                    )
+                    fallback_start_status, fallback_start_reason = _classify_result(
+                        fallback_start_result,
+                        command_label="docker start --checkpoint (fallback)",
+                        capability_sensitive=True,
+                    )
+                    if fallback_start_status == ProbeStatus.OK:
+                        fallback_used = True
+                        start_status = ProbeStatus.OK
+                        start_reason = None
+                    else:
+                        start_status = fallback_start_status
+                        start_reason = (
+                            fallback_start_reason
+                            or "fallback restore start failed"
+                        )
+                else:
+                    start_status = fallback_checkpoint_status
+                    start_reason = (
+                        fallback_checkpoint_reason
+                        or "fallback checkpoint creation failed"
+                    )
+            else:
+                start_status = recover_start_status
+                start_reason = (
+                    recover_start_reason or "failed to recover runtime after unsupported checkpoint-dir"
+                )
+
         if start_status != ProbeStatus.OK:
             _mark_phase_end(
                 restore_phase,
@@ -673,11 +777,14 @@ def collect_smoke_preemption(
                 details=details,
             )
 
+        state_command_name = "docker_inspect_state"
+        if fallback_used:
+            state_command_name = "docker_inspect_state_fallback"
         state_result = runner(
             ["docker", "inspect", "--format", "{{.State.Status}}", container_name],
             timeout_s=timeout_s,
         )
-        details["commands"]["docker_inspect_state"] = _command_details(state_result)
+        details["commands"][state_command_name] = _command_details(state_result)
         state_status, state_reason = _classify_result(
             state_result,
             command_label="docker inspect state",
@@ -726,8 +833,11 @@ def collect_smoke_preemption(
             restore_phase,
             phase_name="restore",
             status=ProbeStatus.OK,
-            command="docker_inspect_state",
+            command=state_command_name,
         )
+        if fallback_used:
+            details["fallback"]["used"] = True
+            details["fallback"]["status"] = ProbeStatus.OK.value
         if capture_memory_telemetry:
             _capture_memory_snapshot(
                 details=details,

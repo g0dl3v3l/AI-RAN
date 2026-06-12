@@ -1,0 +1,48 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1893: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1893: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1893: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1893: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+Error: Required checksum target does not exist: runs/revised-rerun-20260415-001621-g2-opt13b-c64-256/runs/revised-rerun-20260415-001621-g2-opt13b-c64-256/run_manifest.json
+ERROR conda.cli.main_run:execute(142): `conda run python -m inference_profile.cli run-all --run-root runs/revised-rerun-20260415-001621-g2-opt13b-c64-256 --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv --models facebook/opt-1.3b --chunk-sizes 64 128 256 --sequence-lengths 1024 2048 4096 8192 --gpu-id 2 --experiment-type ran-dgxspark-v1` failed. (See above for error)
+INFO: activate-binutils_linux-64.sh made the following environmental changes:
++ADDR2LINE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-addr2line
++AR=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ar
++AS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-as
++CXXFILT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-c++filt
++ELFEDIT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-elfedit
++GPROF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-gprof
++HOST=x86_64-conda_cos6-linux-gnu
++LD_GOLD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld.gold
++LD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld
++NM=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-nm
++OBJCOPY=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objcopy
++OBJDUMP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objdump
++RANLIB=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ranlib
++READELF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-readelf
++SIZE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-size
++STRINGS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strings
++STRIP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strip
+INFO: deactivate-binutils_linux-64.sh made the following environmental changes:
+-ADDR2LINE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-addr2line
+-AR=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ar
+-AS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-as
+-CXXFILT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-c++filt
+-ELFEDIT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-elfedit
+-GPROF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-gprof
+-HOST=x86_64-conda_cos6-linux-gnu
++HOST=x86_64-conda-linux-gnu
+-LD_GOLD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld.gold
+-LD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld
+-NM=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-nm
+-OBJCOPY=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objcopy
+-OBJDUMP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objdump
+-RANLIB=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ranlib
+-READELF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-readelf
+-SIZE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-size
+-STRINGS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strings
+-STRIP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strip

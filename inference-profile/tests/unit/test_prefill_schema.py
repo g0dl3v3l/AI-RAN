@@ -70,8 +70,9 @@ def test_profile_prefill_with_writer_emits_exact_task6_schema_without_warmup_row
         module,
         input_tensor,
         device,
+        sm_ai_partition,
     ):
-        del module, input_tensor, device
+        del module, input_tensor, device, sm_ai_partition
         output_bytes = prefill_profile.build_prefill_output_byte_map(
             prefill_profile.resolve_opt_config(
                 model_id,
@@ -82,7 +83,9 @@ def test_profile_prefill_with_writer_emits_exact_task6_schema_without_warmup_row
         return {
             "model_id": model_id,
             "chunk_tokens": chunk_tokens,
+            "op_type": prefill_profile.PREFILL_GEMM_OP_TYPE,
             "op_name": op_name,
+            "sm_ai_partition": 100,
             "timed_iteration": timed_iteration,
             "duration_us": 100.0 + timed_iteration,
             "baseline_vram_bytes": 1_000,
@@ -91,14 +94,63 @@ def test_profile_prefill_with_writer_emits_exact_task6_schema_without_warmup_row
             "output_bytes": output_bytes,
         }
 
+    def fake_build_prefill_attention_inputs(
+        _config,
+        *,
+        q_proj_module,
+        k_proj_module,
+        v_proj_module,
+        hidden_input,
+    ):
+        del q_proj_module, k_proj_module, v_proj_module, hidden_input
+        return "query", "key", "value"
+
+    def fake_run_attention_warmup(query, key, value, warmup_iterations, *, device):
+        del query, key, value, warmup_iterations, device
+
+    def fake_time_attention_op(
+        *,
+        model_id,
+        chunk_tokens,
+        timed_iteration,
+        query,
+        key,
+        value,
+        device,
+        sm_ai_partition,
+    ):
+        del query, key, value, device
+        return {
+            "model_id": model_id,
+            "chunk_tokens": chunk_tokens,
+            "op_type": prefill_profile.PREFILL_ATTENTION_OP_TYPE,
+            "op_name": prefill_profile.PREFILL_ATTENTION_OP_NAME,
+            "sm_ai_partition": sm_ai_partition,
+            "timed_iteration": timed_iteration,
+            "duration_us": 300.0 + timed_iteration,
+            "baseline_vram_bytes": 1_000,
+            "peak_vram_bytes": 1_600,
+            "dynamic_workspace_bytes": 600,
+            "output_bytes": 1_024,
+        }
+
     monkeypatch.setattr(
         prefill_profile, "_require_cuda_device", lambda _gpu_id: torch.device("cuda:0")
     )
     monkeypatch.setattr(prefill_profile.torch.cuda, "set_device", lambda _device: None)
     monkeypatch.setattr(prefill_profile, "_build_prefill_linear_ops", fake_build_ops)
     monkeypatch.setattr(prefill_profile, "_build_input_tensors", fake_build_inputs)
+    monkeypatch.setattr(
+        prefill_profile,
+        "_build_prefill_attention_inputs",
+        fake_build_prefill_attention_inputs,
+    )
     monkeypatch.setattr(prefill_profile, "_run_warmup", fake_run_warmup)
+    monkeypatch.setattr(
+        prefill_profile, "_run_attention_warmup", fake_run_attention_warmup
+    )
     monkeypatch.setattr(prefill_profile, "_time_linear_op", fake_time_linear_op)
+    monkeypatch.setattr(prefill_profile, "_time_attention_op", fake_time_attention_op)
 
     try:
         result = prefill_profile.profile_prefill_with_writer(
@@ -114,7 +166,7 @@ def test_profile_prefill_with_writer_emits_exact_task6_schema_without_warmup_row
 
     fieldnames, rows = _read_rows(raw_output_path)
     assert fieldnames == list(prefill_profile.PREFILL_EVENT_FIELDNAMES)
-    assert len(rows) == len(prefill_profile.PREFILL_OP_NAMES) * 2 * 3
+    assert len(rows) == (len(prefill_profile.PREFILL_OP_NAMES) + 1) * 2 * 3
     assert result.row_count == len(rows)
     assert result.raw_output_path == raw_output_path
     assert warmup_calls == [
@@ -125,7 +177,15 @@ def test_profile_prefill_with_writer_emits_exact_task6_schema_without_warmup_row
 
     assert {row["model_id"] for row in rows} == {"facebook/opt-125m"}
     assert {int(row["chunk_tokens"]) for row in rows} == {64, 128}
-    assert {row["op_name"] for row in rows} == set(prefill_profile.PREFILL_OP_NAMES)
+    assert {row["op_name"] for row in rows} == {
+        *prefill_profile.PREFILL_OP_NAMES,
+        prefill_profile.PREFILL_ATTENTION_OP_NAME,
+    }
+    assert {row["op_type"] for row in rows} == {
+        prefill_profile.PREFILL_GEMM_OP_TYPE,
+        prefill_profile.PREFILL_ATTENTION_OP_TYPE,
+    }
+    assert {int(row["sm_ai_partition"]) for row in rows} == {100}
     assert {int(row["timed_iteration"]) for row in rows} == {0, 1, 2}
     assert all(float(row["duration_us"]) > 0 for row in rows)
 

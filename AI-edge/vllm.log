@@ -1,0 +1,481 @@
+{
+    "component": "runtime_check",
+    "details": {
+        "attempts": 322,
+        "base_url": "http://127.0.0.1:8013/v1",
+        "commands": {
+            "docker_image_inspect": {
+                "argv": [
+                    "docker",
+                    "image",
+                    "inspect",
+                    "vllm/vllm-openai:latest"
+                ],
+                "duration_s": 0.036001086000396754,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "[\n    {\n        \"Id\": \"sha256:0204ba447a71c42f300e5218e1fe236f539f8b44da74198132366c3baec5887b\",\n        \"RepoTags\": [\n            \"vllm/vllm-openai:latest\"\n        ],\n        \"RepoDigests\": [\n            \"vllm/vllm-openai@sha256:953d3a06d5e64ab582985cd7401289d3abf2a2c14ef2158e9a84313daeec77d7\"\n        ],\n        \"Comment\": \"buildkit.dockerfile.v0\",\n        \"Created\": \"2026-06-04T21:52:49.563687894Z\",\n        \"Config\": {\n            \"Env\": [\n                \"PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n                \"NVARCH=x86_64\",\n                \"NVIDIA_REQUIRE_CUDA=cuda>=13.0 brand=unknown,driver>=535,driver<536 brand=grid,driver>=535,driver<536 brand=tesla,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=vapps,driver>=535,driver<536 brand=vpc,driver>=535,driver<536 brand=vcs,driver>=535,driver<536 brand=vws,driver>=535,driver<536 brand=cloudgaming,driver>=535,driver<536 brand=unknown,driver>=550,driver<551 brand=grid,driver>=550,driver<551 brand=tesla,driver>=550,driver<551 brand=nvidia,driver>=550,driver<551 brand=quadro,driver>=550,driver<551 brand=quadrortx,driver>=550,driver<551 brand=nvidiartx,driver>=550,driver<551 brand=vapps,driver>=550,driver<551 brand=vpc,driver>=550,driver<551 brand=vcs,driver>=550,driver<551 brand=vws,driver>=550,driver<551 brand=cloudgaming,driver>=550,driver<551 brand=unknown,driver>=565,driver<566 brand=grid,driver>=565,driver<566 brand=tesla,driver>=565,driver<566 brand=nvidia,driver>=565,driver<566 brand=quadro,driver>=565,driver<566 brand=quadrortx,driver>=565,driver<566 brand=nvidiartx,driver>=565,driver<566 brand=vapps,driver>=565,driver<566 brand=vpc,driver>=565,driver<566 brand=vcs,driver>=565,driver<566 brand=vws,driver>=565,driver<566 brand=cloudgaming,driver>=565,driver<566 brand=unknown,driver>=570,driver<571 brand=grid,driver>=570,driver<571 brand=tesla,driver>=570,driver<571 brand=nvidia,driver>=570,driver<571 brand=quadro,driver>=570,driver<571 brand=quadrortx,driver>=570,driver<571 brand=nvidiartx,driver>=570,driver<571 brand=vapps,driver>=570,driver<571 brand=vpc,driver>=570,driver<571 brand=vcs,driver>=570,driver<571 brand=vws,driver>=570,driver<571 brand=cloudgaming,driver>=570,driver<571 brand=unknown,driver>=575,driver<576 brand=grid,driver>=575,driver<576 brand=tesla,driver>=575,driver<576 brand=nvidia,driver>=575,driver<576 brand=quadro,driver>=575,driver<576 brand=quadrortx,driver>=575,driver<576 brand=nvidiartx,driver>=575,driver<576 brand=vapps,driver>=575,driver<576 brand=vpc,driver>=575,driver<576 brand=vcs,driver>=575,driver<576 brand=vws,driver>=575,driver<576 brand=cloudgaming,driver>=575,driver<576\",\n                \"NV_CUDA_CUDART_VERSION=13.0.96-1\",\n                \"CUDA_VERSION=13.0.2\",\n                \"LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64\",\n                \"NVIDIA_VISIBLE_DEVICES=all\",\n                \"NVIDIA_DRIVER_CAPABILITIES=compute,utility\",\n                \"DEBIAN_FRONTEND=noninteractive\",\n                \"UV_HTTP_TIMEOUT=500\",\n                \"UV_INDEX_STRATEGY=unsafe-best-match\",\n                \"UV_LINK_MODE=copy\",\n                \"UV_PYTHON_INSTALL_DIR=/opt/uv/python\",\n                \"UV_CACHE_DIR=/opt/uv/cache\",\n                \"VLLM_ENABLE_CUDA_COMPATIBILITY=0\",\n                \"TORCH_CUDA_ARCH_LIST=7.5 8.0 8.6 8.9 9.0 10.0 12.0+PTX\",\n                \"VLLM_USAGE_SOURCE=production-docker-image\",\n                \"VLLM_BUILD_COMMIT=0decac0d96c42b49572498019f0a0e3600f50398\",\n                \"VLLM_BUILD_PIPELINE=019d130e-464e-4ff7-b84b-492992c0c06b\",\n                \"VLLM_BUILD_URL=https://buildkite.com/vllm/release-v2/builds/2333\",\n                \"VLLM_IMAGE_TAG=vllm/vllm-openai:v0.22.1\"\n            ],\n            \"Entrypoint\": [\n                \"vllm\",\n                \"serve\"\n            ],\n            \"WorkingDir\": \"/vllm-workspace\",\n            \"Labels\": {\n                \"ai.vllm.build.commit\": \"0decac0d96c42b49572498019f0a0e3600f50398\",\n                \"ai.vllm.build.pipeline\": \"019d130e-464e-4ff7-b84b-492992c0c06b\",\n                \"ai.vllm.build.url\": \"https://buildkite.com/vllm/release-v2/builds/2333\",\n                \"ai.vllm.image.tag\": \"vllm/vllm-openai:v0.22.1\",\n                \"maintainer\": \"NVIDIA CORPORATION <cudatools@nvidia.com>\",\n                \"org.opencontainers.image.ref.name\": \"ubuntu\",\n                \"org.opencontainers.image.revision\": \"0decac0d96c42b49572498019f0a0e3600f50398\",\n                \"org.opencontainers.image.source\": \"https://github.com/vllm-project/vllm\",\n                \"org.opencontainers.image.url\": \"https://buildkite.com/vllm/release-v2/builds/2333\",\n                \"org.opencontainers.image.version\": \"vllm/vllm-openai:v0.22.1\"\n            }\n        },\n        \"Architecture\": \"amd64\",\n        \"Os\": \"linux\",\n        \"Size\": 25477271563,\n        \"GraphDriver\": {\n            \"Data\": {\n                \"LowerDir\": \"/var/lib/docker/overlay2/c0db2d1c5e25e9e3c5dd72a493af43a0624505b43ccdfc6a900ae23734d6e537/diff:/var/lib/docker/overlay2/ba9e4cf6bb4ff0a42cbd0fde8fba64a7374f256adc7a858cda4647efa2abd77a/diff:/var/lib/docker/overlay2/219f1e6958a43f646ac1df491c6301dd92d6c25f4ca02e968c04009fb68297ec/diff:/var/lib/docker/overlay2/5e7890858b9ad9301514711dac17ed95fb504137c5c905a0c471a73f11519b02/diff:/var/lib/docker/overlay2/5f11a8476aa063382797b60f8fb54ab6365d65add8bc09c4635193c7476c3c5c/diff:/var/lib/docker/overlay2/0a90220858328d1860a52bef1b71e55185f89e95804436b5dd725f4483153311/diff:/var/lib/docker/overlay2/555d326500734147cd2dde8fc443fbabd0340965d629b5679b24ac4cd34703fe/diff:/var/lib/docker/overlay2/f36b7909ff81197137aecf77dd2c91a9f3ef4e9e8c7c4d579b5054467b7d3ed3/diff:/var/lib/docker/overlay2/38e83a21161ec25127e2844d5115b79d9aaa11a0a204911255a3197fd940ca12/diff:/var/lib/docker/overlay2/5665e74045f48ddfaf63eb44d3374958a30e8aaae082a0f415daf8344f7952ff/diff:/var/lib/docker/overlay2/da39eaedc7061fa1f6f04b29abee29b99e8ec68a60f772cad32ccf4f109e68a6/diff:/var/lib/docker/overlay2/9dc59b128f8dac82b67866792b186e99de3076605bec7fe16a9323670adeb4ac/diff:/var/lib/docker/overlay2/1cdf89f550461eb3d205749437c6604a7edd67f05852bff034e75f8cd4d2db0e/diff:/var/lib/docker/overlay2/050dcf919d3358df90e8ca44179928337bf9b116fd0858dbcfc03eb7b3da87fc/diff:/var/lib/docker/overlay2/7364d29d0bbbb56a22f140fb593ddaef8a6cc334144bea7cb5bfba98d6338886/diff:/var/lib/docker/overlay2/81e03eaf7bda828f1581f7ec6762c45429dd58d162eae7d4877bfe4b7a5413ae/diff:/var/lib/docker/overlay2/9714a7862093b6221ced2c86d330bd39e4eae6bf66b6f32ec91352db71a34fde/diff:/var/lib/docker/overlay2/cd134373b75251073936be3bb5b24c0a5d925eb014a66f9bff80b2f0c3691e6f/diff:/var/lib/docker/overlay2/8c773a60c1a58a40f02aa13b983af2d82cbb0bf12ba3f85faedc8ee2ad30a4c0/diff:/var/lib/docker/overlay2/8cf4c9e17b5bcfcd44dfee13919c13e47940f9a53fd5846b6fcbc7687e315152/diff:/var/lib/docker/overlay2/d044313825142e5c90eb1a555a1ae980a6578a168b08642bb344ca681eb6f391/diff:/var/lib/docker/overlay2/42e635a1c63090998b624cd214ba886459ad15ef1c81d805d33d8e9355c4766b/diff:/var/lib/docker/overlay2/cde8427cb6019a90a3f276e86eba1b7525b6bb824b6618d06ad18ca956b6ca21/diff:/var/lib/docker/overlay2/26d9eb87a9864422e517c954aae6a4bbd86084354806aed7a9a21d2f2754c866/diff:/var/lib/docker/overlay2/260d24b3e339e7657c9818ff70dd176c2c4abfa8aa609fc853770045dec8d94e/diff:/var/lib/docker/overlay2/99b6169de7d8c0ad03e3880c55e82e57fbb33b9323747caa61580596a64e219a/diff:/var/lib/docker/overlay2/249610c761589d96b781f83514cab61885c01e5e418c9df20d26969e050f0670/diff:/var/lib/docker/overlay2/789022b84aa8ed751832f838c89b38dc380580780034fe188cd19754d7fc5e4d/diff:/var/lib/docker/overlay2/62e24d717f3d50d6f772def3b5ae0729ef64191123dee011388ddfa9ae9e34c4/diff:/var/lib/docker/overlay2/c2e2b9aa4443c0fccc89110a65a4d758dbc1f1b67db678bf8e15b9c280d2054a/diff\",\n                \"MergedDir\": \"/var/lib/docker/overlay2/1289894dcd3685588bdaab483b381e0f286c92827b2674c93d67d6accaae85d3/merged\",\n                \"UpperDir\": \"/var/lib/docker/overlay2/1289894dcd3685588bdaab483b381e0f286c92827b2674c93d67d6accaae85d3/diff\",\n                \"WorkDir\": \"/var/lib/docker/overlay2/1289894dcd3685588bdaab483b381e0f286c92827b2674c93d67d6accaae85d3/work\"\n            },\n            \"Name\": \"overlay2\"\n        },\n        \"RootFS\": {\n            \"Type\": \"layers\",\n            \"Layers\": [\n                \"sha256:767e56ba346ae714b6e6b816baa839051145ed78cfa0e4524a86cc287b0c4b00\",\n                \"sha256:a34bd8b26cb282b40938915d45732d898d4d09459cd3be508617c2b02e5f9b39\",\n                \"sha256:0f09a2d797f7f8a8a702ccc542c861cf6bc25831172c34974865c8387e1d9a20\",\n                \"sha256:50a43a0352744fd68e68cb9fafee74db9b087024b86ebbc29ba287f40672c319\",\n                \"sha256:b7ec8fd7c485bbedbe64cbc5a7a810ceabb9156e95c83ba60596ddb9b4955d48\",\n                \"sha256:b37d4834a43f8732b7775209232440d1a218428d34d582cb3d4d8dd95e5c9ae3\",\n                \"sha256:96b6414fc0e70e39457925d7b262feaae95f2f0f3f3a0b890dc241a504a18d07\",\n                \"sha256:a87ddd56791dd6542bacfd538d999b2846fb437dc16ff7ed8283ece146a8790d\",\n                \"sha256:37e86b1a66f3229b5b2141ef0fd105ffded44e5ada4522e65477560a996b860e\",\n                \"sha256:22ce6b6bb05837e5437e0ed83a0cbbb3c4a1fd2fbaa6627978beba01935e4b5f\",\n                \"sha256:8615d77d2749f532a33d2277df41dbbae06705cb3904753dad42cdf9ec4da07a\",\n                \"sha256:a26349e6bdfc265a91f130f8c1c665be8440de4f3a842fcb663ced90cf15dbbe\",\n                \"sha256:e12bb03ecda75a3bcfa4f5fe7c10670a90b2ff3265facceb3c7e823aa5a64388\",\n                \"sha256:e12bb03ecda75a3bcfa4f5fe7c10670a90b2ff3265facceb3c7e823aa5a64388\",\n                \"sha256:941b4b73f8232bd79258c7b185b9dc5de62aca638e0564a95abb8bfcb223716e\",\n                \"sha256:9169d060bf3d8fd7527d4c6b8a5f1c8bc28e34a5ea65c17e7cd8c64b7f60d857\",\n                \"sha256:a63bb780576b47db932a45b29926b6366b3f1e4bc3e4c8879a15214a88c32689\",\n                \"sha256:29e946b91d78f6005d0a683f57523945c31ddbd8dea63b7670cbe5a86039999d\",\n                \"sha256:0d437dc08c742dd046c1f855bf91161aaefd15196f0cfac7a161d24cbf0c7dec\",\n                \"sha256:7728b4e3d5b0ab3a3cba8041119799ee860a9ba6a67a11799b2ac15048b27d6e\",\n                \"sha256:8b48669f806cb0fa6af113e7abc8c658399d7bf3561ffa47620fa3710e0eaadd\",\n                \"sha256:9d57f00aed9a39a52e7d23ec0596c3d7edd501634056671827525cbeb60b5288\",\n                \"sha256:f9312ae19483a4415acc6d083ad864e4b14f94f6e3c5947e0ff8d162364dbe8f\",\n                \"sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef\",\n                \"sha256:c1653fd75b5fb6be3b77f6fad836913ea76c52b64acb0a4feea831f44f85c3a0\",\n                \"sha256:b5f209b88a64a3d35624d12d80bf33271fef07369cc785b7a2778abe578b1a75\",\n                \"sha256:090ef6b5008686cac7eca354628810d3ee0c5a83c7e54de9950f0bd7a58c17d8\",\n                \"sha256:4371be1d4016a133505b9bca8bf7ec9c45f45b3b06f5aa5d1a4e495b7834c23f\",\n                \"sha256:4b98a5f41b4a61393d44a7babf642f61460564ac186224eb5492dcec5f29a7b4\",\n                \"sha256:f9ce7c23a084835832c65feb14c2d680a48f1b56fb89d9b847d0fae43f8af64d\",\n                \"sha256:2df108281858196e13dcbdf88ff2bdec67efd3dd1c5a6484928a67ac617dd9e3\"\n            ]\n        },\n        \"Metadata\": {\n            \"LastTagTime\": \"0001-01-01T00:00:00Z\"\n        }\n    }\n]\n",
+                "timed_out": false
+            },
+            "docker_run": {
+                "argv": [
+                    "docker",
+                    "run",
+                    "-d",
+                    "--name",
+                    "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650",
+                    "--label",
+                    "ai-edge-experiment=v0",
+                    "--label",
+                    "ai-edge-component=vllm-runtime",
+                    "--label",
+                    "ai-edge-run-id=ai-edge-v0-vllm-real",
+                    "-p",
+                    "127.0.0.1:8013:8000",
+                    "--gpus",
+                    "all",
+                    "vllm/vllm-openai:latest",
+                    "--model",
+                    "Qwen/Qwen2-0.5B-Instruct",
+                    "--host",
+                    "0.0.0.0",
+                    "--port",
+                    "8000"
+                ],
+                "duration_s": 0.4285789269997622,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8\n",
+                "timed_out": false
+            }
+        },
+        "container": {
+            "container_port": 8000,
+            "host_port": 8013,
+            "id": "bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8",
+            "image": "vllm/vllm-openai:latest",
+            "name": "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650"
+        },
+        "mode": "docker_server",
+        "models_url": "http://127.0.0.1:8013/v1/models",
+        "runtime": "vllm"
+    },
+    "monotonic_ns": 7541292100757,
+    "run_id": "ai-edge-v0-vllm-real",
+    "schema_version": "0.1.0",
+    "status": "ok",
+    "timestamp_utc": "2026-06-09T16:09:43.334315Z"
+}
+{
+    "component": "docker_criu_integration",
+    "details": {
+        "commands": {
+            "docker_checkpoint_create": {
+                "argv": [
+                    "docker",
+                    "checkpoint",
+                    "create",
+                    "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c",
+                    "ai-edge-v0-criu-checkpoint"
+                ],
+                "duration_s": 0.39327520999995613,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "ai-edge-v0-criu-checkpoint\n",
+                "timed_out": false
+            },
+            "docker_checkpoint_help": {
+                "argv": [
+                    "docker",
+                    "checkpoint",
+                    "--help"
+                ],
+                "duration_s": 0.03498665600000095,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "Usage:  docker checkpoint COMMAND\n\nManage checkpoints\n\nCommands:\n  create      Create a checkpoint from a running container\n  ls          List checkpoints for a container\n  rm          Remove a checkpoint\n\nRun 'docker checkpoint COMMAND --help' for more information on a command.\n",
+                "timed_out": false
+            },
+            "docker_inspect_labels": {
+                "argv": [
+                    "docker",
+                    "inspect",
+                    "--format",
+                    "{{json .Config.Labels}}",
+                    "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c"
+                ],
+                "duration_s": 0.03372399499949097,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "{\"ai-edge-component\":\"docker-criu\",\"ai-edge-experiment\":\"v0\",\"ai-edge-run-id\":\"ai-edge-v0-vllm-real\"}\n",
+                "timed_out": false
+            },
+            "docker_inspect_state": {
+                "argv": [
+                    "docker",
+                    "inspect",
+                    "--format",
+                    "{{.State.Status}}",
+                    "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c"
+                ],
+                "duration_s": 0.029668504999790457,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "running\n",
+                "timed_out": false
+            },
+            "docker_rm_force": {
+                "argv": [
+                    "docker",
+                    "rm",
+                    "-f",
+                    "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c"
+                ],
+                "duration_s": 0.1448752569995122,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c\n",
+                "timed_out": false
+            },
+            "docker_run": {
+                "argv": [
+                    "docker",
+                    "run",
+                    "-d",
+                    "--runtime",
+                    "runc",
+                    "--network",
+                    "host",
+                    "--name",
+                    "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c",
+                    "--label",
+                    "ai-edge-experiment=v0",
+                    "--label",
+                    "ai-edge-component=docker-criu",
+                    "--label",
+                    "ai-edge-run-id=ai-edge-v0-vllm-real",
+                    "busybox:1.36",
+                    "sh",
+                    "-c",
+                    "while true; do sleep 1; done"
+                ],
+                "duration_s": 0.24715761599964026,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "f67ff4a18af701f68324fcfa4de1b835a32478026f99e44218abb71b2240122e\n",
+                "timed_out": false
+            },
+            "docker_start_checkpoint": {
+                "argv": [
+                    "docker",
+                    "start",
+                    "--checkpoint",
+                    "ai-edge-v0-criu-checkpoint",
+                    "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c"
+                ],
+                "duration_s": 0.39299830199979624,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "",
+                "timed_out": false
+            },
+            "post_checkpoint_delay": {
+                "duration_s": 5.0,
+                "status": "ok"
+            }
+        },
+        "container": {
+            "checkpoint_name": "ai-edge-v0-criu-checkpoint",
+            "image": "busybox:1.36",
+            "inspected_labels": {
+                "ai-edge-component": "docker-criu",
+                "ai-edge-experiment": "v0",
+                "ai-edge-run-id": "ai-edge-v0-vllm-real"
+            },
+            "name": "ai-edge-v0-criu-ai-edge-v0-vllm-real-16292b0c",
+            "network_mode": "host",
+            "post_checkpoint_delay_s": 5.0,
+            "runtime": "runc"
+        },
+        "extracted": {
+            "container_state": "running"
+        },
+        "prerequisites": {
+            "criu_status": "ok"
+        },
+        "smoke": {
+            "attempted": true,
+            "container_id": "f67ff4a18af701f68324fcfa4de1b835a32478026f99e44218abb71b2240122e"
+        }
+    },
+    "monotonic_ns": 7378807410514,
+    "run_id": "ai-edge-v0-vllm-real",
+    "schema_version": "0.1.0",
+    "status": "ok",
+    "timestamp_utc": "2026-06-09T16:07:00.849618Z"
+}
+{
+    "component": "smoke_preemption",
+    "details": {
+        "checkpoint": {
+            "attempted": true,
+            "command": "docker_checkpoint_create",
+            "end_monotonic_ns": 7541555455673,
+            "end_timestamp_utc": "2026-06-09T16:09:43.597650Z",
+            "reason": "command failure(s): docker checkpoint create",
+            "start_monotonic_ns": 7541317741133,
+            "start_timestamp_utc": "2026-06-09T16:09:43.359942Z",
+            "status": "error"
+        },
+        "commands": {
+            "docker_checkpoint_create": {
+                "argv": [
+                    "docker",
+                    "checkpoint",
+                    "create",
+                    "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650",
+                    "ai-edge-v0-criu-checkpoint"
+                ],
+                "duration_s": 0.23755741100012528,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 1,
+                "status": "error",
+                "stderr": "Error response from daemon: Cannot checkpoint container ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650: runc did not terminate successfully: exit status 1: criu failed: type DUMP errno 0 path= /run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log\n",
+                "stdout": "",
+                "timed_out": false
+            },
+            "docker_inspect_labels": {
+                "argv": [
+                    "docker",
+                    "inspect",
+                    "--format",
+                    "{{json .Config.Labels}}",
+                    "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650"
+                ],
+                "duration_s": 0.023925528000290797,
+                "error_message": null,
+                "error_type": null,
+                "returncode": 0,
+                "status": "ok",
+                "stderr": "",
+                "stdout": "{\"ai-edge-component\":\"vllm-runtime\",\"ai-edge-experiment\":\"v0\",\"ai-edge-run-id\":\"ai-edge-v0-vllm-real\",\"ai.vllm.build.commit\":\"0decac0d96c42b49572498019f0a0e3600f50398\",\"ai.vllm.build.pipeline\":\"019d130e-464e-4ff7-b84b-492992c0c06b\",\"ai.vllm.build.url\":\"https://buildkite.com/vllm/release-v2/builds/2333\",\"ai.vllm.image.tag\":\"vllm/vllm-openai:v0.22.1\",\"maintainer\":\"NVIDIA CORPORATION <cudatools@nvidia.com>\",\"org.opencontainers.image.ref.name\":\"ubuntu\",\"org.opencontainers.image.revision\":\"0decac0d96c42b49572498019f0a0e3600f50398\",\"org.opencontainers.image.source\":\"https://github.com/vllm-project/vllm\",\"org.opencontainers.image.url\":\"https://buildkite.com/vllm/release-v2/builds/2333\",\"org.opencontainers.image.version\":\"vllm/vllm-openai:v0.22.1\"}\n",
+                "timed_out": false
+            }
+        },
+        "container": {
+            "checkpoint_name": "ai-edge-v0-criu-checkpoint",
+            "id": "bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8",
+            "inspected_labels": {
+                "ai-edge-component": "vllm-runtime",
+                "ai-edge-experiment": "v0",
+                "ai-edge-run-id": "ai-edge-v0-vllm-real",
+                "ai.vllm.build.commit": "0decac0d96c42b49572498019f0a0e3600f50398",
+                "ai.vllm.build.pipeline": "019d130e-464e-4ff7-b84b-492992c0c06b",
+                "ai.vllm.build.url": "https://buildkite.com/vllm/release-v2/builds/2333",
+                "ai.vllm.image.tag": "vllm/vllm-openai:v0.22.1",
+                "maintainer": "NVIDIA CORPORATION <cudatools@nvidia.com>",
+                "org.opencontainers.image.ref.name": "ubuntu",
+                "org.opencontainers.image.revision": "0decac0d96c42b49572498019f0a0e3600f50398",
+                "org.opencontainers.image.source": "https://github.com/vllm-project/vllm",
+                "org.opencontainers.image.url": "https://buildkite.com/vllm/release-v2/builds/2333",
+                "org.opencontainers.image.version": "vllm/vllm-openai:v0.22.1"
+            },
+            "name": "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650"
+        },
+        "diagnostics": {
+            "criu_logs": [
+                {
+                    "destination_path": "/tmp/ai-edge-v0-vllm-real/criu_logs/smoke_preemption/01-criu-dump.log",
+                    "error_message": "[Errno 13] Permission denied: '/run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log'",
+                    "error_type": "PermissionError",
+                    "source_path": "/run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log",
+                    "status": "error"
+                }
+            ]
+        },
+        "mode": "docker_server",
+        "outcome": "checkpoint_failed",
+        "prerequisites": {
+            "docker_criu_integration_status": "ok",
+            "runtime_status": "ok"
+        },
+        "reason": "command failure(s): docker checkpoint create",
+        "restore": {
+            "attempted": false
+        },
+        "runtime": "vllm",
+        "smoke": {
+            "attempted": true,
+            "request_monotonic_ns": 7541293194782,
+            "request_started_before_checkpoint": true,
+            "request_status": "ok",
+            "response_monotonic_ns": 7542548390453,
+            "response_status": "ok"
+        }
+    },
+    "monotonic_ns": 7541555480552,
+    "run_id": "ai-edge-v0-vllm-real",
+    "schema_version": "0.1.0",
+    "status": "error",
+    "timestamp_utc": "2026-06-09T16:09:43.597704Z"
+}
+{
+    "classification": "smoke_failed_restore",
+    "details": {
+        "diagnostics": {
+            "criu_logs": [
+                {
+                    "destination_path": "/tmp/ai-edge-v0-vllm-real/criu_logs/smoke_validation/01-criu-dump.log",
+                    "error_message": "[Errno 13] Permission denied: '/run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log'",
+                    "error_type": "PermissionError",
+                    "source_path": "/run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log",
+                    "status": "error"
+                }
+            ]
+        },
+        "preemption": {
+            "checkpoint": {
+                "attempted": true,
+                "command": "docker_checkpoint_create",
+                "end_monotonic_ns": 7541555455673,
+                "end_timestamp_utc": "2026-06-09T16:09:43.597650Z",
+                "reason": "command failure(s): docker checkpoint create",
+                "start_monotonic_ns": 7541317741133,
+                "start_timestamp_utc": "2026-06-09T16:09:43.359942Z",
+                "status": "error"
+            },
+            "commands": {
+                "docker_checkpoint_create": {
+                    "argv": [
+                        "docker",
+                        "checkpoint",
+                        "create",
+                        "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650",
+                        "ai-edge-v0-criu-checkpoint"
+                    ],
+                    "duration_s": 0.23755741100012528,
+                    "error_message": null,
+                    "error_type": null,
+                    "returncode": 1,
+                    "status": "error",
+                    "stderr": "Error response from daemon: Cannot checkpoint container ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650: runc did not terminate successfully: exit status 1: criu failed: type DUMP errno 0 path= /run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log\n",
+                    "stdout": "",
+                    "timed_out": false
+                },
+                "docker_inspect_labels": {
+                    "argv": [
+                        "docker",
+                        "inspect",
+                        "--format",
+                        "{{json .Config.Labels}}",
+                        "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650"
+                    ],
+                    "duration_s": 0.023925528000290797,
+                    "error_message": null,
+                    "error_type": null,
+                    "returncode": 0,
+                    "status": "ok",
+                    "stderr": "",
+                    "stdout": "{\"ai-edge-component\":\"vllm-runtime\",\"ai-edge-experiment\":\"v0\",\"ai-edge-run-id\":\"ai-edge-v0-vllm-real\",\"ai.vllm.build.commit\":\"0decac0d96c42b49572498019f0a0e3600f50398\",\"ai.vllm.build.pipeline\":\"019d130e-464e-4ff7-b84b-492992c0c06b\",\"ai.vllm.build.url\":\"https://buildkite.com/vllm/release-v2/builds/2333\",\"ai.vllm.image.tag\":\"vllm/vllm-openai:v0.22.1\",\"maintainer\":\"NVIDIA CORPORATION <cudatools@nvidia.com>\",\"org.opencontainers.image.ref.name\":\"ubuntu\",\"org.opencontainers.image.revision\":\"0decac0d96c42b49572498019f0a0e3600f50398\",\"org.opencontainers.image.source\":\"https://github.com/vllm-project/vllm\",\"org.opencontainers.image.url\":\"https://buildkite.com/vllm/release-v2/builds/2333\",\"org.opencontainers.image.version\":\"vllm/vllm-openai:v0.22.1\"}\n",
+                    "timed_out": false
+                }
+            },
+            "container": {
+                "checkpoint_name": "ai-edge-v0-criu-checkpoint",
+                "id": "bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8",
+                "inspected_labels": {
+                    "ai-edge-component": "vllm-runtime",
+                    "ai-edge-experiment": "v0",
+                    "ai-edge-run-id": "ai-edge-v0-vllm-real",
+                    "ai.vllm.build.commit": "0decac0d96c42b49572498019f0a0e3600f50398",
+                    "ai.vllm.build.pipeline": "019d130e-464e-4ff7-b84b-492992c0c06b",
+                    "ai.vllm.build.url": "https://buildkite.com/vllm/release-v2/builds/2333",
+                    "ai.vllm.image.tag": "vllm/vllm-openai:v0.22.1",
+                    "maintainer": "NVIDIA CORPORATION <cudatools@nvidia.com>",
+                    "org.opencontainers.image.ref.name": "ubuntu",
+                    "org.opencontainers.image.revision": "0decac0d96c42b49572498019f0a0e3600f50398",
+                    "org.opencontainers.image.source": "https://github.com/vllm-project/vllm",
+                    "org.opencontainers.image.url": "https://buildkite.com/vllm/release-v2/builds/2333",
+                    "org.opencontainers.image.version": "vllm/vllm-openai:v0.22.1"
+                },
+                "name": "ai-edge-v0-vllm-ai-edge-v0-vllm-real-f6e82650"
+            },
+            "diagnostics": {
+                "criu_logs": [
+                    {
+                        "destination_path": "/tmp/ai-edge-v0-vllm-real/criu_logs/smoke_preemption/01-criu-dump.log",
+                        "error_message": "[Errno 13] Permission denied: '/run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log'",
+                        "error_type": "PermissionError",
+                        "source_path": "/run/containerd/io.containerd.runtime.v2.task/moby/bed29a88a8f5cf51234d29a65c49b2ab9c073c2ea35ef1969c25d32d112071c8/criu-dump.log",
+                        "status": "error"
+                    }
+                ]
+            },
+            "mode": "docker_server",
+            "outcome": "checkpoint_failed",
+            "prerequisites": {
+                "docker_criu_integration_status": "ok",
+                "runtime_status": "ok"
+            },
+            "reason": "command failure(s): docker checkpoint create",
+            "restore": {
+                "attempted": false
+            },
+            "runtime": "vllm",
+            "smoke": {
+                "attempted": true,
+                "request_monotonic_ns": 7541293194782,
+                "request_started_before_checkpoint": true,
+                "request_status": "ok",
+                "response_monotonic_ns": 7542548390453,
+                "response_status": "ok"
+            }
+        },
+        "preemption_status": "error",
+        "reason": "command failure(s): docker checkpoint create",
+        "smoke_response": {
+            "completed_after_restore": false,
+            "completed_before_restore": false,
+            "monotonic_ns": 7542548390453,
+            "request_monotonic_ns": 7541293194782,
+            "request_started_before_checkpoint": true,
+            "request_status": "ok",
+            "status": "ok"
+        }
+    },
+    "monotonic_ns": 7542550735644,
+    "request_id": "ai-edge-v0-vllm-real-smoke-request",
+    "run_id": "ai-edge-v0-vllm-real",
+    "schema_version": "0.1.0",
+    "status": "error",
+    "timestamp_utc": "2026-06-09T16:09:44.592913Z"
+}
+(.venv) ubuntu@ubuntu-2404-desktop-template:~/AI-RAN$ 

@@ -1,0 +1,1 @@
+point_id,model_id,public_status,failure_kind,failure_cause,timed_out,exit_code,raw_output_path,raw_row_count,stdout_log_path,stderr_log_path,block_size

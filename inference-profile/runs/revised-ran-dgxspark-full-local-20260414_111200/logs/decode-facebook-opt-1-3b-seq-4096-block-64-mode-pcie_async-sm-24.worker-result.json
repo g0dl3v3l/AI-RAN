@@ -1,0 +1,31 @@
+{
+  "cuda_cleanup": {
+    "empty_cache_attempted": true,
+    "empty_cache_error": null,
+    "raw_close_error": null,
+    "raw_flush_attempted": true,
+    "raw_flush_error": null,
+    "synchronize_attempted": true,
+    "synchronize_error": null
+  },
+  "error_class": null,
+  "error_message": null,
+  "failure_kind": null,
+  "point_id": "decode-facebook-opt-1-3b-seq-4096-block-64-mode-pcie_async-sm-24",
+  "raw_output_exists": true,
+  "raw_output_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-ran-dgxspark-full-local-20260414_111200/raw/points/decode/decode-facebook-opt-1-3b-seq-4096-block-64-mode-pcie_async-sm-24.csv",
+  "raw_row_count": 40,
+  "result_payload": {
+    "block_size": 64,
+    "decode_mode": "pcie_async",
+    "family": "decode",
+    "model_id": "facebook/opt-1.3b",
+    "row_count": 40,
+    "sequence_length": 4096,
+    "sm_ai_partition": 24
+  },
+  "success": true,
+  "worker_parent_pid": 509930,
+  "worker_pid": 587701,
+  "worker_start_method": "spawn"
+}

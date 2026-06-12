@@ -34,6 +34,7 @@ class PcieProfileResult:
     model_id: str
     raw_output_path: Path
     row_count: int
+    overlap_status: str
 
 
 def resolve_pcie_output_path(
@@ -87,6 +88,13 @@ def calculate_kv_block_bytes(
     # V block: [num_heads, block_size, head_dim] in FP16
     # Total: 2 * num_heads * block_size * head_dim * 2 bytes (FP16 = 2 bytes)
     return 2 * num_attention_heads * block_size * head_dim * 2
+
+
+def calculate_exposed_transfer_us(
+    overlap_total_us: float,
+    dummy_compute_us: float,
+) -> float:
+    return max(0.0, float(overlap_total_us) - float(dummy_compute_us))
 
 
 def profile_pcie_sweep(
@@ -147,6 +155,7 @@ def profile_pcie_with_writer(
     device = _require_cuda_device(gpu_id)
     torch_dtype = getattr(torch, PCIE_DTYPE_NAME)
     torch.cuda.set_device(device)
+    overlap_status = "measured"
 
     with torch.inference_mode():
         for block_size in resolved_block_sizes:
@@ -174,27 +183,48 @@ def profile_pcie_with_writer(
                 )
 
                 # Profile overlapped transfer + compute
-                overlap_total_us, dummy_compute_us = _time_pcie_overlap(
-                    block_size=block_size,
-                    num_attention_heads=config.num_attention_heads,
-                    head_dim=config.head_dim,
-                    hidden_size=config.hidden_size,
-                    ffn_dim=config.ffn_dim,
-                    device=device,
-                    dtype=torch_dtype,
-                )
+                try:
+                    overlap_total_us, dummy_compute_us = _time_pcie_overlap(
+                        block_size=block_size,
+                        num_attention_heads=config.num_attention_heads,
+                        head_dim=config.head_dim,
+                        hidden_size=config.hidden_size,
+                        ffn_dim=config.ffn_dim,
+                        device=device,
+                        dtype=torch_dtype,
+                    )
 
-                # Calculate exposed transfer time
-                exposed_transfer_us = max(0.0, overlap_total_us - dummy_compute_us)
+                    # Calculate exposed transfer time
+                    exposed_transfer_us = calculate_exposed_transfer_us(
+                        overlap_total_us,
+                        dummy_compute_us,
+                    )
+                except Exception:
+                    overlap_status = "unsupported"
+                    overlap_total_us = None
+                    dummy_compute_us = None
+                    exposed_transfer_us = None
 
                 row = {
                     "model_id": config.model_id,
                     "block_size": int(block_size),
                     "kv_block_bytes": int(kv_block_bytes),
                     "transfer_only_us": float(transfer_only_us),
-                    "overlap_total_us": float(overlap_total_us),
-                    "dummy_compute_us": float(dummy_compute_us),
-                    "exposed_transfer_us": float(exposed_transfer_us),
+                    "overlap_total_us": (
+                        float(overlap_total_us)
+                        if overlap_total_us is not None
+                        else None
+                    ),
+                    "dummy_compute_us": (
+                        float(dummy_compute_us)
+                        if dummy_compute_us is not None
+                        else None
+                    ),
+                    "exposed_transfer_us": (
+                        float(exposed_transfer_us)
+                        if exposed_transfer_us is not None
+                        else None
+                    ),
                     "timed_iteration": int(iteration),
                 }
                 raw_writer.write_row(row)
@@ -205,6 +235,7 @@ def profile_pcie_with_writer(
         if raw_writer.path is not None
         else Path(),
         row_count=raw_writer.row_count,
+        overlap_status=overlap_status,
     )
 
 
@@ -220,9 +251,7 @@ def _normalize_block_sizes(block_sizes: Sequence[int]) -> tuple[int, ...]:
 
 def _require_cuda_device(gpu_id: int) -> torch.device:
     if not torch.cuda.is_available():
-        raise RuntimeError(
-            "PCIe profiling requires an available CUDA GPU"
-        )
+        raise RuntimeError("PCIe profiling requires an available CUDA GPU")
     return torch.device(f"cuda:{int(gpu_id)}")
 
 
@@ -235,17 +264,18 @@ def _run_pcie_transfer_warmup(
     dtype: torch.dtype,
 ) -> None:
     """Warmup PCIe transfer without timing."""
-    kv_block_bytes = calculate_kv_block_bytes(block_size, num_attention_heads, head_dim)
-    host_tensor = _allocate_pinned_host_tensor(
-        kv_block_bytes // 2,  # FP16 is 2 bytes
-        device=device,
+    host_tensor = _allocate_kv_block_host_tensor(
+        block_size=block_size,
+        num_attention_heads=num_attention_heads,
+        head_dim=head_dim,
         dtype=dtype,
     )
     try:
         transfer_stream = torch.cuda.Stream(device=device)
         with torch.cuda.stream(transfer_stream):
-            _ = host_tensor.to(device=device, non_blocking=True)
+            transferred_tensor = host_tensor.to(device=device, non_blocking=True)
         torch.cuda.synchronize(device)
+        del transferred_tensor
     finally:
         torch.cuda.empty_cache()
 
@@ -259,10 +289,10 @@ def _time_pcie_transfer_only(
     dtype: torch.dtype,
 ) -> float:
     """Time H2D transfer only (no overlap)."""
-    kv_block_bytes = calculate_kv_block_bytes(block_size, num_attention_heads, head_dim)
-    host_tensor = _allocate_pinned_host_tensor(
-        kv_block_bytes // 2,
-        device="cpu",
+    host_tensor = _allocate_kv_block_host_tensor(
+        block_size=block_size,
+        num_attention_heads=num_attention_heads,
+        head_dim=head_dim,
         dtype=dtype,
     )
 
@@ -270,17 +300,18 @@ def _time_pcie_transfer_only(
     torch.cuda.reset_peak_memory_stats(device)
 
     transfer_stream = torch.cuda.Stream(device=device)
-    start_event = torch.cuda.Event(enable_timing=True, stream=transfer_stream)
-    end_event = torch.cuda.Event(enable_timing=True, stream=transfer_stream)
+    start_event = torch.cuda.Event(enable_timing=True)
+    end_event = torch.cuda.Event(enable_timing=True)
 
     with torch.cuda.stream(transfer_stream):
         start_event.record()
-        _ = host_tensor.to(device=device, non_blocking=True)
+        transferred_tensor = host_tensor.to(device=device, non_blocking=True)
         end_event.record()
 
     torch.cuda.synchronize(device)
     transfer_only_us = float(start_event.elapsed_time(end_event) * 1_000.0)
 
+    del transferred_tensor
     torch.cuda.empty_cache()
     return transfer_only_us
 
@@ -297,64 +328,81 @@ def _time_pcie_overlap(
 ) -> tuple[float, float]:
     """
     Time overlapped H2D transfer + compute.
-    
+
     Returns: (overlap_total_us, dummy_compute_us)
     """
-    kv_block_bytes = calculate_kv_block_bytes(block_size, num_attention_heads, head_dim)
-    host_tensor = _allocate_pinned_host_tensor(
-        kv_block_bytes // 2,
-        device="cpu",
+    host_tensor = _allocate_kv_block_host_tensor(
+        block_size=block_size,
+        num_attention_heads=num_attention_heads,
+        head_dim=head_dim,
         dtype=dtype,
     )
 
     # Create dummy compute tensor (FC1-shaped GEMV: [1, hidden_size] x [hidden_size, ffn_dim])
-    compute_input = torch.randn(
-        1, hidden_size, device=device, dtype=dtype
-    )
-    compute_weight = torch.randn(
-        ffn_dim, hidden_size, device=device, dtype=dtype
-    )
+    compute_input = torch.randn(1, hidden_size, device=device, dtype=dtype)
+    compute_weight = torch.randn(ffn_dim, hidden_size, device=device, dtype=dtype)
 
     torch.cuda.synchronize(device)
     torch.cuda.reset_peak_memory_stats(device)
 
     transfer_stream = torch.cuda.Stream(device=device)
     compute_stream = torch.cuda.Stream(device=device)
+    timing_stream = torch.cuda.current_stream(device=device)
 
-    # Time overall elapsed (overlap)
-    start_event = torch.cuda.Event(enable_timing=True)
-    end_event = torch.cuda.Event(enable_timing=True)
+    overlap_start = torch.cuda.Event(enable_timing=True)
+    overlap_end = torch.cuda.Event(enable_timing=True)
+    transfer_end = torch.cuda.Event(enable_timing=True)
+    compute_start = torch.cuda.Event(enable_timing=True)
+    compute_end = torch.cuda.Event(enable_timing=True)
 
-    start_event.record()
+    with torch.cuda.stream(timing_stream):
+        overlap_start.record()
+
+    transfer_stream.wait_event(overlap_start)
+    compute_stream.wait_event(overlap_start)
 
     # Transfer on transfer stream
     with torch.cuda.stream(transfer_stream):
-        _ = host_tensor.to(device=device, non_blocking=True)
+        transferred_tensor = host_tensor.to(device=device, non_blocking=True)
+        transfer_end.record()
 
     # Compute on compute stream
-    compute_start = torch.cuda.Event(enable_timing=True, stream=compute_stream)
-    compute_end = torch.cuda.Event(enable_timing=True, stream=compute_stream)
-
     with torch.cuda.stream(compute_stream):
         compute_start.record()
-        _ = torch.matmul(compute_input, compute_weight.t())
+        compute_output = torch.matmul(compute_input, compute_weight.t())
         compute_end.record()
 
-    end_event.record()
+    timing_stream.wait_event(transfer_end)
+    timing_stream.wait_event(compute_end)
+    with torch.cuda.stream(timing_stream):
+        overlap_end.record()
 
     torch.cuda.synchronize(device)
 
-    overlap_total_us = float(start_event.elapsed_time(end_event) * 1_000.0)
+    overlap_total_us = float(overlap_start.elapsed_time(overlap_end) * 1_000.0)
     dummy_compute_us = float(compute_start.elapsed_time(compute_end) * 1_000.0)
 
+    del transferred_tensor
+    del compute_output
     torch.cuda.empty_cache()
     return (overlap_total_us, dummy_compute_us)
+
+
+def _allocate_kv_block_host_tensor(
+    *,
+    block_size: int,
+    num_attention_heads: int,
+    head_dim: int,
+    dtype: torch.dtype,
+) -> torch.Tensor:
+    kv_block_bytes = calculate_kv_block_bytes(block_size, num_attention_heads, head_dim)
+    num_elements = kv_block_bytes // opt_assets.FP16_BYTES_PER_PARAMETER
+    return _allocate_pinned_host_tensor(num_elements, dtype=dtype)
 
 
 def _allocate_pinned_host_tensor(
     num_elements: int,
     *,
-    device: str | torch.device = "cpu",
     dtype: torch.dtype = torch.float16,
 ) -> torch.Tensor:
     """Allocate a pinned host tensor."""
@@ -362,7 +410,7 @@ def _allocate_pinned_host_tensor(
         num_elements,
         dtype=dtype,
         device="cpu",
-        pin_memory=True if device == "cpu" else False,
+        pin_memory=True,
     )
     # Fill with deterministic values for realism
     generator = torch.Generator(device="cpu")
@@ -376,6 +424,7 @@ __all__ = [
     "PCIE_EVENT_FIELDNAMES",
     "PCIE_EVENTS_FILENAME",
     "PcieProfileResult",
+    "calculate_exposed_transfer_us",
     "calculate_kv_block_bytes",
     "profile_pcie_sweep",
     "profile_pcie_with_writer",

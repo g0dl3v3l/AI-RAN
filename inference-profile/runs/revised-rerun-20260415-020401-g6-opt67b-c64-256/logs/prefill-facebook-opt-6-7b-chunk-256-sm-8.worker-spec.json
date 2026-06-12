@@ -1,0 +1,26 @@
+{
+  "cache_root": null,
+  "callable_path": "inference_profile.profile_orchestrator._run_prefill_point_worker",
+  "chunk_tokens": 256,
+  "experiment_type": "ran-dgxspark-v1",
+  "gpu_id": 6,
+  "model_id": "facebook/opt-6.7b",
+  "point_id": "prefill-facebook-opt-6-7b-chunk-256-sm-8",
+  "raw_fieldnames": [
+    "model_id",
+    "chunk_tokens",
+    "op_type",
+    "op_name",
+    "sm_ai_partition",
+    "timed_iteration",
+    "duration_us",
+    "baseline_vram_bytes",
+    "peak_vram_bytes",
+    "dynamic_workspace_bytes",
+    "output_bytes"
+  ],
+  "raw_output_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g6-opt67b-c64-256/raw/points/prefill/prefill-facebook-opt-6-7b-chunk-256-sm-8.csv",
+  "sm_ai_partition": 8,
+  "timed_iterations": 5,
+  "warmup_iterations": 3
+}

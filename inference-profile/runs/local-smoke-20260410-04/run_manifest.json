@@ -1,0 +1,615 @@
+{
+  "bundle_layout": {
+    "checksum_manifest": "checksums/sha256sums.txt",
+    "checksums": "checksums",
+    "derived": "derived",
+    "environment": "environment.json",
+    "logs": "logs",
+    "plots": "plots",
+    "raw": "raw",
+    "report": "ran_inference_profiling_report.md",
+    "run_manifest": "run_manifest.json"
+  },
+  "created_at": "2026-04-10T13:52:56Z",
+  "final_status": "report_failed",
+  "final_status_history": [
+    {
+      "details": {
+        "error": "Plot generation requires at least one successful simulation result row"
+      },
+      "status": "report_failed",
+      "timestamp": "2026-04-10T13:53:10Z"
+    }
+  ],
+  "run_id": "local-smoke-20260410-04",
+  "schema_version": 1,
+  "stages": {
+    "bootstrap-env": {
+      "details": {
+        "environment_path": "environment.json",
+        "failure_cause": null,
+        "failure_kind": null,
+        "gpu_id": 0
+      },
+      "history": [
+        {
+          "details": {
+            "environment_path": "environment.json",
+            "failure_cause": null,
+            "failure_kind": null,
+            "gpu_id": 0
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:52:58Z"
+        }
+      ],
+      "latest_status": "success",
+      "updated_at": "2026-04-10T13:52:58Z"
+    },
+    "profile": {
+      "details": {
+        "actual_summary_rows": {
+          "decode": 1,
+          "model_constants": 1,
+          "pcie": 1,
+          "prefill": 1
+        },
+        "cache_root": null,
+        "canonical_raw_paths": {
+          "decode": "raw/decode_events.csv",
+          "pcie": "raw/pcie_events.csv",
+          "prefill": "raw/prefill_events.csv"
+        },
+        "chunk_sizes": [
+          64
+        ],
+        "environment_path": "environment.json",
+        "expected_summary_rows": {
+          "decode": 1,
+          "model_constants": 1,
+          "pcie": 1,
+          "prefill": 1
+        },
+        "gpu_id": 0,
+        "inspect_model_prerequisites": [
+          {
+            "asset_manifest_path": "inspect-model/facebook-opt-125m/raw/asset_manifest.json",
+            "asset_source": "synthetic_fallback",
+            "model_constants_path": "inspect-model/facebook-opt-125m/raw/model_constants.json",
+            "model_id": "facebook/opt-125m",
+            "output_root": "inspect-model/facebook-opt-125m"
+          }
+        ],
+        "models": [
+          "facebook/opt-125m"
+        ],
+        "parent_log_paths": {
+          "decode": "logs/profile-decode.log",
+          "inspect-model": "logs/profile-inspect-model.log",
+          "pcie": "logs/profile-pcie.log",
+          "prefill": "logs/profile-prefill.log",
+          "reducer": "logs/profile-reducer.log",
+          "stage": "logs/profile-stage.log"
+        },
+        "profiler_families": {
+          "decode": {
+            "completed_points": 1,
+            "failures": 0,
+            "ooms": 0,
+            "raw_rows": 40,
+            "requested_points": 1,
+            "successes": 1
+          },
+          "pcie": {
+            "completed_points": 1,
+            "failures": 0,
+            "ooms": 0,
+            "raw_rows": 5,
+            "requested_points": 1,
+            "successes": 1
+          },
+          "prefill": {
+            "completed_points": 1,
+            "failures": 0,
+            "ooms": 0,
+            "raw_rows": 30,
+            "requested_points": 1,
+            "successes": 1
+          }
+        },
+        "sequence_lengths": [
+          1024
+        ],
+        "status_sidecar_paths": {
+          "decode": "raw/decode_events_status.csv",
+          "pcie": "raw/pcie_events_status.csv",
+          "prefill": "raw/prefill_events_status.csv"
+        },
+        "summary_rows_complete": true,
+        "timed_iterations": 5,
+        "warmup_iterations": 3
+      },
+      "history": [
+        {
+          "details": {
+            "cache_root": null,
+            "canonical_raw_paths": {
+              "decode": "raw/decode_events.csv",
+              "pcie": "raw/pcie_events.csv",
+              "prefill": "raw/prefill_events.csv"
+            },
+            "chunk_sizes": [
+              64
+            ],
+            "environment_path": "environment.json",
+            "expected_summary_rows": {
+              "decode": 1,
+              "model_constants": 1,
+              "pcie": 1,
+              "prefill": 1
+            },
+            "gpu_id": 0,
+            "inspect_model_prerequisites": [],
+            "models": [
+              "facebook/opt-125m"
+            ],
+            "parent_log_paths": {
+              "decode": "logs/profile-decode.log",
+              "inspect-model": "logs/profile-inspect-model.log",
+              "pcie": "logs/profile-pcie.log",
+              "prefill": "logs/profile-prefill.log",
+              "reducer": "logs/profile-reducer.log",
+              "stage": "logs/profile-stage.log"
+            },
+            "profiler_families": {
+              "decode": {
+                "completed_points": 0,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 0,
+                "requested_points": 1,
+                "successes": 0
+              },
+              "pcie": {
+                "completed_points": 0,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 0,
+                "requested_points": 1,
+                "successes": 0
+              },
+              "prefill": {
+                "completed_points": 0,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 0,
+                "requested_points": 1,
+                "successes": 0
+              }
+            },
+            "sequence_lengths": [
+              1024
+            ],
+            "status_sidecar_paths": {
+              "decode": "raw/decode_events_status.csv",
+              "pcie": "raw/pcie_events_status.csv",
+              "prefill": "raw/prefill_events_status.csv"
+            },
+            "timed_iterations": 5,
+            "warmup_iterations": 3
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:52:58Z"
+        },
+        {
+          "details": {
+            "cache_root": null,
+            "canonical_raw_paths": {
+              "decode": "raw/decode_events.csv",
+              "pcie": "raw/pcie_events.csv",
+              "prefill": "raw/prefill_events.csv"
+            },
+            "chunk_sizes": [
+              64
+            ],
+            "environment_path": "environment.json",
+            "expected_summary_rows": {
+              "decode": 1,
+              "model_constants": 1,
+              "pcie": 1,
+              "prefill": 1
+            },
+            "gpu_id": 0,
+            "inspect_model_prerequisites": [
+              {
+                "asset_manifest_path": "inspect-model/facebook-opt-125m/raw/asset_manifest.json",
+                "asset_source": "synthetic_fallback",
+                "model_constants_path": "inspect-model/facebook-opt-125m/raw/model_constants.json",
+                "model_id": "facebook/opt-125m",
+                "output_root": "inspect-model/facebook-opt-125m"
+              }
+            ],
+            "last_point": {
+              "chunk_tokens": 64,
+              "family": "prefill",
+              "model_id": "facebook/opt-125m",
+              "point_id": "prefill-facebook-opt-125m-chunk-64",
+              "public_status": "success"
+            },
+            "models": [
+              "facebook/opt-125m"
+            ],
+            "parent_log_paths": {
+              "decode": "logs/profile-decode.log",
+              "inspect-model": "logs/profile-inspect-model.log",
+              "pcie": "logs/profile-pcie.log",
+              "prefill": "logs/profile-prefill.log",
+              "reducer": "logs/profile-reducer.log",
+              "stage": "logs/profile-stage.log"
+            },
+            "profiler_families": {
+              "decode": {
+                "completed_points": 0,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 0,
+                "requested_points": 1,
+                "successes": 0
+              },
+              "pcie": {
+                "completed_points": 0,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 0,
+                "requested_points": 1,
+                "successes": 0
+              },
+              "prefill": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 30,
+                "requested_points": 1,
+                "successes": 1
+              }
+            },
+            "sequence_lengths": [
+              1024
+            ],
+            "status_sidecar_paths": {
+              "decode": "raw/decode_events_status.csv",
+              "pcie": "raw/pcie_events_status.csv",
+              "prefill": "raw/prefill_events_status.csv"
+            },
+            "timed_iterations": 5,
+            "warmup_iterations": 3
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:53:02Z"
+        },
+        {
+          "details": {
+            "cache_root": null,
+            "canonical_raw_paths": {
+              "decode": "raw/decode_events.csv",
+              "pcie": "raw/pcie_events.csv",
+              "prefill": "raw/prefill_events.csv"
+            },
+            "chunk_sizes": [
+              64
+            ],
+            "environment_path": "environment.json",
+            "expected_summary_rows": {
+              "decode": 1,
+              "model_constants": 1,
+              "pcie": 1,
+              "prefill": 1
+            },
+            "gpu_id": 0,
+            "inspect_model_prerequisites": [
+              {
+                "asset_manifest_path": "inspect-model/facebook-opt-125m/raw/asset_manifest.json",
+                "asset_source": "synthetic_fallback",
+                "model_constants_path": "inspect-model/facebook-opt-125m/raw/model_constants.json",
+                "model_id": "facebook/opt-125m",
+                "output_root": "inspect-model/facebook-opt-125m"
+              }
+            ],
+            "last_point": {
+              "block_size": 64,
+              "family": "decode",
+              "model_id": "facebook/opt-125m",
+              "point_id": "decode-facebook-opt-125m-seq-1024-block-64",
+              "public_status": "success",
+              "sequence_length": 1024
+            },
+            "models": [
+              "facebook/opt-125m"
+            ],
+            "parent_log_paths": {
+              "decode": "logs/profile-decode.log",
+              "inspect-model": "logs/profile-inspect-model.log",
+              "pcie": "logs/profile-pcie.log",
+              "prefill": "logs/profile-prefill.log",
+              "reducer": "logs/profile-reducer.log",
+              "stage": "logs/profile-stage.log"
+            },
+            "profiler_families": {
+              "decode": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 40,
+                "requested_points": 1,
+                "successes": 1
+              },
+              "pcie": {
+                "completed_points": 0,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 0,
+                "requested_points": 1,
+                "successes": 0
+              },
+              "prefill": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 30,
+                "requested_points": 1,
+                "successes": 1
+              }
+            },
+            "sequence_lengths": [
+              1024
+            ],
+            "status_sidecar_paths": {
+              "decode": "raw/decode_events_status.csv",
+              "pcie": "raw/pcie_events_status.csv",
+              "prefill": "raw/prefill_events_status.csv"
+            },
+            "timed_iterations": 5,
+            "warmup_iterations": 3
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:53:06Z"
+        },
+        {
+          "details": {
+            "cache_root": null,
+            "canonical_raw_paths": {
+              "decode": "raw/decode_events.csv",
+              "pcie": "raw/pcie_events.csv",
+              "prefill": "raw/prefill_events.csv"
+            },
+            "chunk_sizes": [
+              64
+            ],
+            "environment_path": "environment.json",
+            "expected_summary_rows": {
+              "decode": 1,
+              "model_constants": 1,
+              "pcie": 1,
+              "prefill": 1
+            },
+            "gpu_id": 0,
+            "inspect_model_prerequisites": [
+              {
+                "asset_manifest_path": "inspect-model/facebook-opt-125m/raw/asset_manifest.json",
+                "asset_source": "synthetic_fallback",
+                "model_constants_path": "inspect-model/facebook-opt-125m/raw/model_constants.json",
+                "model_id": "facebook/opt-125m",
+                "output_root": "inspect-model/facebook-opt-125m"
+              }
+            ],
+            "last_point": {
+              "block_size": 64,
+              "family": "pcie",
+              "model_id": "facebook/opt-125m",
+              "point_id": "pcie-facebook-opt-125m-block-64",
+              "public_status": "success"
+            },
+            "models": [
+              "facebook/opt-125m"
+            ],
+            "parent_log_paths": {
+              "decode": "logs/profile-decode.log",
+              "inspect-model": "logs/profile-inspect-model.log",
+              "pcie": "logs/profile-pcie.log",
+              "prefill": "logs/profile-prefill.log",
+              "reducer": "logs/profile-reducer.log",
+              "stage": "logs/profile-stage.log"
+            },
+            "profiler_families": {
+              "decode": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 40,
+                "requested_points": 1,
+                "successes": 1
+              },
+              "pcie": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 5,
+                "requested_points": 1,
+                "successes": 1
+              },
+              "prefill": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 30,
+                "requested_points": 1,
+                "successes": 1
+              }
+            },
+            "sequence_lengths": [
+              1024
+            ],
+            "status_sidecar_paths": {
+              "decode": "raw/decode_events_status.csv",
+              "pcie": "raw/pcie_events_status.csv",
+              "prefill": "raw/prefill_events_status.csv"
+            },
+            "timed_iterations": 5,
+            "warmup_iterations": 3
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:53:09Z"
+        },
+        {
+          "details": {
+            "actual_summary_rows": {
+              "decode": 1,
+              "model_constants": 1,
+              "pcie": 1,
+              "prefill": 1
+            },
+            "cache_root": null,
+            "canonical_raw_paths": {
+              "decode": "raw/decode_events.csv",
+              "pcie": "raw/pcie_events.csv",
+              "prefill": "raw/prefill_events.csv"
+            },
+            "chunk_sizes": [
+              64
+            ],
+            "environment_path": "environment.json",
+            "expected_summary_rows": {
+              "decode": 1,
+              "model_constants": 1,
+              "pcie": 1,
+              "prefill": 1
+            },
+            "gpu_id": 0,
+            "inspect_model_prerequisites": [
+              {
+                "asset_manifest_path": "inspect-model/facebook-opt-125m/raw/asset_manifest.json",
+                "asset_source": "synthetic_fallback",
+                "model_constants_path": "inspect-model/facebook-opt-125m/raw/model_constants.json",
+                "model_id": "facebook/opt-125m",
+                "output_root": "inspect-model/facebook-opt-125m"
+              }
+            ],
+            "models": [
+              "facebook/opt-125m"
+            ],
+            "parent_log_paths": {
+              "decode": "logs/profile-decode.log",
+              "inspect-model": "logs/profile-inspect-model.log",
+              "pcie": "logs/profile-pcie.log",
+              "prefill": "logs/profile-prefill.log",
+              "reducer": "logs/profile-reducer.log",
+              "stage": "logs/profile-stage.log"
+            },
+            "profiler_families": {
+              "decode": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 40,
+                "requested_points": 1,
+                "successes": 1
+              },
+              "pcie": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 5,
+                "requested_points": 1,
+                "successes": 1
+              },
+              "prefill": {
+                "completed_points": 1,
+                "failures": 0,
+                "ooms": 0,
+                "raw_rows": 30,
+                "requested_points": 1,
+                "successes": 1
+              }
+            },
+            "sequence_lengths": [
+              1024
+            ],
+            "status_sidecar_paths": {
+              "decode": "raw/decode_events_status.csv",
+              "pcie": "raw/pcie_events_status.csv",
+              "prefill": "raw/prefill_events_status.csv"
+            },
+            "summary_rows_complete": true,
+            "timed_iterations": 5,
+            "warmup_iterations": 3
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:53:09Z"
+        }
+      ],
+      "latest_status": "success",
+      "updated_at": "2026-04-10T13:53:09Z"
+    },
+    "report": {
+      "details": {
+        "error": "Plot generation requires at least one successful simulation result row"
+      },
+      "history": [
+        {
+          "details": {
+            "error": "Plot generation requires at least one successful simulation result row"
+          },
+          "status": "report_failed",
+          "timestamp": "2026-04-10T13:53:10Z"
+        }
+      ],
+      "latest_status": "report_failed",
+      "updated_at": "2026-04-10T13:53:10Z"
+    },
+    "simulate": {
+      "details": {
+        "results_path": "derived/ran_inference_profiling_results.csv",
+        "row_count": 1,
+        "timeline_path": "derived/schedule_timeline.csv"
+      },
+      "history": [
+        {
+          "details": {
+            "results_path": "derived/ran_inference_profiling_results.csv",
+            "row_count": 1,
+            "timeline_path": "derived/schedule_timeline.csv"
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:53:09Z"
+        }
+      ],
+      "latest_status": "success",
+      "updated_at": "2026-04-10T13:53:09Z"
+    },
+    "validate-traces": {
+      "details": {
+        "ldpc_trace": "/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv",
+        "normalized_trace_path": "derived/normalized_ldpc_trace.csv",
+        "ran_ctrl_trace": "/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv",
+        "trace_inspection_path": "raw/trace_inspection.json",
+        "validation_errors_path": null
+      },
+      "history": [
+        {
+          "details": {
+            "ldpc_trace": "/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv",
+            "normalized_trace_path": "derived/normalized_ldpc_trace.csv",
+            "ran_ctrl_trace": "/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv",
+            "trace_inspection_path": "raw/trace_inspection.json",
+            "validation_errors_path": null
+          },
+          "status": "success",
+          "timestamp": "2026-04-10T13:52:58Z"
+        }
+      ],
+      "latest_status": "success",
+      "updated_at": "2026-04-10T13:52:58Z"
+    }
+  },
+  "updated_at": "2026-04-10T13:53:10Z"
+}

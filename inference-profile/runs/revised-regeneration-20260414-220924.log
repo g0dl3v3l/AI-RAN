@@ -1,0 +1,114 @@
+
+== revised-full-20260414-g0-opt125m :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g0-opt125m :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-g1-opt350m :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g1-opt350m :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-g2-opt13b-c64-256 :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g2-opt13b-c64-256 :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-g3-opt13b-c512-1024 :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g3-opt13b-c512-1024 :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-g4-opt27b-c64-256 :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g4-opt27b-c64-256 :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-g5-opt27b-c512-1024 :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g5-opt27b-c512-1024 :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-g6-opt67b-c64-256 :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g6-opt67b-c64-256 :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-g7-opt67b-c512-1024 :: report ==
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py:1909: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.tight_layout()
+exit=0
+
+== revised-full-20260414-g7-opt67b-c512-1024 :: verify-bundle ==
+exit=0
+
+== revised-full-20260414-opt13b-combined :: report ==

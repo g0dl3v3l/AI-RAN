@@ -6,17 +6,23 @@ Michele Polese, Niloofar Mohamadi, Salvatore D'Oro, Leonardo Bonati, and
 \newblock {Beyond Connectivity: An Open Architecture for AI-RAN Convergence in
   6G}.
 \newblock {\em arXiv preprint arXiv:2507.06911}, 2025.
+\newblock \href {https://doi.org/10.48550/arXiv.2507.06911}
+  {\path{doi:10.48550/arXiv.2507.06911}}.
 
 \bibitem{airan}
 Chenyuan Feng, Howard~H. Yang, Kun Guo, Wenchao Xia, Chenxi Liu, and Tony Q.~S.
   Quek.
 \newblock {AI-RAN: The pathway to future wireless networks}.
 \newblock {\em Journal of Information and Intelligence}, 4(1):5--22, 2026.
+\newblock \href {https://doi.org/10.1016/j.jiixd.2025.12.013}
+  {\path{doi:10.1016/j.jiixd.2025.12.013}}.
 
 \bibitem{openairan}
-{\em {Proceedings of the 2025 2nd ACM Workshop on Open and AI RAN}}, Hong Kong,
-  China, 2025. Association for Computing Machinery.
+ACM.
+\newblock {\em {Proceedings of the 2025 2nd ACM Workshop on Open and AI RAN}},
+  Hong Kong, China, 2025. Association for Computing Machinery.
 \newblock Part of MobiCom '25.
+\newblock \href {https://doi.org/10.1145/3737900} {\path{doi:10.1145/3737900}}.
 
 \bibitem{cora}
 Sunghyun Jin, Serae Kim, Sangtae Ha, and Kyunghan Lee.
@@ -24,6 +30,7 @@ Sunghyun Jin, Serae Kim, Sangtae Ha, and Kyunghan Lee.
   Inference Serving over Cellular Networks}.
 \newblock {\em Proceedings of the ACM on Networking}, 3(CoNEXT4):1--23, 2025.
 \newblock Article 40.
+\newblock \href {https://doi.org/10.1145/3768987} {\path{doi:10.1145/3768987}}.
 
 \bibitem{slaairan}
 Hariz Yet, Nguyen~Thanh Tam, Mao~V. Ngo, Lim~Yi Shen, Lin Wei, Jihong Park,
@@ -31,32 +38,18 @@ Hariz Yet, Nguyen~Thanh Tam, Mao~V. Ngo, Lim~Yi Shen, Lin Wei, Jihong Park,
 \newblock {SLA-Aware Distributed LLM Inference Across Device-RAN-Cloud}.
 \newblock In {\em {IEEE INFOCOM Workshops 2026 (6G AI-RAN 2026)}}, 2026.
 \newblock Preprint on arXiv:2602.23722.
+\newblock \href {https://doi.org/10.48550/arXiv.2602.23722}
+  {\path{doi:10.48550/arXiv.2602.23722}}.
 
-\bibitem{weaver}
-{Weaver: Foundation Model Training over AI-RAN Compute Infrastructure}, 2026.
-\newblock Local ACM-formatted manuscript dated March 2026.
-
-\bibitem{paradrop}
-Peng Liu, Dale Willis, and Suman Banerjee.
-\newblock {Paradrop: Enabling Lightweight Multi-tenancy at the Network's
-  Extreme Edge}.
-\newblock In {\em {IEEE/ACM Symposium on Edge Computing (SEC)}}, pages 1--13,
-  2016.
-
-\bibitem{chronos}
-Ujjwal Pawar, Andrew~E. Ferguson, Yuto Takano, Jon Larrea, Xenofon Foukas,
-  Mahesh~K. Marina, and Bozidar Radunovic.
-\newblock {Towards Scalable and Cost-Effective RAN Emulation Leveraging the
-  Public Cloud}.
-\newblock In {\em Proceedings of the 26th International Workshop on Mobile
-  Computing Systems and Applications}, HotMobile '25, pages 43--48, 2025.
-
-\bibitem{sarathiserve}
-Amey Agrawal, Nitin Kedia, Ashish Panwar, Jayashree Mohan, Nipun Kwatra,
-  Bhargav~S. Gulavani, Alexey Tumanov, and Ramachandran Ramjee.
-\newblock {Taming Throughput-Latency Tradeoff in LLM Inference with
-  Sarathi-Serve}.
-\newblock {\em arXiv preprint arXiv:2403.02310}, 2024.
+\bibitem{pagedattention}
+Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu,
+  Joseph~E. Gonzalez, Hao Zhang, and Ion Stoica.
+\newblock {Efficient Memory Management for Large Language Model Serving with
+  PagedAttention}.
+\newblock {\em arXiv preprint arXiv:2309.06180}, 2023.
+\newblock SOSP 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2309.06180}
+  {\path{doi:10.48550/arXiv.2309.06180}}.
 
 \bibitem{distserve}
 Yinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu, Yibo Zhu, Xuanzhe Liu, Xin
@@ -66,13 +59,95 @@ Yinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu, Yibo Zhu, Xuanzhe Liu, Xin
 \newblock In {\em 18th USENIX Symposium on Operating Systems Design and
   Implementation (OSDI 24)}, pages 193--210, Santa Clara, CA, 2024. USENIX
   Association.
+\newblock URL:
+  \url{https://www.usenix.org/conference/osdi24/presentation/zhong-yinmin}.
 
-\bibitem{pagedattention}
-Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu,
-  Joseph~E. Gonzalez, Hao Zhang, and Ion Stoica.
-\newblock {Efficient Memory Management for Large Language Model Serving with
-  PagedAttention}.
-\newblock {\em arXiv preprint arXiv:2309.06180}, 2023.
-\newblock SOSP 2023.
+\bibitem{chronos}
+Ujjwal Pawar, Andrew~E. Ferguson, Yuto Takano, Jon Larrea, Xenofon Foukas,
+  Mahesh~K. Marina, and Bozidar Radunovic.
+\newblock {Towards Scalable and Cost-Effective RAN Emulation Leveraging the
+  Public Cloud}.
+\newblock In {\em Proceedings of the 26th International Workshop on Mobile
+  Computing Systems and Applications}, HotMobile '25, pages 43--48, 2025.
+\newblock \href {https://doi.org/10.1145/3708468.3711895}
+  {\path{doi:10.1145/3708468.3711895}}.
+
+\bibitem{orca}
+Gyeong-In Yu, Joo~Seong Jeong, Geon-Woo Kim, Soojeong Kim, and Byung-Gon Chun.
+\newblock {Orca: A Distributed Serving System for Transformer-Based Generative
+  Models}.
+\newblock In {\em 16th USENIX Symposium on Operating Systems Design and
+  Implementation (OSDI 22)}. USENIX Association, 2022.
+\newblock URL: \url{https://www.usenix.org/system/files/osdi22-yu.pdf}.
+
+\bibitem{usher}
+Sudipta~Saha Shubha, Haiying Shen, and Anand Iyer.
+\newblock {USHER: Holistic Interference Avoidance for Resource Optimized ML
+  Inference}.
+\newblock In {\em 18th USENIX Symposium on Operating Systems Design and
+  Implementation (OSDI 24)}. USENIX Association, 2024.
+\newblock URL: \url{https://www.usenix.org/system/files/osdi24-shubha.pdf}.
+
+\bibitem{orion}
+Foteini Strati, Xianzhe Ma, and Ana Klimovic.
+\newblock {Orion: Interference-aware, Fine-grained GPU Sharing for ML
+  Applications}.
+\newblock In {\em Proceedings of the Nineteenth European Conference on Computer
+  Systems (EuroSys '24)}, 2024.
+\newblock \href {https://doi.org/10.1145/3627703.3629578}
+  {\path{doi:10.1145/3627703.3629578}}.
+
+\bibitem{ppipe}
+Z.~Jonny Kong, Qiang Xu, and Y.~Charlie Hu.
+\newblock {PPipe: Efficient Video Analytics Serving on Heterogeneous GPU
+  Clusters via Pool-Based Pipeline Parallelism}.
+\newblock In {\em 2025 USENIX Annual Technical Conference (ATC 25)}. USENIX
+  Association, 2025.
+\newblock URL: \url{https://www.usenix.org/system/files/atc25-kong.pdf}.
+
+\bibitem{octopinf}
+Thanh-Tung Nguyen, Lucas Liebe, Nhat-Quang Tau, Yuheng Wu, Jinghan Cheng, and
+  Dongman Lee.
+\newblock {OCTOPINF: Workload-Aware Inference Serving for Edge Video
+  Analytics}.
+\newblock {\em arXiv preprint arXiv:2502.01277}, 2025.
+\newblock \href {https://doi.org/10.48550/arXiv.2502.01277}
+  {\path{doi:10.48550/arXiv.2502.01277}}.
+
+\bibitem{cachegen}
+Yuhan Liu, Hanchen Li, Yihua Cheng, Siddhant Ray, Yuyang Huang, Qizheng Zhang,
+  Kuntai Du, Jiayi Yao, Shan Lu, Ganesh Ananthanarayanan, Michael Maire, Henry
+  Hoffmann, Ari Holtzman, and Junchen Jiang.
+\newblock {CacheGen: KV Cache Compression and Streaming for Fast Large Language
+  Model Serving}.
+\newblock In {\em ACM SIGCOMM 2024 Conference}, 2024.
+\newblock \href {https://doi.org/10.1145/3651890.3672274}
+  {\path{doi:10.1145/3651890.3672274}}.
+
+\bibitem{deepspeedinfer}
+Reza~Yazdani Aminabadi, Samyam Rajbhandari, Ammar~Ahmad Awan, Chao Li, Dacheng
+  Li, Erwin Zheng, Olatunji Ruwase, Shaden Smith, Mengzhou Zhang, Jeff Rasley,
+  and Yuxiong He.
+\newblock {DeepSpeed-Inference: Enabling Efficient Inference of Transformer
+  Models at Unprecedented Scale}.
+\newblock In {\em SC22: International Conference for High Performance
+  Computing, Networking, Storage and Analysis}, 2022.
+\newblock \href {https://doi.org/10.1109/SC41404.2022.00051}
+  {\path{doi:10.1109/SC41404.2022.00051}}.
+
+\bibitem{paradrop}
+Peng Liu, Dale Willis, and Suman Banerjee.
+\newblock {Paradrop: Enabling Lightweight Multi-tenancy at the Network's
+  Extreme Edge}.
+\newblock In {\em {IEEE/ACM Symposium on Edge Computing (SEC)}}, pages 1--13,
+  2016.
+\newblock \href {https://doi.org/10.1109/SEC.2016.39}
+  {\path{doi:10.1109/SEC.2016.39}}.
+
+\bibitem{campus5g}
+{Campus5G: A Campus Scale Private 5G Open RAN Testbed}.
+\newblock Local paper in research paper/Campus5G.pdf.
+\newblock \href {https://doi.org/10.1145/3787927.3787930}
+  {\path{doi:10.1145/3787927.3787930}}.
 
 \end{thebibliography}

@@ -1,0 +1,79 @@
+[2026-06-12T00:23:18Z] [init] run_id=ai-edge-v0-vllm-real-20260612-002318
+[2026-06-12T00:23:18Z] [init] repo_root=/home/ubuntu/AI-RAN/AI-edge
+[2026-06-12T00:23:18Z] [init] config_path=/tmp/v0_vllm_docker_enabled.yaml
+[2026-06-12T00:23:18Z] [init] artifact_dir=/tmp/ai-edge-v0-vllm-real-20260612-002318/artifacts
+[2026-06-12T00:23:18Z] [sudo] refreshing sudo credentials (interactive prompt allowed)
+[2026-06-12T00:23:18Z] [criu_config] writing /etc/criu/runc.conf
+[2026-06-12T00:23:18Z] [cleanup] removing previous experiment containers and occupied ports
+[2026-06-12T00:23:18Z] [checkpoint_target] configuring RAM-backed checkpoint dir
+[2026-06-12T00:23:19Z] [telemetry] capturing pre-run host memory/VRAM snapshots
+[2026-06-12T00:23:19Z] [config] building effective config with checkpoint and post-restore probe settings
+[2026-06-12T00:23:19Z] [probe_run] starting run_v0_probe.py (live stage output expected)
+[2026-06-12T00:23:19.439414Z] [run_v0_probe] start config=/tmp/ai-edge-v0-vllm-real-20260612-002318/v0_effective.yaml output_dir=/tmp/ai-edge-v0-vllm-real-20260612-002318/artifacts
+[2026-06-12T00:23:19.446648Z] [orchestrator] start: starting V0 orchestration details={'config_path': '/tmp/ai-edge-v0-vllm-real-20260612-002318/v0_effective.yaml', 'output_dir': '/tmp/ai-edge-v0-vllm-real-20260612-002318/artifacts'}
+[2026-06-12T00:23:19.496939Z] [probe_sequence] start: running environment and runtime probes
+[2026-06-12T00:23:19.497283Z] [hardware_probe] start: collecting hardware probe
+[2026-06-12T00:23:19.774074Z] [hardware_probe] done: hardware probe completed details={'probe_status': 'ok'}
+[2026-06-12T00:23:19.774488Z] [docker_probe] start: collecting docker probe
+[2026-06-12T00:23:19.818343Z] [docker_probe] done: docker probe completed details={'probe_status': 'ok'}
+[2026-06-12T00:23:19.818833Z] [criu_probe] start: collecting criu probe
+[2026-06-12T00:23:19.830493Z] [criu_probe] done: criu probe completed details={'probe_status': 'ok'}
+[2026-06-12T00:23:19.830945Z] [docker_criu_integration] start: running docker CRIU integration probe
+[2026-06-12T00:23:25.696487Z] [docker_criu_integration] done: docker CRIU integration probe completed details={'probe_status': 'unsupported'}
+[2026-06-12T00:23:25.697058Z] [cuda_probe] start: collecting cuda probe
+[2026-06-12T00:23:26.581628Z] [cuda_probe] done: cuda probe completed details={'probe_status': 'ok'}
+[2026-06-12T00:23:26.582214Z] [mps_probe] start: collecting mps probe
+[2026-06-12T00:23:26.582782Z] [mps_probe] done: mps probe completed details={'probe_status': 'ok'}
+[2026-06-12T00:23:26.582983Z] [runtime_start] start: starting runtime adapter
+[2026-06-12T00:25:10.638551Z] [runtime_start] done: runtime adapter start completed details={'probe_status': 'ok', 'runtime_mode': 'docker_server', 'base_url': 'http://127.0.0.1:8000/v1'}
+[2026-06-12T00:25:10.639111Z] [smoke_request] start: issuing initial smoke request details={'request_id': 'artifacts-smoke-request'}
+[2026-06-12T00:25:11.703600Z] [smoke_request] done: initial smoke request completed details={'request_id': 'artifacts-smoke-request'}
+[2026-06-12T00:25:11.703883Z] [smoke_preemption] start: running checkpoint/restore preemption probe
+[2026-06-12T00:25:11.704307Z] [smoke_preemption] done: checkpoint/restore preemption probe completed details={'probe_status': 'unsupported', 'outcome': 'not_supported'}
+[2026-06-12T00:25:11.704861Z] [post_restore_probe] start: running explicit post-restore readiness+smoke proof
+[2026-06-12T00:25:11.705121Z] [post_restore_probe] done: post-restore probe completed details={'probe_status': 'skipped', 'reason': "post-restore probe skipped because preemption outcome is 'not_supported'"}
+[2026-06-12T00:25:11.705331Z] [smoke_validation] start: classifying smoke validation
+[2026-06-12T00:25:11.705668Z] [smoke_validation] done: smoke validation completed details={'probe_status': 'unsupported', 'classification': 'smoke_not_supported', 'reason': 'unsupported capability: docker start --checkpoint'}
+[2026-06-12T00:25:11.705945Z] [runtime_teardown] start: stopping runtime adapter
+[2026-06-12T00:25:12.911670Z] [runtime_teardown] done: runtime adapter stopped details={'cleanup_status': 'ok'}
+[2026-06-12T00:25:12.911975Z] [probe_sequence] done: real probe sequence completed
+[2026-06-12T00:25:12.912140Z] [criu_log_capture] start: capturing CRIU logs from probe artifacts
+[2026-06-12T00:25:12.912390Z] [criu_log_capture] done: CRIU log capture finished
+[2026-06-12T00:25:12.912480Z] [debug_bundle] start: collecting debug bundle
+[2026-06-12T00:25:13.483325Z] [debug_bundle] done: debug bundle collected details={'debug_bundle_status': 'ok'}
+[2026-06-12T00:25:13.489326Z] [orchestrator] done: V0 orchestration completed
+[2026-06-12T00:25:13.489506Z] V0 orchestration complete: /tmp/ai-edge-v0-vllm-real-20260612-002318/artifacts
+[2026-06-12T00:25:13Z] [probe_run] run_v0_probe.py finished rc=0
+[2026-06-12T00:25:13Z] [telemetry] capturing post-run host memory/VRAM snapshots
+[2026-06-12T00:25:13Z] [system_debug] collecting host docker/containerd/criu diagnostics
+[2026-06-12T01:25:13+01:00] writing logs to /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug
+[2026-06-12T01:25:13+01:00] collecting system-info
+[2026-06-12T01:25:13+01:00] collecting docker-journal
+[2026-06-12T01:25:13+01:00] collecting containerd-journal
+[2026-06-12T01:25:13+01:00] collecting docker-events-v0
+[2026-06-12T01:25:13+01:00] collecting docker-events-all
+[2026-06-12T01:25:13+01:00] collecting v0-containers
+[2026-06-12T01:25:14+01:00] collecting v0-container-inspect
+[2026-06-12T01:25:14+01:00] collecting v0-container-logs
+[2026-06-12T01:25:14+01:00] collecting v0-checkpoints
+[2026-06-12T01:25:14+01:00] collecting process-state
+[2026-06-12T01:25:14+01:00] Docker data-root: /var/lib/docker
+[2026-06-12T01:25:14+01:00] collecting checkpoint-log-paths
+[2026-06-12T01:25:30+01:00] copying checkpoint/log files when accessible
+[2026-06-12T01:25:32+01:00] creating error summary
+[2026-06-12T01:25:32+01:00] creating archive /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug.tar.gz
+
+CRIU debug logs collected.
+
+Directory: /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug
+Archive:   /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug.tar.gz
+
+Start by inspecting:
+  /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug/error-summary.txt
+  /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug/docker-journal.txt
+  /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug/containerd-journal.txt
+  /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug/docker-events-v0.txt
+  /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug/v0-containers.txt
+  /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug/checkpoint-log-paths.txt
+
+[2026-06-12T00:25:32Z] [bundle] creating final compressed bundle

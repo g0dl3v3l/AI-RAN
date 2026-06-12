@@ -1,120 +1,90 @@
-"""Test remote run command rendering via deploy_and_run_remote.sh."""
+from __future__ import annotations
 
 import subprocess
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_PATH = REPO_ROOT / "scripts" / "deploy_and_run_remote.sh"
 
 
-def test_run_stage_renders_trace_paths():
-    """Verify run stage passes trace paths to remote CLI."""
-    result = subprocess.run(
-        [
-            "bash",
-            str(SCRIPT_PATH),
-            "--stage", "run",
-            "--run-id", "test-run",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/remote/path/ldpc.csv",
-            "--ran-ctrl-trace", "/remote/path/ran.csv",
-            "--dry-run",
-        ],
+def _run_dry_run(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["bash", str(SCRIPT_PATH), *args, "--dry-run"],
+        cwd=REPO_ROOT,
         capture_output=True,
         text=True,
+        check=False,
     )
-    assert result.returncode == 0
+
+
+def test_run_stage_renders_run_all_command_with_run_root_trace_paths_and_manifest_check() -> (
+    None
+):
+    result = _run_dry_run(
+        "--stage",
+        "run",
+        "--run-id",
+        "exp-001",
+        "--models",
+        "opt-125m",
+        "opt-350m",
+        "opt-1.3b",
+        "--chunk-sizes",
+        "32",
+        "64",
+        "--sequence-lengths",
+        "128",
+        "256",
+        "--ldpc-trace",
+        "/remote/path/ldpc.csv",
+        "--ran-ctrl-trace",
+        "/remote/path/ran.csv",
+    )
     output = result.stdout + result.stderr
-    
-    # Verify trace paths are in command
+
+    assert result.returncode == 0
+    assert "python -m inference_profile.cli run-all" in output
+    assert ".venv/bin/python" in output
+    assert "--resume-from validate-traces" in output
+    assert "/home/netsys/dheeraj/inference-profile/runs/exp-001" in output
     assert "/remote/path/ldpc.csv" in output
     assert "/remote/path/ran.csv" in output
-    # Verify run-all is called
-    assert "run-all" in output
-
-
-def test_run_stage_passes_run_root():
-    """Verify run stage passes correct run root to remote CLI."""
-    result = subprocess.run(
-        [
-            "bash",
-            str(SCRIPT_PATH),
-            "--stage", "run",
-            "--run-id", "exp-001",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
-            "--dry-run",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0
-    output = result.stdout + result.stderr
-    
-    # Verify run root is passed
-    assert "exp-001" in output or "runs" in output
-
-
-def test_run_stage_includes_model_list():
-    """Verify multiple models are passed to run-all."""
-    result = subprocess.run(
-        [
-            "bash",
-            str(SCRIPT_PATH),
-            "--stage", "run",
-            "--run-id", "test-models",
-            "--models", "opt-125m", "opt-350m", "opt-1.3b",
-            "--chunk-sizes", "32", "64",
-            "--sequence-lengths", "128", "256",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
-            "--dry-run",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0
-    output = result.stdout + result.stderr
-    
-    # Verify all models are in output
     assert "opt-125m" in output
     assert "opt-350m" in output
     assert "opt-1.3b" in output
+    assert "32" in output
+    assert "64" in output
+    assert "128" in output
+    assert "256" in output
+    assert "run_manifest.json" in output
+    assert "final_status" in output
 
 
-def test_all_stage_calls_run():
-    """Verify 'all' stage includes run stage with correct paths."""
-    result = subprocess.run(
-        [
-            "bash",
-            str(SCRIPT_PATH),
-            "--stage", "all",
-            "--run-id", "test-all-run",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/path/ldpc.csv",
-            "--ran-ctrl-trace", "/path/ran.csv",
-            "--dry-run",
-        ],
-        capture_output=True,
-        text=True,
+def test_all_stage_dry_run_includes_run_stage_and_manifest_success_check() -> None:
+    result = _run_dry_run(
+        "--stage",
+        "all",
+        "--run-id",
+        "test-all-run",
+        "--models",
+        "opt-125m",
+        "--chunk-sizes",
+        "32",
+        "--sequence-lengths",
+        "128",
+        "--ldpc-trace",
+        "/path/ldpc.csv",
+        "--ran-ctrl-trace",
+        "/path/ran.csv",
     )
-    assert result.returncode == 0
     output = result.stdout + result.stderr
-    
-    # Should have all stages
+
+    assert result.returncode == 0
     assert "Starting sync stage" in output
     assert "Starting bootstrap stage" in output
     assert "Starting run stage" in output
     assert "Starting fetch stage" in output
-
-
-if __name__ == "__main__":
-    import pytest
-    pytest.main([__file__, "-v"])
+    assert "python -m inference_profile.cli run-all" in output
+    assert "--resume-from validate-traces" in output
+    assert "run_manifest.json" in output
+    assert "final_status" in output

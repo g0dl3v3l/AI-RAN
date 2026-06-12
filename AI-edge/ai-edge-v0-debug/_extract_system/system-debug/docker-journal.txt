@@ -1,0 +1,20 @@
+===== docker-journal =====
+SCRIPT: sudo journalctl -u docker --since '2 hours ago' --no-pager || journalctl -u docker --since '2 hours ago' --no-pager || true
+SINCE: 2 hours ago
+TIME: 2026-06-12T01:25:13+01:00
+Jun 12 00:44:44 ubuntu dockerd[379100]: time="2026-06-12T00:44:44.204292543+01:00" level=info msg="sbJoin: gwep4 ''->'', gwep6 ''->''" eid=4ff1af909576 ep=ai-edge-v0-criu-ai-edge-v0-vllm-real-37709619 net=host nid=d8813952be99
+Jun 12 00:44:44 ubuntu dockerd[379100]: time="2026-06-12T00:44:44.567963359+01:00" level=info msg="ignoring event" container=655354ae1d1be53ff7ac0bd33c1ec50a4a60c067132319c55030f770acca87e1 module=libcontainerd namespace=moby topic=/tasks/delete type="*events.TaskDelete"
+Jun 12 00:44:49 ubuntu dockerd[379100]: time="2026-06-12T00:44:49.820135321+01:00" level=info msg="sbJoin: gwep4 ''->'', gwep6 ''->''" eid=0b2f61bdcd2a ep=ai-edge-v0-criu-ai-edge-v0-vllm-real-37709619 net=host nid=d8813952be99
+Jun 12 00:44:50 ubuntu dockerd[379100]: time="2026-06-12T00:44:50.117660797+01:00" level=info msg="ignoring event" container=655354ae1d1be53ff7ac0bd33c1ec50a4a60c067132319c55030f770acca87e1 module=libcontainerd namespace=moby topic=/tasks/delete type="*events.TaskDelete"
+Jun 12 00:44:50 ubuntu dockerd[379100]: time="2026-06-12T00:44:50.610867101+01:00" level=info msg="sbJoin: gwep4 ''->'74c96d79f31d', gwep6 ''->''" eid=74c96d79f31d ep=zen_proskuriakova net=bridge nid=5577e35814a4
+Jun 12 00:44:50 ubuntu dockerd[379100]: time="2026-06-12T00:44:50.873279375+01:00" level=info msg="ignoring event" container=9d66781ad8911ab74a0b0190a0ae1a5215786bbf715583aad5921ed2b5832fe3 module=libcontainerd namespace=moby topic=/tasks/delete type="*events.TaskDelete"
+Jun 12 00:44:51 ubuntu dockerd[379100]: time="2026-06-12T00:44:51.535113089+01:00" level=info msg="sbJoin: gwep4 ''->'8b7b2e4c9d4e', gwep6 ''->''" eid=8b7b2e4c9d4e ep=ai-edge-v0-vllm-ai-edge-v0-vllm-real-e399ae1a net=bridge nid=5577e35814a4
+Jun 12 00:47:48 ubuntu dockerd[379100]: time="2026-06-12T00:47:48.325975095+01:00" level=info msg="ignoring event" container=aae9f0f9241d7bea97ed7010b25d8ea63337f3fc5ddfe8ce4149fc78f4c76b45 module=libcontainerd namespace=moby topic=/tasks/delete type="*events.TaskDelete"
+Jun 12 00:49:37 ubuntu dockerd[379100]: time="2026-06-12T00:49:37.469831855+01:00" level=error msg="Handler for POST /v1.52/containers/ai-edge-v0-vllm-ai-edge-v0-vllm-real-e399ae1a/checkpoints returned error: Cannot checkpoint container ai-edge-v0-vllm-ai-edge-v0-vllm-real-e399ae1a: write /var/lib/containerd/io.containerd.content.v1.content/ingest/ab2c9b950e515ee4caffabf4c69689c80912c84d99f88fcfc580598cf748c391/data: no space left on device"
+Jun 12 01:23:20 ubuntu dockerd[379100]: time="2026-06-12T01:23:20.125863854+01:00" level=info msg="sbJoin: gwep4 ''->'', gwep6 ''->''" eid=9f3bf0faa4bc ep=ai-edge-v0-criu-artifacts-c6acd3bc net=host nid=d8813952be99
+Jun 12 01:23:20 ubuntu dockerd[379100]: time="2026-06-12T01:23:20.497362581+01:00" level=info msg="ignoring event" container=170917a309bb76686ea5a472806acab1c03978e918f6b576f95df64d0b6f31ec module=libcontainerd namespace=moby topic=/tasks/delete type="*events.TaskDelete"
+Jun 12 01:23:26 ubuntu dockerd[379100]: time="2026-06-12T01:23:26.133297034+01:00" level=info msg="sbJoin: gwep4 ''->'23d6bc843673', gwep6 ''->''" eid=23d6bc843673 ep=stoic_hypatia net=bridge nid=5577e35814a4
+Jun 12 01:23:26 ubuntu dockerd[379100]: time="2026-06-12T01:23:26.355544826+01:00" level=info msg="ignoring event" container=a9ae265db7638543e4f2a214279542a74b2a2c36e24c57f2ecce425c0bf2e6f8 module=libcontainerd namespace=moby topic=/tasks/delete type="*events.TaskDelete"
+Jun 12 01:23:27 ubuntu dockerd[379100]: time="2026-06-12T01:23:27.047604924+01:00" level=info msg="sbJoin: gwep4 ''->'a57ca22d01a0', gwep6 ''->''" eid=a57ca22d01a0 ep=ai-edge-v0-vllm-artifacts-ae63b274 net=bridge nid=5577e35814a4
+Jun 12 01:25:12 ubuntu dockerd[379100]: time="2026-06-12T01:25:12.181561979+01:00" level=info msg="ignoring event" container=f2b91c958b114473efb55e3d2fddce1ad0dabe15d4b0b188f6bba209ecb3281e module=libcontainerd namespace=moby topic=/tasks/delete type="*events.TaskDelete"
+EXIT_CODE: 0

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from inference_profile import paths
+from inference_profile import experiments, paths
 
 
 def test_build_run_bundle_paths_uses_fixed_layout() -> None:
@@ -46,3 +46,18 @@ def test_init_run_bundle_creates_timestamped_tree_and_placeholders(tmp_path) -> 
     assert bundle_paths.report_path.read_text(encoding="utf-8") == ""
     assert bundle_paths.checksum_manifest_path.exists()
     assert bundle_paths.checksum_manifest_path.read_text(encoding="utf-8") == ""
+
+
+def test_init_experiment_run_bundle_uses_revised_prefix(tmp_path) -> None:
+    fixed_now = datetime(2026, 4, 13, 19, 0, 0, tzinfo=timezone.utc)
+
+    bundle_paths = paths.init_experiment_run_bundle(
+        tmp_path,
+        experiment_type=experiments.RAN_DGXSPARK_V1_EXPERIMENT_TYPE,
+        now=fixed_now,
+    )
+
+    assert bundle_paths.run_id == "revised-ran-dgxspark-20260413_190000"
+    assert bundle_paths.run_root == (
+        tmp_path / "runs" / "revised-ran-dgxspark-20260413_190000"
+    )

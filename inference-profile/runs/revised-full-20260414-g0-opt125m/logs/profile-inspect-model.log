@@ -1,0 +1,2 @@
+[2026-04-14T11:52:43Z] Ensuring inspect-model prerequisites for facebook/opt-125m at /mnt/data/dheeraj/dicertation/inference-profile/runs/revised-full-20260414-g0-opt125m/inspect-model/facebook-opt-125m
+[2026-04-14T11:52:44Z] Inspect-model complete for facebook/opt-125m: asset_source=synthetic_fallback model_constants=/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-full-20260414-g0-opt125m/inspect-model/facebook-opt-125m/raw/model_constants.json

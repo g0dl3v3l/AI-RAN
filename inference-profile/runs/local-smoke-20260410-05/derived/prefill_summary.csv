@@ -1,0 +1,2 @@
+model_id,chunk_tokens,prefill_max_gemm_us,prefill_workspace_bytes,prefill_parked_activation_bytes
+facebook/opt-125m,64,148.47999811172485,393216,393216

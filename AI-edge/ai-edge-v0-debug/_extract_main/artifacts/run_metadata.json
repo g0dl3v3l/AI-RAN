@@ -1,0 +1,139 @@
+{
+  "arm": "env_probe",
+  "cleanup": {
+    "component": "runtime_teardown",
+    "details": {
+      "commands": {
+        "docker_inspect_labels": {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{json .Config.Labels}}",
+            "ai-edge-v0-vllm-artifacts-ae63b274"
+          ],
+          "duration_s": 0.03579227201407775,
+          "error_message": null,
+          "error_type": null,
+          "returncode": 0,
+          "status": "ok",
+          "stderr": "",
+          "stdout": "{\"ai-edge-component\":\"vllm-runtime\",\"ai-edge-experiment\":\"v0\",\"ai-edge-run-id\":\"artifacts\",\"ai.vllm.build.commit\":\"0decac0d96c42b49572498019f0a0e3600f50398\",\"ai.vllm.build.pipeline\":\"019d130e-464e-4ff7-b84b-492992c0c06b\",\"ai.vllm.build.url\":\"https://buildkite.com/vllm/release-v2/builds/2333\",\"ai.vllm.image.tag\":\"vllm/vllm-openai:v0.22.1\",\"maintainer\":\"NVIDIA CORPORATION <cudatools@nvidia.com>\",\"org.opencontainers.image.ref.name\":\"ubuntu\",\"org.opencontainers.image.revision\":\"0decac0d96c42b49572498019f0a0e3600f50398\",\"org.opencontainers.image.source\":\"https://github.com/vllm-project/vllm\",\"org.opencontainers.image.url\":\"https://buildkite.com/vllm/release-v2/builds/2333\",\"org.opencontainers.image.version\":\"vllm/vllm-openai:v0.22.1\"}\n",
+          "timed_out": false
+        },
+        "docker_rm_force": {
+          "argv": [
+            "docker",
+            "rm",
+            "-f",
+            "ai-edge-v0-vllm-artifacts-ae63b274"
+          ],
+          "duration_s": 1.1693936840165406,
+          "error_message": null,
+          "error_type": null,
+          "returncode": 0,
+          "status": "ok",
+          "stderr": "",
+          "stdout": "ai-edge-v0-vllm-artifacts-ae63b274\n",
+          "timed_out": false
+        }
+      },
+      "container": {
+        "id": "f2b91c958b114473efb55e3d2fddce1ad0dabe15d4b0b188f6bba209ecb3281e",
+        "inspected_labels": {
+          "ai-edge-component": "vllm-runtime",
+          "ai-edge-experiment": "v0",
+          "ai-edge-run-id": "artifacts",
+          "ai.vllm.build.commit": "0decac0d96c42b49572498019f0a0e3600f50398",
+          "ai.vllm.build.pipeline": "019d130e-464e-4ff7-b84b-492992c0c06b",
+          "ai.vllm.build.url": "https://buildkite.com/vllm/release-v2/builds/2333",
+          "ai.vllm.image.tag": "vllm/vllm-openai:v0.22.1",
+          "maintainer": "NVIDIA CORPORATION <cudatools@nvidia.com>",
+          "org.opencontainers.image.ref.name": "ubuntu",
+          "org.opencontainers.image.revision": "0decac0d96c42b49572498019f0a0e3600f50398",
+          "org.opencontainers.image.source": "https://github.com/vllm-project/vllm",
+          "org.opencontainers.image.url": "https://buildkite.com/vllm/release-v2/builds/2333",
+          "org.opencontainers.image.version": "vllm/vllm-openai:v0.22.1"
+        },
+        "name": "ai-edge-v0-vllm-artifacts-ae63b274"
+      },
+      "mode": "docker_server",
+      "runtime": "vllm"
+    },
+    "monotonic_ns": 298205092657115,
+    "run_id": "artifacts",
+    "schema_version": "0.1.0",
+    "status": "ok",
+    "timestamp_utc": "2026-06-12T00:25:12.911619Z"
+  },
+  "completed_at_utc": "2026-06-12T00:25:13.487993Z",
+  "completed_monotonic_ns": 298205669042152,
+  "config_path": "/tmp/ai-edge-v0-vllm-real-20260612-002318/v0_effective.yaml",
+  "cuda_version": "13.1",
+  "debug_bundle": {
+    "artifact_path": "/tmp/ai-edge-v0-vllm-real-20260612-002318/artifacts/debug/debug_bundle.json",
+    "status": "ok"
+  },
+  "docker_version": "29.1.3",
+  "driver_version": "590.48.01",
+  "dry_run": false,
+  "experiment_id": "v0_env_probe",
+  "git": {
+    "branch": "master",
+    "commit": "65fa40fb0d756d5cadab165c795df3084b437f23",
+    "describe": "65fa40f",
+    "dirty": true,
+    "errors": [],
+    "git_available": true,
+    "is_repo": true,
+    "remote_origin_url": "https://github.com/g0dl3v3l/AI-RAN.git",
+    "toplevel": "/home/ubuntu/AI-RAN"
+  },
+  "gpu_names": [
+    "NVIDIA L40S"
+  ],
+  "hardware_summary": {
+    "cpu_core_count": 32,
+    "cpu_model": "143",
+    "cuda_version": "13.1",
+    "driver_version": "590.48.01",
+    "gpu_count": 1,
+    "gpu_names": [
+      "NVIDIA L40S"
+    ],
+    "system_memory_total_bytes": 135064371200,
+    "vram_total_mib": 46068
+  },
+  "model": "Qwen/Qwen2-0.5B-Instruct",
+  "mps_summary": {
+    "allow_start_stop": false,
+    "attempted_start_stop": false,
+    "control_binary": "nvidia-cuda-mps-control",
+    "control_pipe_exists": false,
+    "control_pipe_path": "/tmp/nvidia-mps/control",
+    "mode": "read_only",
+    "started_by_probe": false,
+    "status": "ok"
+  },
+  "output_dir": "/tmp/ai-edge-v0-vllm-real-20260612-002318/artifacts",
+  "probe_statuses": {
+    "criu_check": "ok",
+    "cuda_check": "ok",
+    "docker": "ok",
+    "docker_criu_integration": "unsupported",
+    "hardware": "ok",
+    "mps_check": "ok",
+    "post_restore_probe": "skipped",
+    "runtime_check": "ok",
+    "smoke_preemption": "unsupported",
+    "smoke_validation": "unsupported"
+  },
+  "run_id": "artifacts",
+  "runtime": "vllm",
+  "schema_version": "0.1.0",
+  "seed": 0,
+  "started_at_utc": "2026-06-12T00:23:19.451746Z",
+  "started_monotonic_ns": 298091632761753,
+  "status": "completed",
+  "version": "v0"
+}

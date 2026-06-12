@@ -1,0 +1,58 @@
+{
+  "plot_01_exemplar": {
+    "chunk_tokens": 1024,
+    "model_id": "facebook/opt-2.7b",
+    "model_label": "OPT-2.7B",
+    "model_size_rank": 4.0,
+    "sequence_length": 8192,
+    "ttft_ms": 525.9018402099609
+  },
+  "plot_01_packed_timeline": {
+    "policy": "repeat the selected exemplar task queue until the shared idle-gap trace is exhausted",
+    "schedule_variant_field": "schedule_variant",
+    "source": "packed_exemplar_timeline.csv",
+    "task_id_field": "task_id"
+  },
+  "plot_01_selection_rule": {
+    "sort_order": [
+      "ttft_ms ASC",
+      "model_size_rank DESC",
+      "chunk_tokens DESC",
+      "sequence_length DESC"
+    ],
+    "source": "ran_inference_profiling_results.csv",
+    "status_filter": "success"
+  },
+  "plot_05_largest_successful_chunk_by_model": [
+    {
+      "model_id": "facebook/opt-125m",
+      "model_label": "OPT-125M",
+      "selected_chunk_tokens": null
+    },
+    {
+      "model_id": "facebook/opt-350m",
+      "model_label": "OPT-350M",
+      "selected_chunk_tokens": null
+    },
+    {
+      "model_id": "facebook/opt-1.3b",
+      "model_label": "OPT-1.3B",
+      "selected_chunk_tokens": null
+    },
+    {
+      "model_id": "facebook/opt-2.7b",
+      "model_label": "OPT-2.7B",
+      "selected_chunk_tokens": 1024
+    },
+    {
+      "model_id": "facebook/opt-6.7b",
+      "model_label": "OPT-6.7B",
+      "selected_chunk_tokens": null
+    }
+  ],
+  "plot_05_selection_rule": {
+    "policy": "largest successful chunk_tokens per fixed model",
+    "source": "ran_inference_profiling_results.csv",
+    "status_filter": "success"
+  }
+}

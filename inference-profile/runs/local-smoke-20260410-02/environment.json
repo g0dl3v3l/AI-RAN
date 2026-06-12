@@ -1,0 +1,86 @@
+{
+  "bootstrap_status": "success",
+  "cache_root": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02/cache",
+  "captured_at": "2026-04-10T13:43:13Z",
+  "cuda": {
+    "available": true,
+    "compute_capability": "8.6",
+    "device_count": 8,
+    "driver_version": "580.126.20",
+    "gpu_name": "NVIDIA RTX A5000",
+    "multi_processor_count": 64,
+    "probe_error": null,
+    "selected_gpu_id": 0,
+    "torch_cuda_build_version": "13.0",
+    "total_memory_bytes": 25283526656
+  },
+  "cwd": "/mnt/data/dheeraj/dicertation/inference-profile",
+  "dependencies": {
+    "safetensors": {
+      "available": false,
+      "error": "No module named 'safetensors'",
+      "required": false,
+      "version": null
+    },
+    "torch": {
+      "available": true,
+      "error": null,
+      "required": true,
+      "version": "2.11.0+cu130"
+    },
+    "transformers": {
+      "available": false,
+      "error": "No module named 'transformers'",
+      "required": false,
+      "version": null
+    }
+  },
+  "failed_step": null,
+  "failure_cause": null,
+  "failure_kind": null,
+  "gpu_id": 0,
+  "installation": {
+    "editable_install_command": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02/.venv/bin/python -m pip install -e /mnt/data/dheeraj/dicertation/inference-profile",
+    "mode": "validate-only",
+    "project_installation_required": true,
+    "python_only_dependency_installation_expected": true,
+    "system_packages_mutated": false
+  },
+  "manifest_update": {
+    "attempted": true,
+    "error": null,
+    "path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02/run_manifest.json",
+    "status": "updated"
+  },
+  "output_root": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02",
+  "paths": {
+    "cache_root": {
+      "exists": true,
+      "free_bytes": 136874762240,
+      "path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02/cache",
+      "writable": true
+    },
+    "output_root": {
+      "exists": true,
+      "free_bytes": 136874766336,
+      "path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02",
+      "writable": true
+    }
+  },
+  "platform": "Linux-6.8.0-106-generic-x86_64-with-glibc2.35",
+  "project_root": "/mnt/data/dheeraj/dicertation/inference-profile",
+  "public_status": "success",
+  "python_executable": "/home/dheeraj/miniconda3/bin/python",
+  "python_executable_exists": true,
+  "python_version": "3.13.12",
+  "stage": "bootstrap-env",
+  "venv": {
+    "create_command": "python3 -m venv --system-site-packages .venv",
+    "include_system_site_packages": true,
+    "path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02/.venv",
+    "python_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02/.venv/bin/python",
+    "pyvenv_cfg_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-02/.venv/pyvenv.cfg",
+    "status": "created",
+    "system_site_packages_required": true
+  }
+}

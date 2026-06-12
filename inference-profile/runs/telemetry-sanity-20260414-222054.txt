@@ -1,0 +1,25 @@
+runs=11
+revised-full-20260414-g0-opt125m: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g1-opt350m: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g2-opt13b-c64-256: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g3-opt13b-c512-1024: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g4-opt27b-c64-256: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g5-opt27b-c512-1024: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g6-opt67b-c64-256: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-g7-opt67b-c512-1024: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-opt13b-combined: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-opt27b-combined: telemetry_cols=16 out_of_range=0 identical_pairs=0
+revised-full-20260414-opt67b-combined: telemetry_cols=16 out_of_range=0 identical_pairs=0
+
+issues:
+- revised-full-20260414-g0-opt125m: decode_events missing expected columns
+- revised-full-20260414-g1-opt350m: decode_events missing expected columns
+- revised-full-20260414-g2-opt13b-c64-256: decode_events missing expected columns
+- revised-full-20260414-g3-opt13b-c512-1024: decode_events missing expected columns
+- revised-full-20260414-g4-opt27b-c64-256: decode_events missing expected columns
+- revised-full-20260414-g5-opt27b-c512-1024: decode_events missing expected columns
+- revised-full-20260414-g6-opt67b-c64-256: decode_events missing expected columns
+- revised-full-20260414-g7-opt67b-c512-1024: decode_events missing expected columns
+- revised-full-20260414-opt13b-combined: decode_events missing expected columns
+- revised-full-20260414-opt27b-combined: decode_events missing expected columns
+- revised-full-20260414-opt67b-combined: decode_events missing expected columns

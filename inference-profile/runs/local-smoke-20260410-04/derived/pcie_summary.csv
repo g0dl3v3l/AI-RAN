@@ -1,0 +1,2 @@
+model_id,block_size,kv_block_bytes,transfer_only_us,overlap_total_us,dummy_compute_us,exposed_transfer_us,effective_gbps
+facebook/opt-125m,64,196608,291.2447988986969,19530.739557743073,19179.328399896618,351.41115784645444,0.67506098218216

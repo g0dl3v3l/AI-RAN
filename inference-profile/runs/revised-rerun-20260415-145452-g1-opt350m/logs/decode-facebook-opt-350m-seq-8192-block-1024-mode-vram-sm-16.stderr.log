@@ -1,0 +1,3 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/decode_profile.py:198: RuntimeWarning: Decode microbenchmark requested sequence lengths [8192] above model context limit (2048) for facebook/opt-350m. These points remain synthetic kernel-level profiling and are not equivalent to full autoregressive decode semantics.
+  _warn_if_sequence_lengths_exceed_model_context(

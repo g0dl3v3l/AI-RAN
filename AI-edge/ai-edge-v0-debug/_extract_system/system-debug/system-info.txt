@@ -1,0 +1,155 @@
+===== system-info =====
+SCRIPT: 
+  echo "===== docker version ====="
+  docker version || true
+  echo
+  echo "===== docker info ====="
+  docker info || true
+  echo
+  echo "===== criu version ====="
+  criu --version || true
+  echo
+  echo "===== criu check --all ====="
+  criu check --all || true
+  echo
+  echo "===== runc version ====="
+  runc --version || true
+  echo
+  echo "===== uname ====="
+  uname -a || true
+  echo
+  echo "===== os-release ====="
+  cat /etc/os-release || true
+
+SINCE: 2 hours ago
+TIME: 2026-06-12T01:25:13+01:00
+===== docker version =====
+Client:
+ Version:           29.1.3
+ API version:       1.52
+ Go version:        go1.24.4
+ Git commit:        29.1.3-0ubuntu3~22.04.2
+ Built:             Wed Apr 29 22:18:59 2026
+ OS/Arch:           linux/amd64
+ Context:           default
+
+Server:
+ Engine:
+  Version:          29.1.3
+  API version:      1.52 (minimum version 1.44)
+  Go version:       go1.24.4
+  Git commit:       29.1.3-0ubuntu3~22.04.2
+  Built:            Wed Apr 29 22:18:59 2026
+  OS/Arch:          linux/amd64
+  Experimental:     true
+ containerd:
+  Version:          1.7.28
+  GitCommit:        
+ runc:
+  Version:          1.3.3-0ubuntu1~22.04.3
+  GitCommit:        
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        
+
+===== docker info =====
+Client:
+ Version:    29.1.3
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  0.21.3
+    Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+  trust: Manage trust on Docker images (Docker Inc.)
+    Version:  29.1.3
+    Path:     /usr/libexec/docker/cli-plugins/docker-trust
+
+Server:
+ Containers: 16
+  Running: 1
+  Paused: 0
+  Stopped: 15
+ Images: 162
+ Server Version: 29.1.3
+ Storage Driver: overlay2
+  Backing Filesystem: extfs
+  Supports d_type: true
+  Using metacopy: false
+  Native Overlay Diff: true
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ CDI spec directories:
+  /etc/cdi
+  /var/run/cdi
+ Discovered Devices:
+  cdi: nvidia.com/gpu=0
+  cdi: nvidia.com/gpu=GPU-ef38ed9b-b69e-b7b6-96ea-094f906f9bcc
+  cdi: nvidia.com/gpu=all
+ Swarm: inactive
+ Runtimes: runc io.containerd.runc.v2
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: 
+ runc version: 
+ init version: 
+ Security Options:
+  apparmor
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 6.8.0-94-generic
+ Operating System: Ubuntu 22.04.5 LTS
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 32
+ Total Memory: 125.8GiB
+ Name: ubuntu
+ ID: b0712556-c7e2-438e-a0c9-26af64d650d7
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Experimental: true
+ Insecure Registries:
+  ::1/128
+  127.0.0.0/8
+ Live Restore Enabled: false
+ Firewall Backend: iptables
+
+
+===== criu version =====
+Version: 4.2
+GitID: v4.2
+
+===== criu check --all =====
+CRIU needs to have the CAP_SYS_ADMIN or the CAP_CHECKPOINT_RESTORE capability: 
+setcap cap_checkpoint_restore+eip criu
+
+===== runc version =====
+runc version 1.3.3-0ubuntu1~22.04.3
+spec: 1.2.1
+go: go1.23.1
+libseccomp: 2.5.3
+
+===== uname =====
+Linux ubuntu 6.8.0-94-generic #96~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Jan 16 13:19:05 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+
+===== os-release =====
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.5 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy
+EXIT_CODE: 0

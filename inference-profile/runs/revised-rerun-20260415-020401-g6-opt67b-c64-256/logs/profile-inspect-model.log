@@ -1,0 +1,2 @@
+[2026-04-15T01:04:08Z] Ensuring inspect-model prerequisites for facebook/opt-6.7b at /mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g6-opt67b-c64-256/inspect-model/facebook-opt-6-7b
+[2026-04-15T01:04:09Z] Inspect-model complete for facebook/opt-6.7b: asset_source=layer_shard model_constants=/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g6-opt67b-c64-256/inspect-model/facebook-opt-6-7b/raw/model_constants.json

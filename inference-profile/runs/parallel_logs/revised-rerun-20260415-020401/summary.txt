@@ -1,0 +1,2 @@
+LOG_DIR=/mnt/data/dheeraj/dicertation/inference-profile/runs/parallel_logs/revised-rerun-20260415-020401
+ALL_JOBS_SUCCEEDED

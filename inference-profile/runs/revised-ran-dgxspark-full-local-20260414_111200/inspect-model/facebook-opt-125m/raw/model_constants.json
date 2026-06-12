@@ -1,0 +1,10 @@
+{
+  "ffn_dim": 3072,
+  "hidden_size": 768,
+  "layer_index": 5,
+  "layer_weight_bytes": 14175744,
+  "num_attention_heads": 12,
+  "num_hidden_layers": 12,
+  "total_weight_bytes_fp16": 250478592,
+  "vram_ceiling_bytes": 15170115993
+}

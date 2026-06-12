@@ -2,7 +2,7 @@
 
 Standalone package for remote RAN inference profiling on OPT decoder layers via GPU acceleration.
 
-This package profiles isolated OPT model layers (125M, 350M, 1.3B) on a remote DGX to measure:
+This package profiles isolated OPT model layers (125M, 350M, 1.3B, 2.7B, and 6.7B) on a remote DGX to measure:
 - **Prefill performance**: Time to process input tokens with full attention
 - **Decode performance**: Token-by-token generation with blockwise flash-decoding
 - **PCIe overlap**: Hidden H2D transfer cost during decode
@@ -58,7 +58,7 @@ inference-profile/
         ├── derived/                       # Reduced/canonical summaries
         ├── checksums/                     # SHA256 checksums of all outputs
         ├── plots/                         # PNG plots
-        └── report.md                      # Markdown report
+        └── ran_inference_profiling_report.md  # Markdown report
 ```
 
 ## Usage: Local CLI
@@ -73,7 +73,13 @@ Prepare remote working directory and validate dependencies.
 python -m inference_profile.cli bootstrap-env --output-root /tmp/runs/run-001
 ```
 
-**Acceptance**: Directory created with `.dependencies-ok` marker file.
+Note: The CLI supports a versioned experiment selector for the revised DGX Spark
+path. To run the revised experiment path use `--experiment-type ran-dgxspark-v1`.
+When selected, revised runs default to a versioned run-root like
+`runs/revised-ran-dgxspark-<timestamp>` and emit explicitly prefixed artifacts
+(`revised_*.png`, `revised_*.html`) to avoid colliding with legacy bundles.
+
+**Acceptance**: The run root is initialized, `.venv/` is created with system site packages enabled, and `environment.json` is written.
 
 ### Stage 2: Validate Traces
 
@@ -86,7 +92,17 @@ python -m inference_profile.cli validate-traces \
   --output-root /tmp/runs/run-001
 ```
 
-**Output**: `logs/validate-traces.log` with line counts and schema checks.
+**Outputs**:
+- `raw/trace_inspection.json`: structural inspection of both trace files
+- `derived/normalized_ldpc_trace.csv`: canonical scheduler input derived from the LDPC trace
+- `raw/validation_errors.csv`: emitted only when the primary LDPC trace fails validation
+
+Canonical example trace paths used by the project:
+
+```
+/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv
+/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv
+```
 
 ### Stage 3: Profile
 
@@ -95,10 +111,10 @@ Execute prefill, decode, and PCIe profiling across the sweep matrix:
 
 ```bash
 python -m inference_profile.cli profile \
-  --run-root /tmp/runs/run-001 \
-  --models opt-125m opt-350m opt-1.3b \
-  --chunk-sizes 32 64 \
-  --sequence-lengths 128 256 512 \
+  --output-root /tmp/runs/run-001 \
+  --models facebook/opt-125m facebook/opt-350m facebook/opt-1.3b \
+  --chunk-sizes 64 128 \
+  --sequence-lengths 1024 2048 \
   --gpu-id 0 \
   --cache-root /mnt/cache
 ```
@@ -107,19 +123,24 @@ python -m inference_profile.cli profile \
 - `raw/prefill_events.csv`: Per-sweep-point GEMM/attention timings
 - `raw/decode_events.csv`: Per-block attention fetch/compute/reduction breakdown
 - `raw/pcie_events.csv`: Transfer-only vs. overlapped transfer+compute
-- `logs/profile.log`: Sweep progress and per-model warmup/iteration counts
+- `logs/profile-stage.log`: High-level stage progress
+- `logs/profile-prefill.log`, `logs/profile-decode.log`, `logs/profile-pcie.log`: Family-specific progress
+- `logs/<point-id>.stdout.log` and `logs/<point-id>.stderr.log`: Per-point worker logs
 
 **Duration**: ~30 min (models) × 2 (chunk-size) × 3 (seq-length) × profiling time per point
 
 ### Stage 4: Simulate
 
-Load profiling results and run deterministic greedy scheduler against LDPC/RAN traces.
+Load profiling results and run the deterministic greedy scheduler against normalized LDPC idle gaps. The RAN control trace is validated and reported, but it is not used for scheduler capacity.
 
 ```bash
 python -m inference_profile.cli simulate --run-root /tmp/runs/run-001
 ```
 
-**Output**: `derived/simulation_results.csv` with per-token latency and resource consumption.
+**Outputs**:
+- `derived/simulation_inputs.csv`: Canonical simulation inputs assembled from successful profile summaries
+- `derived/ran_inference_profiling_results.csv`: Deterministic latency/resource results keyed by `trace_sha256`
+- `derived/schedule_timeline.csv`: Per-interval prefill/decode scheduling timeline
 
 ### Stage 5: Report
 
@@ -130,12 +151,31 @@ python -m inference_profile.cli report --run-root /tmp/runs/run-001
 ```
 
 **Outputs**:
-- `plots/prefill_time_vs_seq_length.png`
-- `plots/decode_time_vs_kv_length.png`
-- `plots/pcie_overlap_fraction.png`
-- `plots/ttft_vs_model_size.png`
-- `plots/tpot_vs_trace_load.png`
-- `report.md`: Executive summary, metrics, and recommendations
+- Legacy path:
+  - `plots/01_ran_trace_interleaving.png`
+  - `plots/01_ran_trace_interleaving_interactive.html` (interactive companion)
+  - `plots/02_prefill_safety_boundary.png`
+  - `plots/03_prefill_vram_composition.png`
+  - `plots/04_ttft_vs_runway.png`
+  - `plots/05_decode_tpot_degradation.png`
+  - `plots/06_operation_level_microarchitecture_summary.png`
+- Revised `ran-dgxspark-v1` path:
+  - `telemetry/telemetry.jsonl`
+  - `plots/revised_01_ran_trace_interleaving.png`
+  - `plots/revised_01_ran_trace_interleaving_interactive.html`
+  - `plots/revised_02_prefill_safety_boundary.png`
+  - `plots/revised_03_prefill_vram_composition.png`
+  - `plots/revised_04_ttft_vs_runway.png`
+  - `plots/revised_05_decode_tpot_degradation.png`
+  - `plots/revised_06_operation_level_microarchitecture_summary.png`
+  - `plots/revised_07_hardware_utilization_profiling.png`
+  - `plots/revised_08_decode_memory_consumption.png`
+- `ran_inference_profiling_report.md`: Executive summary, metrics, and recommendations
+
+**Telemetry tiers**:
+- `baseline_nvml_pt`: direct PyTorch timings/memory plus coarse NVML sampling (`gpu_util`, memory used, clocks, power). This is the default revised path.
+- `external_profiler`: optional external-profiler-backed tier for exact microscopic counters such as ACU / GBU / SMU when available.
+- In baseline mode, microscopic ACU / GBU / SMU should be treated as unavailable or approximated, not as guaranteed exact measurements.
 
 ### Stage 6: Verify Bundle
 
@@ -152,11 +192,11 @@ python -m inference_profile.cli verify-bundle --run-root /tmp/runs/run-001
 ```bash
 python -m inference_profile.cli run-all \
   --run-root /tmp/runs/run-001 \
-  --ldpc-trace /mnt/data/traces/ldpc.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl.csv \
-  --models opt-125m opt-350m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 256 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv \
+  --models facebook/opt-125m facebook/opt-350m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 2048 \
   --gpu-id 0
 ```
 
@@ -167,11 +207,11 @@ If a run fails at stage N, resume without rerunning earlier stages:
 ```bash
 python -m inference_profile.cli run-all \
   --run-root /tmp/runs/run-001 \
-  --ldpc-trace /mnt/data/traces/ldpc.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl.csv \
-  --models opt-125m opt-350m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 256 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv \
+  --models facebook/opt-125m facebook/opt-350m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 2048 \
   --resume-from profile  # Skips bootstrap-env and validate-traces
 ```
 
@@ -189,9 +229,9 @@ The `deploy_and_run_remote.sh` script orchestrates SSH/scp operations to remote 
 
 ### Prerequisites
 
-- `.ssh_pass` file at `/mnt/data/dheeraj/dicertation/.ssh_pass` containing SSH password for `netsys@dheeraj`
+- `.ssh_pass` file at `/mnt/data/dheeraj/dicertation/.ssh_pass` containing the SSH password for `netsys@192.168.1.20`
 - `sshpass` installed locally
-- LDPC and RAN control trace files accessible locally
+- LDPC and RAN control trace files accessible on the remote DGX at the paths passed to `--ldpc-trace` and `--ran-ctrl-trace`
 
 ### Smoke Command
 
@@ -201,11 +241,11 @@ Minimal test run (single model, small matrix):
 bash scripts/deploy_and_run_remote.sh \
   --stage all \
   --run-id smoke-001 \
-  --models opt-125m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 \
-  --ldpc-trace /mnt/data/traces/ldpc_embb_04_10.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl_embb_04_10.csv
+  --models facebook/opt-125m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv
 ```
 
 **Expected duration**: ~5 minutes (remote sync/bootstrap/profile/simulate/report/fetch)
@@ -216,11 +256,11 @@ bash scripts/deploy_and_run_remote.sh \
 bash scripts/deploy_and_run_remote.sh \
   --stage all \
   --run-id exp-001-full \
-  --models opt-125m opt-350m opt-1.3b \
-  --chunk-sizes 32 64 128 \
-  --sequence-lengths 128 256 512 1024 \
-  --ldpc-trace /mnt/data/traces/ldpc_embb_04_10.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl_embb_04_10.csv
+  --models facebook/opt-125m facebook/opt-350m facebook/opt-1.3b facebook/opt-2.7b facebook/opt-6.7b \
+  --chunk-sizes 64 128 256 512 1024 \
+  --sequence-lengths 1024 2048 4096 8192 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv
 ```
 
 **Expected duration**: ~90 minutes
@@ -231,11 +271,11 @@ bash scripts/deploy_and_run_remote.sh \
 bash scripts/deploy_and_run_remote.sh \
   --stage all \
   --run-id exp-001 \
-  --models opt-125m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 \
-  --ldpc-trace /mnt/data/traces/ldpc.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl.csv \
+  --models facebook/opt-125m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv \
   --dry-run
 ```
 
@@ -246,35 +286,35 @@ bash scripts/deploy_and_run_remote.sh \
 Execute individual stages or retry failed ones:
 
 ```bash
-# Stage 1: Sync and bootstrap only
+# Stage 1: Sync source tree to the remote project root
 bash scripts/deploy_and_run_remote.sh \
   --stage sync \
   --run-id exp-001 \
-  --models opt-125m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 \
-  --ldpc-trace /mnt/data/traces/ldpc.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl.csv
+  --models facebook/opt-125m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv
 
 # Stage 2: Bootstrap
 bash scripts/deploy_and_run_remote.sh \
   --stage bootstrap \
   --run-id exp-001 \
-  --models opt-125m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 \
-  --ldpc-trace /mnt/data/traces/ldpc.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl.csv
+  --models facebook/opt-125m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv
 
-# Stage 3: Run profiling (this may take 30+ minutes)
+# Stage 3: Run the remaining pipeline remotely (validate-traces → verify-bundle)
 bash scripts/deploy_and_run_remote.sh \
   --stage run \
   --run-id exp-001 \
-  --models opt-125m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 \
-  --ldpc-trace /mnt/data/traces/ldpc.csv \
-  --ran-ctrl-trace /mnt/data/traces/ran_ctrl.csv
+  --models facebook/opt-125m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 \
+  --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv \
+  --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv
 
 # Stage 4: Fetch results locally
 bash scripts/deploy_and_run_remote.sh \
@@ -285,8 +325,8 @@ bash scripts/deploy_and_run_remote.sh \
 ### Script Stages
 
 1. **sync**: Upload source code (preserves `/home/netsys/dheeraj/inference-profile/runs/`)
-2. **bootstrap**: Create remote directory structure
-3. **run**: Execute profiling on remote GPU
+2. **bootstrap**: Create the remote run root and bootstrap its `.venv`
+3. **run**: Resume the remote pipeline from `validate-traces` onward for an already-bootstrapped `run_id`
 4. **fetch**: Download results to local `inference-profile/runs/<run_id>/`
 
 ## Output Directory Layout
@@ -295,53 +335,75 @@ After completion, local results are in `inference-profile/runs/<run_id>/`:
 
 ```
 runs/<run_id>/
-├── run_manifest.json              # {"run_id": "...", "status": "success", "stage_status": {...}}
+├── run_manifest.json              # canonical manifest (see inference_profile.manifests.FINAL_STATUSES)
+├── environment.json               # bootstrap + profile environment snapshot
 ├── logs/
-│   ├── bootstrap-env.log
-│   ├── validate-traces.log
-│   ├── profile.log
-│   ├── simulate.log
-│   ├── report.log
-│   └── verify-bundle.log
+│   ├── profile-stage.log
+│   ├── profile-inspect-model.log
+│   ├── profile-prefill.log
+│   ├── profile-decode.log
+│   ├── profile-pcie.log
+│   ├── profile-reducer.log
+│   └── <point-id>.{worker-spec.json,worker-result.json,stdout.log,stderr.log}
 ├── raw/
-│   ├── prefill_events.csv         # (model_id, chunk_size, seq_len, layer_idx, us)
-│   ├── decode_events.csv          # (model_id, block_size, seq_len, layer_idx, attention_us, reduction_us)
-│   └── pcie_events.csv            # (model_id, block_size, kv_bytes, transfer_only_us, overlapped_us)
+│   ├── trace_inspection.json
+│   ├── validation_errors.csv      # only when LDPC validation fails
+│   ├── prefill_events.csv
+│   ├── prefill_events_status.csv
+│   ├── decode_events.csv
+│   ├── decode_events_status.csv
+│   ├── pcie_events.csv
+│   └── pcie_events_status.csv
 ├── derived/
-│   ├── model_constants.csv        # (model_id, hidden_size, num_heads, num_layers)
-│   ├── prefill_summary.csv        # (model_id, chunk_size, seq_len, max_us, mean_us)
-│   ├── decode_summary.csv         # (model_id, block_size, seq_len, attention_us, reduction_us)
-│   ├── pcie_summary.csv           # (model_id, block_size, kv_bytes, exposed_us, fully_hidden_us)
-│   └── simulation_results.csv     # (model_id, seq_len, trace_name, ttft_ms, tpot_ms_vram, tpot_ms_pcie_async)
+│   ├── normalized_ldpc_trace.csv
+│   ├── model_constants.csv
+│   ├── prefill_summary.csv
+│   ├── decode_summary.csv
+│   ├── pcie_summary.csv
+│   ├── simulation_inputs.csv
+│   ├── ran_inference_profiling_results.csv     # includes `trace_sha256`, TTFT, TPOT, and VRAM runway metrics
+│   └── schedule_timeline.csv
 ├── checksums/
-│   └── checksums.json             # {filename: sha256_hex, ...}
+│   └── sha256sums.txt             # textual sha256 manifest with run-root relative paths
 ├── plots/
-│   ├── prefill_time_vs_seq_length.png
-│   ├── decode_time_vs_kv_length.png
-│   ├── pcie_overlap_fraction.png
-│   ├── ttft_vs_model_size.png
-│   └── tpot_vs_trace_load.png
-└── report.md                      # Executive summary and recommendations
+│   ├── 01_ran_trace_interleaving.png
+│   ├── 01_ran_trace_interleaving_interactive.html
+│   ├── 02_prefill_safety_boundary.png
+│   ├── 03_prefill_vram_composition.png
+│   ├── 04_ttft_vs_runway.png
+│   ├── 05_decode_tpot_degradation.png
+│   ├── 06_operation_level_microarchitecture_summary.png
+│   ├── revised_01_ran_trace_interleaving.png          # revised experiment only
+│   ├── revised_01_ran_trace_interleaving_interactive.html
+│   ├── revised_02_prefill_safety_boundary.png
+│   ├── revised_03_prefill_vram_composition.png
+│   ├── revised_04_ttft_vs_runway.png
+│   ├── revised_05_decode_tpot_degradation.png
+│   ├── revised_06_operation_level_microarchitecture_summary.png
+│   └── revised_07_hardware_utilization_profiling.png
+│   └── revised_08_decode_memory_consumption.png
+├── telemetry/
+│   └── telemetry.jsonl                                # revised experiment only
+└── ran_inference_profiling_report.md                      # Executive summary and recommendations
 ```
 
 ## Status Taxonomy
 
-The `run_manifest.json` captures pipeline progress via stage status values:
+The project uses a canonical manifest schema and final status taxonomy defined in `inference_profile.manifests.FINAL_STATUSES`.
 
-| Status | Meaning |
-|--------|---------|
-| `pending` | Stage not yet started |
-| `running` | Stage in progress |
-| `success` | Stage completed successfully |
-| `failed` | Stage failed; see `logs/<stage>.log` |
+Run-level `final_status` values (as implemented):
 
-**Run-level status** in manifest:
-| Status | Meaning |
-|--------|---------|
-| `running` | Pipeline in progress |
-| `success` | All stages completed successfully |
-| `failed` | One or more stages failed |
-| `fetch_failed` | Remote run succeeded but local verification failed (checksum/completeness) |
+- `bootstrap_failed`
+- `validation_failed`
+- `profile_oom`
+- `profile_failed`
+- `simulate_failed`
+- `report_failed`
+- `ssh_failed`
+- `fetch_failed`
+- `success`
+
+Per-stage progress is recorded under the `stages` object in the manifest. Each stage entry contains `latest_status`, `updated_at`, and a `history` list with timestamped status entries. Stages that have never run are absent from the manifest rather than being encoded as `pending` or `running`.
 
 ## Resume Rules
 
@@ -349,7 +411,7 @@ When using `--resume-from <stage>`:
 
 1. **All prior stages** (if marked successful in manifest) are **skipped**
 2. **Starting stage and all later stages** are **re-executed**
-3. If a prior stage shows `failed` status, the run is **rejected** with an error
+3. If a prior stage is missing or does not have `latest_status == success`, the resume request is **rejected** with an error
 4. Manifests are **updated in-place** to avoid re-writing earlier stages
 
 **Use case**: If `profile` stage times out, retry with:
@@ -362,12 +424,12 @@ python -m inference_profile.cli run-all \
 
 ## Checksum Verification Flow
 
-1. After `report` stage completes, SHA256 checksums are computed for all artifact files
+1. After `report` stage completes, a textual SHA256 manifest is written at `checksums/sha256sums.txt` containing lines of the form: `<hexsum>  <relative/path/to/file>`
 2. During `verify-bundle` stage:
    - Completeness check: All required files present?
-   - Checksum check: All files match stored SHA256s?
-3. If verification succeeds: manifest status = `success`
-4. If verification fails: manifest status = `fetch_failed`, all files preserved for debugging
+   - Checksum check: All required files and fetched `logs/` artifacts match stored SHA256s?
+3. If verification succeeds: manifest final_status set to `success`
+4. If verification fails after fetch: `verify-bundle` reports `fetch_failed`, the fetched bundle is preserved for debugging, and the fetched `run_manifest.json` is left unchanged
 
 **To re-verify** an existing run bundle locally:
 ```bash
@@ -381,7 +443,7 @@ python -m inference_profile.cli verify-bundle --run-root runs/exp-001
 | Metric | Units | Meaning |
 |--------|-------|---------|
 | `us` | microseconds | Wall-clock time per CUDA event (kernel execution) |
-| `ttft_ms` | milliseconds | Time-to-First-Token = prefill latency for entire prompt |
+| `ttft_ms` | milliseconds | Time-to-First-Token = latency from first prefill dispatch to prefill completion (ms) |
 | `tpot_ms_vram` | milliseconds | Time-Per-Output-Token = decode latency (VRAM-bound estimate) |
 | `tpot_ms_pcie_async` | milliseconds | Time-Per-Output-Token = decode latency (async PCIe overlap model) |
 
@@ -389,9 +451,10 @@ python -m inference_profile.cli verify-bundle --run-root runs/exp-001
 
 | Metric | Meaning |
 |--------|---------|
-| `survival_vram_bytes` | Peak KV-cache footprint at decoder input (bytes) |
-| `decode_runway_bytes` | Maximum KV bytes that fit in GPU memory before OOM |
-| `kv_bytes_per_token` | Incremental KV-cache growth per output token |
+| `survival_vram_bytes` | Remaining VRAM headroom after weights and the larger of prefill/decode workspace + parked activations (bytes) |
+| `decode_runway_bytes` | Remaining decode-time VRAM headroom after weights, the bulk KV cache accumulated by prefill, and decode workspace + parked activations (bytes) |
+| `decode_runway_tokens` | Additional decode tokens that could still fit after prefill, given the remaining decode-time VRAM headroom and the KV-cache bytes per token |
+| `kv_bytes_per_token_all_layers` | Incremental KV-cache growth per output token aggregated across all decoder layers (bytes) |
 
 ### Profiling Breakdown (Decode)
 
@@ -411,7 +474,8 @@ python -m inference_profile.cli verify-bundle --run-root runs/exp-001
 
 This package intentionally uses `sshpass` for remote SSH authentication **because the user request explicitly requires it**. 
 
-- The password is **stored in a file** (`.ssh_pass`) with restricted read permissions (`600`)
+- The password is **stored in a local file** (`.ssh_pass`) and the wrapper requires mode `600`
+- SSH host key verification remains enabled, so the remote host must already be trusted in `~/.ssh/known_hosts`
 - The password file path is **never logged** (script uses `sed` to redact it from debug output)
 - `--dry-run` prints redacted commands to allow inspection without exposing secrets
 
@@ -426,16 +490,16 @@ Reduce the sweep matrix:
 bash scripts/deploy_and_run_remote.sh \
   --stage all \
   --run-id quick-test \
-  --models opt-125m \
-  --chunk-sizes 32 \
-  --sequence-lengths 128 256
+  --models facebook/opt-125m \
+  --chunk-sizes 64 \
+  --sequence-lengths 1024 2048
 ```
 
 ### Checksum Verification Fails After Fetch
 
 Check that:
 1. All files were fetched from remote (verify file counts in `runs/<run_id>/`)
-2. Remote `.ssh_pass` permission is correct (600)
+2. Local `.ssh_pass` permission is correct (600)
 3. Re-attempt fetch: `bash scripts/deploy_and_run_remote.sh --stage fetch --run-id <run_id>`
 
 ### GPU Out of Memory During Profile Stage
@@ -470,7 +534,7 @@ pytest tests/gpu -v
 pytest tests/ -v
 ```
 
-**All tests passing**: 117 unit + integration tests (GPU tests require CUDA hardware)
+Run the targeted suites you need locally; GPU smoke tests require CUDA hardware.
 
 ## References
 
@@ -481,4 +545,3 @@ pytest tests/ -v
 ## License
 
 Internal dissertation project. Not for public distribution.
-

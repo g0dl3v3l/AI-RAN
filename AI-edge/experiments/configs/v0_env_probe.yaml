@@ -8,7 +8,7 @@ workload:
   prompt: Respond with the exact text 'smoke ok'.
   temperature: 0.0
   max_tokens: 64
-  timeout_s: 30.0
+  timeout_s: 60.0
 
 preemption_policy:
   mode: auto
@@ -57,9 +57,9 @@ probe_options:
     control_binary: nvidia-cuda-mps-control
     control_pipe_path: /tmp/nvidia-mps/control
   runtime:
-    timeout_s: 180.0
+    timeout_s: 600.0
   preemption:
-    timeout_s: 180.0
+    timeout_s: 1200.0
     checkpoint_name: ai-edge-v0-criu-checkpoint
     criu_config_mode: cdi_restore_compat
     criu_config_allow_sudo: true

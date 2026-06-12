@@ -1,0 +1,2 @@
+model_id,sequence_length,block_size,decode_max_gemv_us,attention_fetch_compute_us,reduction_overhead_us,decode_workspace_bytes,decode_parked_activation_bytes
+facebook/opt-125m,1024,64,145.4080045223236,1903.385591506958,766.1888003349304,45056,1536

@@ -1,0 +1,10 @@
+[2026-04-15T13:52:45Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-vram-sm-8 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:52:52Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-pcie_async-sm-8 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:52:59Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-vram-sm-16 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:53:06Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-pcie_async-sm-16 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:53:13Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-vram-sm-24 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:53:20Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-pcie_async-sm-24 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:53:27Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-vram-sm-32 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:53:34Z] decode-facebook-opt-2-7b-seq-1024-block-64-mode-pcie_async-sm-32 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:53:41Z] decode-facebook-opt-2-7b-seq-1024-block-128-mode-vram-sm-8 status=success raw_rows=40 failure_kind=-
+[2026-04-15T13:53:47Z] decode-facebook-opt-2-7b-seq-1024-block-128-mode-pcie_async-sm-8 status=success raw_rows=40 failure_kind=-

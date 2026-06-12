@@ -18,6 +18,7 @@ NORMALIZED_TRACE_HEADERS = (
     "sm_utilization",
     "slot_duration_ms",
     "source_schema",
+    "sm_count",
 )
 VALIDATION_ERROR_HEADERS = ("trace_name", "error_code", "message")
 
@@ -135,25 +136,36 @@ def normalize_primary_trace(
     normalized_rows: list[dict[str, Any]] = []
     time_values_ms: list[float] = []
     sm_utilization_values: list[float] = []
+    sm_count_values: list[int] = []
     source_schema: str | None = None
     time_column: str | None = None
 
     if not issues:
-        if read_result.header == PRIMARY_SCHEMA_A_HEADERS:
+        if _header_contains_required_columns(
+            read_result.header, PRIMARY_SCHEMA_A_HEADERS
+        ):
             source_schema = SOURCE_SCHEMA_A
             time_column = PRIMARY_SCHEMA_A_HEADERS[0]
             inspection["schema_detected"] = source_schema
             inspection["time_unit_hint"] = "ms"
-            time_values_ms, sm_utilization_values, issues = _parse_schema_a_rows(
-                read_result.rows
+            time_values_ms, sm_utilization_values, sm_count_values, issues = (
+                _parse_schema_a_rows(
+                    read_result.rows,
+                    read_result.header,
+                )
             )
-        elif read_result.header == PRIMARY_SCHEMA_B_HEADERS:
+        elif _header_contains_required_columns(
+            read_result.header, PRIMARY_SCHEMA_B_HEADERS
+        ):
             source_schema = SOURCE_SCHEMA_B
             time_column = PRIMARY_SCHEMA_B_HEADERS[0]
             inspection["schema_detected"] = source_schema
             inspection["time_unit_hint"] = "ns"
-            time_values_ms, sm_utilization_values, issues = _parse_schema_b_rows(
-                read_result.rows
+            time_values_ms, sm_utilization_values, sm_count_values, issues = (
+                _parse_schema_b_rows(
+                    read_result.rows,
+                    read_result.header,
+                )
             )
         else:
             issues.append(
@@ -161,8 +173,8 @@ def normalize_primary_trace(
                     trace_name=PRIMARY_TRACE_NAME,
                     error_code="unsupported_schema",
                     message=(
-                        "Primary ldpc_trace.csv must use exactly one of the supported "
-                        "headers: time_ms,sm_utilization or time_slot_sched_ns,sm_count"
+                        "Primary ldpc_trace.csv must include one of the supported "
+                        "column pairs: time_ms,sm_utilization or time_slot_sched_ns,sm_count"
                     ),
                 )
             )
@@ -187,15 +199,20 @@ def normalize_primary_trace(
         inspection["median_positive_delta_ms"] = median_positive_delta_ms
 
         if not issues:
-            normalized_rows = [
-                {
+            normalized_rows = []
+            for index in range(len(time_values_ms)):
+                row = {
                     "time_ms": time_values_ms[index],
                     "sm_utilization": sm_utilization_values[index],
                     "slot_duration_ms": slot_durations_ms[index],
                     "source_schema": source_schema,
                 }
-                for index in range(len(time_values_ms))
-            ]
+                # carry through sm_count when available from schema B
+                if "sm_count_values" in locals() and sm_count_values:
+                    row["sm_count"] = int(sm_count_values[index])
+                else:
+                    row["sm_count"] = ""
+                normalized_rows.append(row)
             inspection["normalized_row_count"] = len(normalized_rows)
 
     inspection["errors"] = [issue.message for issue in issues]
@@ -264,15 +281,22 @@ def inspect_secondary_trace(path: str | Path) -> dict[str, Any]:
 
 def _parse_schema_a_rows(
     rows: tuple[tuple[int, tuple[str, ...]], ...],
-) -> tuple[list[float], list[float], list[ValidationIssue]]:
+    header: tuple[str, ...],
+) -> tuple[list[float], list[float], list[int], list[ValidationIssue]]:
     issues: list[ValidationIssue] = []
     time_values_ms: list[float] = []
     sm_utilization_values: list[float] = []
+    time_index = header.index("time_ms")
+    sm_utilization_index = header.index("sm_utilization")
 
     for line_number, cells in rows:
-        time_ms = _coerce_float(cells[0], column="time_ms", line_number=line_number)
+        time_ms = _coerce_float(
+            cells[time_index],
+            column="time_ms",
+            line_number=line_number,
+        )
         sm_utilization = _coerce_float(
-            cells[1],
+            cells[sm_utilization_index],
             column="sm_utilization",
             line_number=line_number,
         )
@@ -314,23 +338,31 @@ def _parse_schema_a_rows(
         time_values_ms.append(time_ms)
         sm_utilization_values.append(sm_utilization)
 
-    return time_values_ms, sm_utilization_values, issues
+    # schema A does not provide sm_count; return empty sm_count_values list
+    return time_values_ms, sm_utilization_values, [], issues
 
 
 def _parse_schema_b_rows(
     rows: tuple[tuple[int, tuple[str, ...]], ...],
-) -> tuple[list[float], list[float], list[ValidationIssue]]:
+    header: tuple[str, ...],
+) -> tuple[list[float], list[float], list[int], list[ValidationIssue]]:
     issues: list[ValidationIssue] = []
     time_values_ms: list[float] = []
-    sm_utilization_values: list[float] = []
+    sm_count_values: list[int] = []
+    time_index = header.index("time_slot_sched_ns")
+    sm_count_index = header.index("sm_count")
 
     for line_number, cells in rows:
         time_slot_sched_ns = _coerce_float(
-            cells[0],
+            cells[time_index],
             column="time_slot_sched_ns",
             line_number=line_number,
         )
-        sm_count = _coerce_float(cells[1], column="sm_count", line_number=line_number)
+        sm_count = _coerce_float(
+            cells[sm_count_index],
+            column="sm_count",
+            line_number=line_number,
+        )
         if time_slot_sched_ns is None or sm_count is None:
             issues.append(
                 ValidationIssue(
@@ -380,9 +412,21 @@ def _parse_schema_b_rows(
             )
             continue
         time_values_ms.append(time_slot_sched_ns / 1e6)
-        sm_utilization_values.append(100.0 if sm_count_int > 0 else 0.0)
+        sm_count_values.append(sm_count_int)
 
-    return time_values_ms, sm_utilization_values, issues
+    if issues:
+        return time_values_ms, [], [], issues
+
+    if not sm_count_values:
+        return time_values_ms, [], [], issues
+
+    idle_sm_count_baseline = min(sm_count_values)
+    sm_utilization_values = [
+        0.0 if sm_count == idle_sm_count_baseline else 100.0
+        for sm_count in sm_count_values
+    ]
+
+    return time_values_ms, sm_utilization_values, sm_count_values, issues
 
 
 def _derive_slot_durations_ms(
@@ -669,6 +713,13 @@ def _coerce_float(raw_value: str, *, column: str, line_number: int) -> float | N
     return value
 
 
+def _header_contains_required_columns(
+    header: tuple[str, ...],
+    required_columns: tuple[str, ...],
+) -> bool:
+    return all(column in header for column in required_columns)
+
+
 def _write_normalized_trace(
     path: Path,
     rows: list[dict[str, Any]],
@@ -684,6 +735,7 @@ def _write_normalized_trace(
                     "sm_utilization": _format_number(float(row["sm_utilization"])),
                     "slot_duration_ms": _format_number(float(row["slot_duration_ms"])),
                     "source_schema": str(row["source_schema"]),
+                    "sm_count": str(row.get("sm_count", "")),
                 }
             )
 

@@ -254,6 +254,129 @@ def test_llama_cpp_experiment_owned_container_can_attempt_preemption():
     ]
 
 
+def test_custom_checkpoint_dir_restore_falls_back_to_default_checkpoint_storage():
+    from ai_runtime_experiments.preemption import collect_smoke_preemption
+
+    container_name = "ai-edge-v0-vllm-fixed"
+    checkpoint_dir = "/dev/shm/ai-edge-v0"
+    inspect_command = [
+        "docker",
+        "inspect",
+        "--format",
+        "{{json .Config.Labels}}",
+        container_name,
+    ]
+    checkpoint_command = [
+        "docker",
+        "checkpoint",
+        "create",
+        "--checkpoint-dir",
+        checkpoint_dir,
+        container_name,
+        "cp1",
+    ]
+    start_with_dir_command = [
+        "docker",
+        "start",
+        "--checkpoint-dir",
+        checkpoint_dir,
+        "--checkpoint",
+        "cp1",
+        container_name,
+    ]
+    recover_start_command = ["docker", "start", container_name]
+    fallback_checkpoint_command = [
+        "docker",
+        "checkpoint",
+        "create",
+        container_name,
+        "cp1-default-fallback",
+    ]
+    fallback_start_command = [
+        "docker",
+        "start",
+        "--checkpoint",
+        "cp1-default-fallback",
+        container_name,
+    ]
+    state_command = [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        container_name,
+    ]
+
+    runner = RecordingRunner(
+        {
+            tuple(inspect_command): _result(
+                inspect_command,
+                status=ProbeStatus.OK,
+                stdout=(
+                    '{"ai-edge-experiment":"v0",'
+                    '"ai-edge-component":"vllm-runtime",'
+                    '"ai-edge-run-id":"task-8"}\n'
+                ),
+            ),
+            tuple(checkpoint_command): _result(
+                checkpoint_command,
+                status=ProbeStatus.OK,
+                stdout="cp1\n",
+            ),
+            tuple(start_with_dir_command): _result(
+                start_with_dir_command,
+                status=ProbeStatus.ERROR,
+                returncode=1,
+                stderr="Error response from daemon: custom checkpointdir is not supported\n",
+            ),
+            tuple(recover_start_command): _result(
+                recover_start_command,
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+            tuple(fallback_checkpoint_command): _result(
+                fallback_checkpoint_command,
+                status=ProbeStatus.OK,
+                stdout="cp1-default-fallback\n",
+            ),
+            tuple(fallback_start_command): _result(
+                fallback_start_command,
+                status=ProbeStatus.OK,
+                stdout=container_name + "\n",
+            ),
+            tuple(state_command): _result(
+                state_command,
+                status=ProbeStatus.OK,
+                stdout="running\n",
+            ),
+        }
+    )
+
+    record = collect_smoke_preemption(
+        run_id="task-8",
+        runtime_session=_runtime_session(container_name=container_name),
+        docker_criu_integration=_docker_criu_probe(),
+        runner=runner,
+        checkpoint_name="cp1",
+        checkpoint_dir=checkpoint_dir,
+        post_checkpoint_delay_s=0,
+    )
+
+    assert record["status"] == "ok"
+    assert record["details"]["outcome"] == "restored"
+    assert record["details"]["fallback"]["used"] is True
+    assert record["details"]["fallback"]["original_checkpoint_dir"] == checkpoint_dir
+    assert runner.calls == [
+        inspect_command,
+        checkpoint_command,
+        start_with_dir_command,
+        recover_start_command,
+        fallback_checkpoint_command,
+        fallback_start_command,
+        state_command,
+    ]
+
+
 def test_smoke_preemption_switches_criu_config_before_dump_and_restore_and_restores_original():
     from ai_runtime_experiments.preemption import collect_smoke_preemption
 

@@ -1,0 +1,9 @@
+gpu,run_root,pid,exit_code
+0,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g0-opt125m,2620031,0
+1,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g1-opt350m,2620032,0
+2,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g2-opt13b-c64-256,2620033,0
+3,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g3-opt13b-c512-1024,2620034,0
+4,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g4-opt27b-c64-256,2620036,0
+5,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g5-opt27b-c512-1024,2620037,0
+6,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g6-opt67b-c64-256,2620039,0
+7,/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-020401-g7-opt67b-c512-1024,2620042,0

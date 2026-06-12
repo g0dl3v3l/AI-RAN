@@ -1,0 +1,16 @@
+{
+  "asset_source": "layer_shard",
+  "asset_source_reason": "indexed_layer_shard",
+  "config_filename": "config.json",
+  "index_filename": "pytorch_model.bin.index.json",
+  "layer_index": 15,
+  "layer_prefix": "decoder.layers.15.",
+  "model_id": "facebook/opt-6.7b",
+  "resolved_shard_filenames": [
+    "pytorch_model-00001-of-00002.bin"
+  ],
+  "resolved_shard_paths": [
+    "/mnt/data/dheeraj/.cache/huggingface/hub/models--facebook--opt-6.7b/snapshots/a45aa65bbeb77c1558bc99bedc6779195462dab0/pytorch_model-00001-of-00002.bin"
+  ],
+  "synthetic_layer": null
+}

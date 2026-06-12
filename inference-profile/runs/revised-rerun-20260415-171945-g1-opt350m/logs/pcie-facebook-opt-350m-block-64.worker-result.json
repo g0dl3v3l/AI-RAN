@@ -1,0 +1,29 @@
+{
+  "cuda_cleanup": {
+    "empty_cache_attempted": true,
+    "empty_cache_error": null,
+    "raw_close_error": null,
+    "raw_flush_attempted": true,
+    "raw_flush_error": null,
+    "synchronize_attempted": true,
+    "synchronize_error": null
+  },
+  "error_class": null,
+  "error_message": null,
+  "failure_kind": null,
+  "point_id": "pcie-facebook-opt-350m-block-64",
+  "raw_output_exists": true,
+  "raw_output_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-171945-g1-opt350m/raw/points/pcie/pcie-facebook-opt-350m-block-64.csv",
+  "raw_row_count": 5,
+  "result_payload": {
+    "block_size": 64,
+    "family": "pcie",
+    "model_id": "facebook/opt-350m",
+    "overlap_status": "measured",
+    "row_count": 5
+  },
+  "success": true,
+  "worker_parent_pid": 3693249,
+  "worker_pid": 3790489,
+  "worker_start_method": "spawn"
+}

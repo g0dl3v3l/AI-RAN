@@ -47,3 +47,32 @@ def test_module_help_lists_all_stage_subcommands() -> None:
     assert "Stageable CLI scaffold for remote RAN inference profiling." in result.stdout
     for subcommand in EXPECTED_SUBCOMMANDS:
         assert subcommand in result.stdout
+
+
+def test_run_all_help_lists_experiment_type_and_dry_run_flags() -> None:
+    project_root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [sys.executable, "-m", "inference_profile.cli", "run-all", "--help"],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "--experiment-type" in result.stdout
+    assert "--dry-run" in result.stdout
+
+
+def test_run_all_help_no_longer_marks_run_root_as_required() -> None:
+    project_root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [sys.executable, "-m", "inference_profile.cli", "run-all", "--help"],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "--run-root RUN_ROOT" in result.stdout

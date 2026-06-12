@@ -1,0 +1,388 @@
+Tue Jun  9 18:54:49 UTC 2026
+== wc -l ==
+1071 /tmp/ai-edge-v0-vllm-real/criu_logs/smoke_preemption/01-criu-dump.log
+
+== tail -n 250 ==
+(17.773228) mnt: 		Working on 5280->5253
+(17.773229) mnt: 		Working on 5279->5253
+(17.773230) mnt: 		Working on 5278->5253
+(17.773231) mnt: 		Working on 5277->5253
+(17.773232) mnt: 		Working on 5276->5253
+(17.773233) mnt: 		Working on 5275->5253
+(17.773234) mnt: 		Working on 5274->5253
+(17.773235) mnt: 		Working on 5273->5253
+(17.773236) mnt: 		Working on 5272->5253
+(17.773237) mnt: 		Working on 5271->5253
+(17.773238) mnt: 		Working on 5270->5253
+(17.773239) mnt: 		Working on 5269->5253
+(17.773240) mnt: 		Working on 5268->5253
+(17.773241) mnt: 		Working on 5267->5253
+(17.773242) mnt: 		Working on 5266->5253
+(17.773243) mnt: 		Working on 5265->5255
+(17.773244) mnt: 		Working on 5264->5253
+(17.773245) mnt: 		Working on 5263->5253
+(17.773246) mnt: 		Working on 5262->5253
+(17.773247) mnt: 		Working on 5261->5256
+(17.773248) mnt: 		Working on 5260->5256
+(17.773249) mnt: 		Working on 5259->5258
+(17.773250) mnt: 		Working on 5258->5253
+(17.773251) mnt: 		Working on 5257->5256
+(17.773252) mnt: 		Working on 5256->5253
+(17.773253) mnt: 		Working on 5255->5253
+(17.773254) mnt: 		Working on 5253->5195
+(17.773255) mnt: 	Resorting children of 5253 in mount order
+(17.773270) mnt: 	Resorting children of 5283 in mount order
+(17.773271) mnt: 	Resorting children of 5282 in mount order
+(17.773271) mnt: 	Resorting children of 5281 in mount order
+(17.773272) mnt: 	Resorting children of 5280 in mount order
+(17.773273) mnt: 	Resorting children of 5279 in mount order
+(17.773276) mnt: 	Resorting children of 5278 in mount order
+(17.773277) mnt: 	Resorting children of 5277 in mount order
+(17.773278) mnt: 	Resorting children of 5276 in mount order
+(17.773279) mnt: 	Resorting children of 5275 in mount order
+(17.773279) mnt: 	Resorting children of 5274 in mount order
+(17.773280) mnt: 	Resorting children of 5273 in mount order
+(17.773281) mnt: 	Resorting children of 5272 in mount order
+(17.773282) mnt: 	Resorting children of 5271 in mount order
+(17.773283) mnt: 	Resorting children of 5284 in mount order
+(17.773284) mnt: 	Resorting children of 5270 in mount order
+(17.773284) mnt: 	Resorting children of 5269 in mount order
+(17.773285) mnt: 	Resorting children of 5268 in mount order
+(17.773286) mnt: 	Resorting children of 5267 in mount order
+(17.773287) mnt: 	Resorting children of 5266 in mount order
+(17.773288) mnt: 	Resorting children of 5264 in mount order
+(17.773289) mnt: 	Resorting children of 5263 in mount order
+(17.773289) mnt: 	Resorting children of 5262 in mount order
+(17.773290) mnt: 	Resorting children of 5258 in mount order
+(17.773291) mnt: 	Resorting children of 5259 in mount order
+(17.773292) mnt: 	Resorting children of 5209 in mount order
+(17.773293) mnt: 	Resorting children of 5256 in mount order
+(17.773295) mnt: 	Resorting children of 5288 in mount order
+(17.773296) mnt: 	Resorting children of 5287 in mount order
+(17.773296) mnt: 	Resorting children of 5286 in mount order
+(17.773297) mnt: 	Resorting children of 5285 in mount order
+(17.773298) mnt: 	Resorting children of 5261 in mount order
+(17.773299) mnt: 	Resorting children of 5260 in mount order
+(17.773300) mnt: 	Resorting children of 5257 in mount order
+(17.773300) mnt: 	Resorting children of 5255 in mount order
+(17.773303) mnt: 	Resorting children of 5265 in mount order
+(17.773304) mnt: 	Resorting children of 5289 in mount order
+(17.773305) mnt: 	Resorting children of 5208 in mount order
+(17.773306) mnt: 	Resorting children of 5207 in mount order
+(17.773307) mnt: 	Resorting children of 5206 in mount order
+(17.773308) mnt: 	Resorting children of 5205 in mount order
+(17.773308) mnt: 	Resorting children of 5204 in mount order
+(17.773309) mnt: 	Resorting children of 5203 in mount order
+(17.773310) mnt: 	Resorting children of 5202 in mount order
+(17.773311) mnt: 	Resorting children of 5201 in mount order
+(17.773312) mnt: 	Resorting children of 5200 in mount order
+(17.773313) mnt: 	Resorting children of 5199 in mount order
+(17.773313) mnt: 	Resorting children of 5198 in mount order
+(17.773314) mnt: 	Resorting children of 5197 in mount order
+(17.773315) mnt: 	Resorting children of 5196 in mount order
+(17.773316) mnt: Done:
+(17.773317) mnt: [./](5253->5195)
+(17.773318) mnt:  [./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin](5283->5253)
+(17.773319) mnt:  <--
+(17.773320) mnt:  [./usr/lib/firmware/nvidia/610.43.02/gsp_ga10x.bin](5282->5253)
+(17.773321) mnt:  <--
+(17.773322) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-tileiras.so.610.43.02](5281->5253)
+(17.773323) mnt:  <--
+(17.773324) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.610.43.02](5280->5253)
+(17.773325) mnt:  <--
+(17.773326) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.610.43.02](5279->5253)
+(17.773327) mnt:  <--
+(17.773327) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.610.43.02](5278->5253)
+(17.773328) mnt:  <--
+(17.773329) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.610.43.02](5277->5253)
+(17.773330) mnt:  <--
+(17.773331) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.610.43.02](5276->5253)
+(17.773332) mnt:  <--
+(17.773333) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.610.43.02](5275->5253)
+(17.773333) mnt:  <--
+(17.773334) mnt:  [./usr/lib/x86_64-linux-gnu/libcudadebugger.so.610.43.02](5274->5253)
+(17.773335) mnt:  <--
+(17.773336) mnt:  [./usr/lib/x86_64-linux-gnu/libcuda.so.610.43.02](5273->5253)
+(17.773337) mnt:  <--
+(17.773338) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.610.43.02](5272->5253)
+(17.773339) mnt:  <--
+(17.773340) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-ml.so.610.43.02](5271->5253)
+(17.773343) mnt:  <--
+(17.773343) mnt:  [./run/nvidia-persistenced/socket](5284->5253)
+(17.773344) mnt:  <--
+(17.773345) mnt:  [./usr/bin/nvidia-cuda-mps-server](5270->5253)
+(17.773346) mnt:  <--
+(17.773347) mnt:  [./usr/bin/nvidia-cuda-mps-control](5269->5253)
+(17.773348) mnt:  <--
+(17.773349) mnt:  [./usr/bin/nvidia-persistenced](5268->5253)
+(17.773350) mnt:  <--
+(17.773351) mnt:  [./usr/bin/nvidia-debugdump](5267->5253)
+(17.773352) mnt:  <--
+(17.773352) mnt:  [./usr/bin/nvidia-smi](5266->5253)
+(17.773353) mnt:  <--
+(17.773354) mnt:  [./etc/hosts](5264->5253)
+(17.773355) mnt:  <--
+(17.773356) mnt:  [./etc/hostname](5263->5253)
+(17.773357) mnt:  <--
+(17.773358) mnt:  [./etc/resolv.conf](5262->5253)
+(17.773359) mnt:  <--
+(17.773360) mnt:  [./sys](5258->5253)
+(17.773360) mnt:   [./sys/fs/cgroup](5259->5258)
+(17.773361) mnt:   <--
+(17.773362) mnt:   [./sys/firmware](5209->5258)
+(17.773363) mnt:   <--
+(17.773364) mnt:  <--
+(17.773365) mnt:  [./dev](5256->5253)
+(17.773366) mnt:   [./dev/nvidia0](5288->5256)
+(17.773367) mnt:   <--
+(17.773367) mnt:   [./dev/nvidia-uvm-tools](5287->5256)
+(17.773368) mnt:   <--
+(17.773369) mnt:   [./dev/nvidia-uvm](5286->5256)
+(17.773370) mnt:   <--
+(17.773371) mnt:   [./dev/nvidiactl](5285->5256)
+(17.773372) mnt:   <--
+(17.773373) mnt:   [./dev/shm](5261->5256)
+(17.773374) mnt:   <--
+(17.773374) mnt:   [./dev/mqueue](5260->5256)
+(17.773375) mnt:   <--
+(17.773376) mnt:   [./dev/pts](5257->5256)
+(17.773377) mnt:   <--
+(17.773378) mnt:  <--
+(17.773379) mnt:  [./proc](5255->5253)
+(17.773380) mnt:   [./proc/driver/nvidia](5265->5255)
+(17.773381) mnt:    [./proc/driver/nvidia/gpus/0000:03:00.0](5289->5265)
+(17.773382) mnt:    <--
+(17.773382) mnt:   <--
+(17.773383) mnt:   [./proc/timer_list](5208->5255)
+(17.773384) mnt:   <--
+(17.773385) mnt:   [./proc/scsi](5207->5255)
+(17.773386) mnt:   <--
+(17.773387) mnt:   [./proc/latency_stats](5206->5255)
+(17.773388) mnt:   <--
+(17.773388) mnt:   [./proc/keys](5205->5255)
+(17.773389) mnt:   <--
+(17.773390) mnt:   [./proc/kcore](5204->5255)
+(17.773391) mnt:   <--
+(17.773392) mnt:   [./proc/interrupts](5203->5255)
+(17.773393) mnt:   <--
+(17.773394) mnt:   [./proc/asound](5202->5255)
+(17.773395) mnt:   <--
+(17.773396) mnt:   [./proc/acpi](5201->5255)
+(17.773396) mnt:   <--
+(17.773397) mnt:   [./proc/sysrq-trigger](5200->5255)
+(17.773398) mnt:   <--
+(17.773399) mnt:   [./proc/sys](5199->5255)
+(17.773400) mnt:   <--
+(17.773401) mnt:   [./proc/irq](5198->5255)
+(17.773402) mnt:   <--
+(17.773403) mnt:   [./proc/fs](5197->5255)
+(17.773403) mnt:   <--
+(17.773404) mnt:   [./proc/bus](5196->5255)
+(17.773405) mnt:   <--
+(17.773406) mnt:  <--
+(17.773407) mnt: <--
+(17.773417) mnt: 	The mount 5206 is bind for 5208 (@./proc/latency_stats -> @./proc/timer_list)
+(17.773420) mnt: 	The mount 5205 is bind for 5208 (@./proc/keys -> @./proc/timer_list)
+(17.773421) mnt: 	The mount 5204 is bind for 5208 (@./proc/kcore -> @./proc/timer_list)
+(17.773422) mnt: 	The mount 5203 is bind for 5208 (@./proc/interrupts -> @./proc/timer_list)
+(17.773423) mnt: 	The mount 5256 is bind for 5208 (@./dev -> @./proc/timer_list)
+(17.773425) mnt: 	The mount 5199 is bind for 5200 (@./proc/sys -> @./proc/sysrq-trigger)
+(17.773426) mnt: 	The mount 5198 is bind for 5200 (@./proc/irq -> @./proc/sysrq-trigger)
+(17.773427) mnt: 	The mount 5197 is bind for 5200 (@./proc/fs -> @./proc/sysrq-trigger)
+(17.773428) mnt: 	The mount 5196 is bind for 5200 (@./proc/bus -> @./proc/sysrq-trigger)
+(17.773429) mnt: 	The mount 5255 is bind for 5200 (@./proc -> @./proc/sysrq-trigger)
+(17.773430) mnt: 	The mount 5287 is bind for 5288 (@./dev/nvidia-uvm-tools -> @./dev/nvidia0)
+(17.773431) mnt: 	The mount 5286 is bind for 5288 (@./dev/nvidia-uvm -> @./dev/nvidia0)
+(17.773432) mnt: 	The mount 5285 is bind for 5288 (@./dev/nvidiactl -> @./dev/nvidia0)
+(17.773434) mnt: 	The mount 5282 is bind for 5283 (@./usr/lib/firmware/nvidia/610.43.02/gsp_ga10x.bin -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773435) mnt: 	The mount 5281 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-tileiras.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773438) mnt: 	The mount 5280 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773439) mnt: 	The mount 5279 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773440) mnt: 	The mount 5278 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773441) mnt: 	The mount 5277 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773442) mnt: 	The mount 5276 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773444) mnt: 	The mount 5275 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773445) mnt: 	The mount 5274 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libcudadebugger.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773446) mnt: 	The mount 5273 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libcuda.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773447) mnt: 	The mount 5272 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773448) mnt: 	The mount 5271 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-ml.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773449) mnt: 	The mount 5270 is bind for 5283 (@./usr/bin/nvidia-cuda-mps-server -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773450) mnt: 	The mount 5269 is bind for 5283 (@./usr/bin/nvidia-cuda-mps-control -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773451) mnt: 	The mount 5268 is bind for 5283 (@./usr/bin/nvidia-persistenced -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773452) mnt: 	The mount 5267 is bind for 5283 (@./usr/bin/nvidia-debugdump -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773453) mnt: 	The mount 5266 is bind for 5283 (@./usr/bin/nvidia-smi -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773454) mnt: 	The mount 5264 is bind for 5283 (@./etc/hosts -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773455) mnt: 	The mount 5263 is bind for 5283 (@./etc/hostname -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773456) mnt: 	The mount 5262 is bind for 5283 (@./etc/resolv.conf -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+(17.773460) mnt: Found /dev/null mapping for ./proc/timer_list mountpoint
+(17.773462) mnt: Found /dev/null mapping for ./proc/latency_stats mountpoint
+(17.773463) mnt: Found /dev/null mapping for ./proc/keys mountpoint
+(17.773465) mnt: Found /dev/null mapping for ./proc/kcore mountpoint
+(17.773466) mnt: Found /dev/null mapping for ./proc/interrupts mountpoint
+(17.773478) mnt: Found /etc/hosts mapping for ./etc/hosts mountpoint
+(17.773479) mnt: Found /etc/hostname mapping for ./etc/hostname mountpoint
+(17.773480) mnt: Found /etc/resolv.conf mapping for ./etc/resolv.conf mountpoint
+(17.773483) mnt: Inspecting sharing on 5209 shared_id 0 master_id 0 (@./sys/firmware)
+(17.773485) mnt: Inspecting sharing on 5208 shared_id 0 master_id 0 (@./proc/timer_list)
+(17.773486) mnt: Inspecting sharing on 5207 shared_id 0 master_id 0 (@./proc/scsi)
+(17.773487) mnt: Inspecting sharing on 5206 shared_id 0 master_id 0 (@./proc/latency_stats)
+(17.773488) mnt: Inspecting sharing on 5205 shared_id 0 master_id 0 (@./proc/keys)
+(17.773489) mnt: Inspecting sharing on 5204 shared_id 0 master_id 0 (@./proc/kcore)
+(17.773490) mnt: Inspecting sharing on 5203 shared_id 0 master_id 0 (@./proc/interrupts)
+(17.773491) mnt: Inspecting sharing on 5202 shared_id 0 master_id 0 (@./proc/asound)
+(17.773492) mnt: Inspecting sharing on 5201 shared_id 0 master_id 0 (@./proc/acpi)
+(17.773494) mnt: Inspecting sharing on 5200 shared_id 0 master_id 0 (@./proc/sysrq-trigger)
+(17.773495) mnt: Inspecting sharing on 5199 shared_id 0 master_id 0 (@./proc/sys)
+(17.773496) mnt: Inspecting sharing on 5198 shared_id 0 master_id 0 (@./proc/irq)
+(17.773497) mnt: Inspecting sharing on 5197 shared_id 0 master_id 0 (@./proc/fs)
+(17.773498) mnt: Inspecting sharing on 5196 shared_id 0 master_id 0 (@./proc/bus)
+(17.773499) mnt: Inspecting sharing on 5289 shared_id 0 master_id 13 (@./proc/driver/nvidia/gpus/0000:03:00.0)
+(17.773501) Error (criu/mount.c:1092): mnt: Mount 5289 ./proc/driver/nvidia/gpus/0000:03:00.0 (master_id: 13 shared_id: 0) has unreachable sharing. Try --enable-external-masters.
+(17.773517) net: Unlock network
+(17.773519) Running network-unlock scripts
+(17.773521) 	RPC
+(17.876844) cuda_plugin: finished cuda_plugin stage 0 err -1
+(17.990878) cuda_plugin: resuming devices on pid 52469
+(17.990910) cuda_plugin: Restore thread pid 52567 found for real pid 52469
+(18.180057) cuda_plugin: resuming devices on pid 52769
+(18.180132) cuda_plugin: Restore thread pid 52841 found for real pid 52769
+(23.559333) Unfreezing tasks into 1
+(23.559353) 	Unseizing 52469 into 1
+(23.560144) 	Unseizing 52768 into 1
+(23.560156) 	Unseizing 52769 into 1
+(23.561016) 	Unseizing 53243 into 1
+(23.561024) 	Unseizing 53244 into 1
+(23.561484) Error (criu/cr-dump.c:2128): Dumping FAILED.
+
+== grep key failure lines ==
+8:(00.000204) Hugetlb size 2 Mb is supported but cannot get dev's number
+9:(00.000221) Hugetlb size 1024 Mb is supported but cannot get dev's number
+24:(00.002258) Plugin "cuda_plugin" (version 512 hooks 13)
+28:(00.006484) cuda_plugin: initialized: cuda_plugin stage 0
+49:(00.006695) cg-prop: 	Property "memory.oom_control"
+81:(00.006742) cg-prop: Parsing controller "devices"
+83:(00.006744) cg-prop: 	Property "devices.list"
+87:(00.006799) Add ipc ns 3 pid 53231
+99:(00.006885) Warn  (criu/seize.c:531): unfreezing cgroup for plugin compatibility
+100:(00.008372) plugin: `cuda_plugin' hook 10 -> 0x7672b185d789
+101:(00.058939) cuda_plugin: pausing devices on pid 52469
+307:(00.110366) plugin: `cuda_plugin' hook 10 -> 0x7672b185d789
+308:(00.127726) cuda_plugin: cuda-checkpoint output ===>
+311:<=== cuda-checkpoint output
+312:(00.127749) Error (cuda_plugin.c:221): cuda_plugin: Failed to launch cuda-checkpoint to retrieve restore tid: Could not find restore thread for process ID 52768
+314:(00.127759) cuda_plugin: no need to pause devices on pid 52768
+320:(00.128214) plugin: `cuda_plugin' hook 10 -> 0x7672b185d789
+321:(00.180888) cuda_plugin: pausing devices on pid 52769
+673:(00.233176) plugin: `cuda_plugin' hook 10 -> 0x7672b185d789
+674:(00.257897) cuda_plugin: cuda-checkpoint output ===>
+677:<=== cuda-checkpoint output
+678:(00.257932) Error (cuda_plugin.c:221): cuda_plugin: Failed to launch cuda-checkpoint to retrieve restore tid: Could not find restore thread for process ID 53243
+680:(00.257937) cuda_plugin: no need to pause devices on pid 53243
+684:(00.258307) plugin: `cuda_plugin' hook 10 -> 0x7672b185d789
+685:(00.276500) cuda_plugin: cuda-checkpoint output ===>
+688:<=== cuda-checkpoint output
+689:(00.276535) Error (cuda_plugin.c:221): cuda_plugin: Failed to launch cuda-checkpoint to retrieve restore tid: Could not find restore thread for process ID 53244
+691:(00.276540) cuda_plugin: no need to pause devices on pid 53244
+703:(00.280566) plugin: `cuda_plugin' hook 11 -> 0x7672b185d4d9
+704:(00.306105) cuda_plugin: Checkpointing CUDA devices on pid 52469 restore_tid 52567
+705:(00.350619) plugin: `cuda_plugin' hook 11 -> 0x7672b185d4d9
+706:(00.378035) cuda_plugin: cuda-checkpoint output ===>
+709:<=== cuda-checkpoint output
+710:(00.378075) Error (cuda_plugin.c:221): cuda_plugin: Failed to launch cuda-checkpoint to retrieve restore tid: Could not find restore thread for process ID 52768
+712:(00.378080) cuda_plugin: No need to checkpoint devices on pid 52768
+713:(00.378084) plugin: `cuda_plugin' hook 11 -> 0x7672b185d4d9
+714:(00.400277) cuda_plugin: Checkpointing CUDA devices on pid 52769 restore_tid 52841
+715:(17.545609) plugin: `cuda_plugin' hook 11 -> 0x7672b185d4d9
+716:(17.649940) cuda_plugin: cuda-checkpoint output ===>
+719:<=== cuda-checkpoint output
+720:(17.649966) Error (cuda_plugin.c:221): cuda_plugin: Failed to launch cuda-checkpoint to retrieve restore tid: Could not find restore thread for process ID 53243
+722:(17.649969) cuda_plugin: No need to checkpoint devices on pid 53243
+723:(17.649971) plugin: `cuda_plugin' hook 11 -> 0x7672b185d4d9
+724:(17.762293) cuda_plugin: cuda-checkpoint output ===>
+727:<=== cuda-checkpoint output
+728:(17.762321) Error (cuda_plugin.c:221): cuda_plugin: Failed to launch cuda-checkpoint to retrieve restore tid: Could not find restore thread for process ID 53244
+730:(17.762324) cuda_plugin: No need to checkpoint devices on pid 53244
+735:(17.762397) Will take ipc namespace in the image
+736:(17.762398) Add ipc ns 11 pid 52469
+747:(17.772798) 	type overlay source overlay mnt_id 5253 s_dev 0x5e / @ ./ flags 0x200000 options lowerdir=/var/lib/docker/overlay2/l/HCJNDF4M4Q73XHTQQVODAH3PG6:/var/lib/docker/overlay2/l/OGRW3O4TGC7ZRZJFUVMO7V4JDK:/var/lib/docker/overlay2/l/QQQ3MCTTFSK7PEECW2Z4LKXKAH:/var/lib/docker/overlay2/l/OZDO43JOWR6BGIERRDXI6BAVJT:/var/lib/docker/overlay2/l/6ARBMXCQTTDKZDTLABGPMA5FID:/var/lib/docker/overlay2/l/SETS4CBMAVVCYXK4Q7B6TZM5EW:/var/lib/docker/overlay2/l/57JNVVYJVYTBSH3HE3LUCJJFNF:/var/lib/docker/overlay2/l/CZ5YF6M42QEQMHPMTYDV2DJWQF:/var/lib/docker/overlay2/l/QLKLVHSXH2BC5O2ZFMY3WDJO3R:/var/lib/docker/overlay2/l/YHXYRZLCTMBP4H4URGCKL6YUDL:/var/lib/docker/overlay2/l/IT63ZK7Z6Q4ULAFH3MCGIDAMTJ:/var/lib/docker/overlay2/l/GDX2DB5AGOD6YC7CZ6JMA34SQQ:/var/lib/docker/overlay2/l/FDMVTD4E3FIOPP2AMJP3TDTP2M:/var/lib/docker/overlay2/l/BJCXOQR4PM2HQC7BUQEDBGEMDP:/var/lib/docker/overlay2/l/G44AU4GDBQSBNSHYBMN6KLGFK6:/var/lib/docker/overlay2/l/BCWOZX4I6K452WW63R725GVESQ:/var/lib/docker/overlay2/l/222QIMXMUMEMYB64MFAU7RTWZC:/var/lib/docker/overlay2/l/P4THPRFGVC4N7GFN3TUNJXPGWH:/var/lib/docker/overlay2/l/GUCBX67KEBBZK67STM7LIVXZMB:/var/lib/docker/overlay2/l/2PID6GBCDOU4VKPUWVLOMRNVNW:/var/lib/docker/overlay2/l/BCLCDHQK6PGF2AIPPLNLUUIQ4J:/var/lib/docker/overlay2/l/QT2LAKCON57YR6GRTY32IFJPGT:/var/lib/docker/overlay2/l/NCPODSXSUHYRLXW23LP2VV44NY:/var/lib/docker/overlay2/l/Y5IS4OY445U7DDOMRCJPWNKKDP:/var/lib/docker/overlay2/l/NU5ZJ6FAPW2QZP5FEGXFNBAAOS:/var/lib/docker/overlay2/l/2PJM2DTOHVBT4QIODQF3GAYHEW:/var/lib/docker/overlay2/l/2P6G7X6MVBQ4VW4HVADZ5NENHW:/var/lib/docker/overlay2/l/7OPVOKRLE6OZRT4WMUOBJ7NWGZ:/var/lib/docker/overlay2/l/THCUBJGOY2KOSCOYRO3YVHGJVW:/var/lib/docker/overlay2/l/TBDL3KGIOCLCOVC53T3IGZSETW:/var/lib/docker/overlay2/l/NRLEKFJKLIHGSMWLOTLBJYIEHS:/var/lib/docker/overlay2/l/4ADVHYRC7R72HTC3A2HJ5ZS5OV,upperdir=/var/lib/docker/overlay2/9e4f95fb37588d8e39cc76e207d2c715d1604b713aed4b9b778e47c43657a3f7/diff,workdir=/var/lib/docker/overlay2/9e4f95fb37588d8e39cc76e207d2c715d1604b713aed4b9b778e47c43657a3f7/work,nouserxattr
+758:(17.772931) 	type tmpfs source tmpfs mnt_id 5265 s_dev 0x6c / @ ./proc/driver/nvidia flags 0x20000e options mode=555,inode64
+759:(17.772936) 	type ext4 source /dev/sda2 mnt_id 5266 s_dev 0x800002 /usr/bin/nvidia-smi @ ./usr/bin/nvidia-smi flags 0x280007 options 
+760:(17.772940) 	type ext4 source /dev/sda2 mnt_id 5267 s_dev 0x800002 /usr/bin/nvidia-debugdump @ ./usr/bin/nvidia-debugdump flags 0x280007 options 
+761:(17.772944) 	type ext4 source /dev/sda2 mnt_id 5268 s_dev 0x800002 /usr/bin/nvidia-persistenced @ ./usr/bin/nvidia-persistenced flags 0x280007 options 
+762:(17.772955) 	type ext4 source /dev/sda2 mnt_id 5269 s_dev 0x800002 /usr/bin/nvidia-cuda-mps-control @ ./usr/bin/nvidia-cuda-mps-control flags 0x280007 options 
+763:(17.772959) 	type ext4 source /dev/sda2 mnt_id 5270 s_dev 0x800002 /usr/bin/nvidia-cuda-mps-server @ ./usr/bin/nvidia-cuda-mps-server flags 0x280007 options 
+764:(17.772965) 	type ext4 source /dev/sda2 mnt_id 5271 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-ml.so.610.43.02 flags 0x280007 options 
+765:(17.772985) 	type ext4 source /dev/sda2 mnt_id 5272 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.610.43.02 flags 0x280007 options 
+766:(17.772988) 	type ext4 source /dev/sda2 mnt_id 5273 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libcuda.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libcuda.so.610.43.02 flags 0x280007 options 
+767:(17.772992) 	type ext4 source /dev/sda2 mnt_id 5274 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libcudadebugger.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libcudadebugger.so.610.43.02 flags 0x280007 options 
+768:(17.772996) 	type ext4 source /dev/sda2 mnt_id 5275 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.610.43.02 flags 0x280007 options 
+769:(17.773000) 	type ext4 source /dev/sda2 mnt_id 5276 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.610.43.02 flags 0x280007 options 
+770:(17.773020) 	type ext4 source /dev/sda2 mnt_id 5277 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.610.43.02 flags 0x280007 options 
+771:(17.773026) 	type ext4 source /dev/sda2 mnt_id 5278 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.610.43.02 flags 0x280007 options 
+772:(17.773030) 	type ext4 source /dev/sda2 mnt_id 5279 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.610.43.02 flags 0x280007 options 
+773:(17.773034) 	type ext4 source /dev/sda2 mnt_id 5280 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.610.43.02 flags 0x280007 options 
+774:(17.773038) 	type ext4 source /dev/sda2 mnt_id 5281 s_dev 0x800002 /usr/lib/x86_64-linux-gnu/libnvidia-tileiras.so.610.43.02 @ ./usr/lib/x86_64-linux-gnu/libnvidia-tileiras.so.610.43.02 flags 0x280007 options 
+775:(17.773041) 	type ext4 source /dev/sda2 mnt_id 5282 s_dev 0x800002 /usr/lib/firmware/nvidia/610.43.02/gsp_ga10x.bin @ ./usr/lib/firmware/nvidia/610.43.02/gsp_ga10x.bin flags 0x280007 options 
+776:(17.773063) 	type ext4 source /dev/sda2 mnt_id 5283 s_dev 0x800002 /usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin @ ./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin flags 0x280007 options 
+777:(17.773070) 	type tmpfs source tmpfs mnt_id 5284 s_dev 0x1b /nvidia-persistenced/socket @ ./run/nvidia-persistenced/socket flags 0x28000e options size=13185972k,mode=755,inode64
+778:(17.773075) 	type devtmpfs source udev mnt_id 5285 s_dev 0x6 /nvidiactl @ ./dev/nvidiactl flags 0x28000b options size=65887464k,nr_inodes=16471866,mode=755,inode64
+779:(17.773079) 	type devtmpfs source udev mnt_id 5286 s_dev 0x6 /nvidia-uvm @ ./dev/nvidia-uvm flags 0x28000b options size=65887464k,nr_inodes=16471866,mode=755,inode64
+780:(17.773084) 	type devtmpfs source udev mnt_id 5287 s_dev 0x6 /nvidia-uvm-tools @ ./dev/nvidia-uvm-tools flags 0x28000b options size=65887464k,nr_inodes=16471866,mode=755,inode64
+781:(17.773107) 	type devtmpfs source udev mnt_id 5288 s_dev 0x6 /nvidia0 @ ./dev/nvidia0 flags 0x28000b options size=65887464k,nr_inodes=16471866,mode=755,inode64
+782:(17.773112) 	type proc source proc mnt_id 5289 s_dev 0x19 /driver/nvidia/gpus/0000:03:00.0 @ ./proc/driver/nvidia/gpus/0000:03:00.0 flags 0x28000f options 
+901:(17.773318) mnt:  [./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin](5283->5253)
+903:(17.773320) mnt:  [./usr/lib/firmware/nvidia/610.43.02/gsp_ga10x.bin](5282->5253)
+905:(17.773322) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-tileiras.so.610.43.02](5281->5253)
+907:(17.773324) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.610.43.02](5280->5253)
+909:(17.773326) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.610.43.02](5279->5253)
+911:(17.773327) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.610.43.02](5278->5253)
+913:(17.773329) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.610.43.02](5277->5253)
+915:(17.773331) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.610.43.02](5276->5253)
+917:(17.773333) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.610.43.02](5275->5253)
+919:(17.773334) mnt:  [./usr/lib/x86_64-linux-gnu/libcudadebugger.so.610.43.02](5274->5253)
+921:(17.773336) mnt:  [./usr/lib/x86_64-linux-gnu/libcuda.so.610.43.02](5273->5253)
+923:(17.773338) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.610.43.02](5272->5253)
+925:(17.773340) mnt:  [./usr/lib/x86_64-linux-gnu/libnvidia-ml.so.610.43.02](5271->5253)
+927:(17.773343) mnt:  [./run/nvidia-persistenced/socket](5284->5253)
+929:(17.773345) mnt:  [./usr/bin/nvidia-cuda-mps-server](5270->5253)
+931:(17.773347) mnt:  [./usr/bin/nvidia-cuda-mps-control](5269->5253)
+933:(17.773349) mnt:  [./usr/bin/nvidia-persistenced](5268->5253)
+935:(17.773351) mnt:  [./usr/bin/nvidia-debugdump](5267->5253)
+937:(17.773352) mnt:  [./usr/bin/nvidia-smi](5266->5253)
+952:(17.773366) mnt:   [./dev/nvidia0](5288->5256)
+954:(17.773367) mnt:   [./dev/nvidia-uvm-tools](5287->5256)
+956:(17.773369) mnt:   [./dev/nvidia-uvm](5286->5256)
+958:(17.773371) mnt:   [./dev/nvidiactl](5285->5256)
+968:(17.773380) mnt:   [./proc/driver/nvidia](5265->5255)
+969:(17.773381) mnt:    [./proc/driver/nvidia/gpus/0000:03:00.0](5289->5265)
+1010:(17.773430) mnt: 	The mount 5287 is bind for 5288 (@./dev/nvidia-uvm-tools -> @./dev/nvidia0)
+1011:(17.773431) mnt: 	The mount 5286 is bind for 5288 (@./dev/nvidia-uvm -> @./dev/nvidia0)
+1012:(17.773432) mnt: 	The mount 5285 is bind for 5288 (@./dev/nvidiactl -> @./dev/nvidia0)
+1013:(17.773434) mnt: 	The mount 5282 is bind for 5283 (@./usr/lib/firmware/nvidia/610.43.02/gsp_ga10x.bin -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1014:(17.773435) mnt: 	The mount 5281 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-tileiras.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1015:(17.773438) mnt: 	The mount 5280 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1016:(17.773439) mnt: 	The mount 5279 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1017:(17.773440) mnt: 	The mount 5278 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1018:(17.773441) mnt: 	The mount 5277 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1019:(17.773442) mnt: 	The mount 5276 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1020:(17.773444) mnt: 	The mount 5275 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1021:(17.773445) mnt: 	The mount 5274 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libcudadebugger.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1022:(17.773446) mnt: 	The mount 5273 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libcuda.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1023:(17.773447) mnt: 	The mount 5272 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1024:(17.773448) mnt: 	The mount 5271 is bind for 5283 (@./usr/lib/x86_64-linux-gnu/libnvidia-ml.so.610.43.02 -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1025:(17.773449) mnt: 	The mount 5270 is bind for 5283 (@./usr/bin/nvidia-cuda-mps-server -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1026:(17.773450) mnt: 	The mount 5269 is bind for 5283 (@./usr/bin/nvidia-cuda-mps-control -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1027:(17.773451) mnt: 	The mount 5268 is bind for 5283 (@./usr/bin/nvidia-persistenced -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1028:(17.773452) mnt: 	The mount 5267 is bind for 5283 (@./usr/bin/nvidia-debugdump -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1029:(17.773453) mnt: 	The mount 5266 is bind for 5283 (@./usr/bin/nvidia-smi -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1030:(17.773454) mnt: 	The mount 5264 is bind for 5283 (@./etc/hosts -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1031:(17.773455) mnt: 	The mount 5263 is bind for 5283 (@./etc/hostname -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1032:(17.773456) mnt: 	The mount 5262 is bind for 5283 (@./etc/resolv.conf -> @./usr/lib/firmware/nvidia/610.43.02/gsp_tu10x.bin)
+1055:(17.773499) mnt: Inspecting sharing on 5289 shared_id 0 master_id 13 (@./proc/driver/nvidia/gpus/0000:03:00.0)
+1056:(17.773501) Error (criu/mount.c:1092): mnt: Mount 5289 ./proc/driver/nvidia/gpus/0000:03:00.0 (master_id: 13 shared_id: 0) has unreachable sharing. Try --enable-external-masters.
+1060:(17.876844) cuda_plugin: finished cuda_plugin stage 0 err -1
+1061:(17.990878) cuda_plugin: resuming devices on pid 52469
+1062:(17.990910) cuda_plugin: Restore thread pid 52567 found for real pid 52469
+1063:(18.180057) cuda_plugin: resuming devices on pid 52769
+1064:(18.180132) cuda_plugin: Restore thread pid 52841 found for real pid 52769
+1071:(23.561484) Error (criu/cr-dump.c:2128): Dumping FAILED.

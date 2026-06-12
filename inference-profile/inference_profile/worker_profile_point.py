@@ -13,6 +13,7 @@ from tempfile import NamedTemporaryFile
 import traceback
 from typing import Any, cast
 
+from inference_profile import experiments
 from inference_profile.paths import bundle_paths_from_run_root
 
 _WORKER_STDOUT_SUFFIX = ".stdout.log"
@@ -198,6 +199,7 @@ def _execute_worker_spec(spec_path: Path) -> tuple[dict[str, Any], int]:
         raw_output_path = _optional_string(spec.get("raw_output_path"))
         raw_fieldnames = _normalize_fieldnames(spec.get("raw_fieldnames"))
         raw_writer = RawCsvWriter(raw_output_path, fieldnames=raw_fieldnames)
+        _configure_mps_partition(spec)
         worker_callable = _load_worker_callable(callable_path)
         result_payload = _normalize_result_payload(worker_callable(spec, raw_writer))
         success = True
@@ -339,6 +341,33 @@ def _build_parent_payload(
     if failure_kind == "cuda_oom":
         base_payload["public_status"] = "profile_oom"
     return base_payload
+
+
+def _configure_mps_partition(spec: Mapping[str, Any]) -> None:
+    sm_ai_partition = spec.get("sm_ai_partition")
+    if sm_ai_partition is None:
+        return
+    resolved_partition = int(sm_ai_partition)
+    if resolved_partition <= 0 or resolved_partition > 100:
+        raise ValueError("sm_ai_partition must be between 1 and 100")
+
+    experiment_type = str(spec.get("experiment_type") or "")
+    if (
+        experiment_type == experiments.RAN_DGXSPARK_V1_EXPERIMENT_TYPE
+        and resolved_partition <= experiments.RAN_DGXSPARK_V1_SM_AI_CAP
+    ):
+        percentage_partition = int(
+            round(
+                (resolved_partition / experiments.RAN_DGXSPARK_V1_SM_AI_CAP)
+                * 100.0
+            )
+        )
+    else:
+        percentage_partition = resolved_partition
+
+    percentage_partition = max(1, min(100, percentage_partition))
+    os.environ["CUDA_MPS_ENABLE_PER_CTX_DEVICE_MULTIPROCESSOR_PARTITIONING"] = "1"
+    os.environ["CUDA_MPS_ACTIVE_THREAD_PERCENTAGE"] = str(percentage_partition)
 
 
 def _build_artifact_paths(run_root: Path, point_id: str) -> dict[str, Path]:

@@ -1,0 +1,9 @@
+gpu,run_root,pid,exit_code
+0,runs/revised-rerun-20260415-001508-g0-opt125m,2190474,2
+1,runs/revised-rerun-20260415-001508-g1-opt350m,2190475,2
+2,runs/revised-rerun-20260415-001508-g2-opt13b-c64-256,2190476,2
+3,runs/revised-rerun-20260415-001508-g3-opt13b-c512-1024,2190477,2
+4,runs/revised-rerun-20260415-001508-g4-opt27b-c64-256,2190478,2
+5,runs/revised-rerun-20260415-001508-g5-opt27b-c512-1024,2190479,2
+6,runs/revised-rerun-20260415-001508-g6-opt67b-c64-256,2190480,2
+7,runs/revised-rerun-20260415-001508-g7-opt67b-c512-1024,2190481,2

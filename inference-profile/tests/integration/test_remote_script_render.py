@@ -5,6 +5,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 SCRIPT_PATH = REPO_ROOT / "scripts" / "deploy_and_run_remote.sh"
+REMOTE_TARGET = "netsys@192.168.1.20"
 
 
 def test_script_syntax_valid():
@@ -36,24 +37,33 @@ def test_dry_run_redacts_password():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "sync",
-            "--run-id", "test-001",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
+            "--stage",
+            "sync",
+            "--run-id",
+            "test-001",
+            "--models",
+            "facebook/opt-125m",
+            "--chunk-sizes",
+            "64",
+            "--sequence-lengths",
+            "1024",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
             "--dry-run",
         ],
         capture_output=True,
         text=True,
     )
     assert result.returncode == 0
+    output = result.stdout + result.stderr
     # Check that password file is NOT exposed in logs
     assert ".ssh_pass" not in result.stdout
     assert ".ssh_pass" not in result.stderr
     # Check that redacted version IS present
     assert "<redacted>" in result.stdout
+    assert REMOTE_TARGET in output
 
 
 def test_dry_run_all_stages():
@@ -62,13 +72,23 @@ def test_dry_run_all_stages():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "all",
-            "--run-id", "test-all",
-            "--models", "opt-125m", "opt-350m",
-            "--chunk-sizes", "32", "64",
-            "--sequence-lengths", "128", "256",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
+            "--stage",
+            "all",
+            "--run-id",
+            "test-all",
+            "--models",
+            "facebook/opt-125m",
+            "facebook/opt-350m",
+            "--chunk-sizes",
+            "64",
+            "128",
+            "--sequence-lengths",
+            "1024",
+            "2048",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
             "--dry-run",
         ],
         capture_output=True,
@@ -81,6 +101,8 @@ def test_dry_run_all_stages():
     assert "Starting bootstrap stage" in output
     assert "Starting run stage" in output
     assert "Starting fetch stage" in output
+    assert "--resume-from validate-traces" in output
+    assert output.count(REMOTE_TARGET) == 5
 
 
 def test_models_argument_parsing():
@@ -89,13 +111,22 @@ def test_models_argument_parsing():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "run",
-            "--run-id", "test-models",
-            "--models", "opt-125m", "opt-350m", "opt-1.3b",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
+            "--stage",
+            "run",
+            "--run-id",
+            "test-models",
+            "--models",
+            "facebook/opt-125m",
+            "facebook/opt-350m",
+            "facebook/opt-1.3b",
+            "--chunk-sizes",
+            "64",
+            "--sequence-lengths",
+            "1024",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
             "--dry-run",
         ],
         capture_output=True,
@@ -104,9 +135,9 @@ def test_models_argument_parsing():
     assert result.returncode == 0
     output = result.stdout + result.stderr
     # Verify models appear in command
-    assert "opt-125m" in output
-    assert "opt-350m" in output
-    assert "opt-1.3b" in output
+    assert "facebook/opt-125m" in output
+    assert "facebook/opt-350m" in output
+    assert "facebook/opt-1.3b" in output
 
 
 def test_gpu_id_option():
@@ -115,14 +146,22 @@ def test_gpu_id_option():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "run",
-            "--run-id", "test-gpu",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
-            "--gpu-id", "3",
+            "--stage",
+            "run",
+            "--run-id",
+            "test-gpu",
+            "--models",
+            "facebook/opt-125m",
+            "--chunk-sizes",
+            "64",
+            "--sequence-lengths",
+            "1024",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
+            "--gpu-id",
+            "3",
             "--dry-run",
         ],
         capture_output=True,
@@ -139,13 +178,20 @@ def test_invalid_stage_error():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "invalid-stage",
-            "--run-id", "test-err",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
+            "--stage",
+            "invalid-stage",
+            "--run-id",
+            "test-err",
+            "--models",
+            "facebook/opt-125m",
+            "--chunk-sizes",
+            "64",
+            "--sequence-lengths",
+            "1024",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
         ],
         capture_output=True,
         text=True,
@@ -154,6 +200,25 @@ def test_invalid_stage_error():
     assert "Unknown stage" in result.stderr or "Unknown stage" in result.stdout
 
 
+def test_invalid_run_id_is_rejected() -> None:
+    result = subprocess.run(
+        [
+            "bash",
+            str(SCRIPT_PATH),
+            "--stage",
+            "fetch",
+            "--run-id",
+            "bad/run-id",
+            "--dry-run",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "run-id must match" in result.stderr or "run-id must match" in result.stdout
+
+
 if __name__ == "__main__":
     import pytest
+
     pytest.main([__file__, "-v"])

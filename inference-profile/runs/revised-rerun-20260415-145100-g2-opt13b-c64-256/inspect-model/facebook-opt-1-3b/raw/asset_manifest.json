@@ -1,0 +1,168 @@
+{
+  "asset_source": "synthetic_fallback",
+  "asset_source_reason": "monolithic_only",
+  "config_filename": "config.json",
+  "index_filename": null,
+  "layer_index": 11,
+  "layer_prefix": null,
+  "model_id": "facebook/opt-1.3b",
+  "resolved_shard_filenames": [],
+  "resolved_shard_paths": [],
+  "synthetic_layer": {
+    "dtype": "float16",
+    "parameters": [
+      {
+        "bytes_fp16": 8388608,
+        "name": "self_attn.q_proj.weight",
+        "numel": 4194304,
+        "seed": 53,
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "self_attn.q_proj.bias",
+        "numel": 2048,
+        "seed": 54,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 8388608,
+        "name": "self_attn.k_proj.weight",
+        "numel": 4194304,
+        "seed": 55,
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "self_attn.k_proj.bias",
+        "numel": 2048,
+        "seed": 56,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 8388608,
+        "name": "self_attn.v_proj.weight",
+        "numel": 4194304,
+        "seed": 57,
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "self_attn.v_proj.bias",
+        "numel": 2048,
+        "seed": 58,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 8388608,
+        "name": "self_attn.out_proj.weight",
+        "numel": 4194304,
+        "seed": 59,
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "self_attn.out_proj.bias",
+        "numel": 2048,
+        "seed": 60,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "self_attn_layer_norm.weight",
+        "numel": 2048,
+        "seed": 61,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "self_attn_layer_norm.bias",
+        "numel": 2048,
+        "seed": 62,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 33554432,
+        "name": "fc1.weight",
+        "numel": 16777216,
+        "seed": 63,
+        "shape": [
+          8192,
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 16384,
+        "name": "fc1.bias",
+        "numel": 8192,
+        "seed": 64,
+        "shape": [
+          8192
+        ]
+      },
+      {
+        "bytes_fp16": 33554432,
+        "name": "fc2.weight",
+        "numel": 16777216,
+        "seed": 65,
+        "shape": [
+          2048,
+          8192
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "fc2.bias",
+        "numel": 2048,
+        "seed": 66,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "final_layer_norm.weight",
+        "numel": 2048,
+        "seed": 67,
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes_fp16": 4096,
+        "name": "final_layer_norm.bias",
+        "numel": 2048,
+        "seed": 68,
+        "shape": [
+          2048
+        ]
+      }
+    ],
+    "reason": "monolithic_only",
+    "seed": 53
+  }
+}

@@ -33,10 +33,12 @@ def create_run_manifest(
     bundle_paths: RunBundlePaths,
     *,
     created_at: datetime | None = None,
+    schema_version: str | int = MANIFEST_SCHEMA_VERSION,
+    metadata: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     timestamp = _format_timestamp(created_at)
-    return {
-        "schema_version": MANIFEST_SCHEMA_VERSION,
+    manifest: dict[str, object] = {
+        "schema_version": schema_version,
         "run_id": bundle_paths.run_id,
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -45,14 +47,24 @@ def create_run_manifest(
         "bundle_layout": bundle_paths.relative_layout,
         "stages": {},
     }
+    if metadata is not None:
+        manifest.update(dict(metadata))
+    return manifest
 
 
 def initialize_run_manifest(
     bundle_paths: RunBundlePaths,
     *,
     created_at: datetime | None = None,
+    schema_version: str | int = MANIFEST_SCHEMA_VERSION,
+    metadata: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
-    manifest = create_run_manifest(bundle_paths, created_at=created_at)
+    manifest = create_run_manifest(
+        bundle_paths,
+        created_at=created_at,
+        schema_version=schema_version,
+        metadata=metadata,
+    )
     _write_json_atomic(bundle_paths.run_manifest_path, manifest)
     return manifest
 
@@ -182,6 +194,7 @@ def required_checksum_paths(
         bundle_paths.run_manifest_path,
         bundle_paths.environment_path,
         bundle_paths.report_path,
+        bundle_paths.logs_dir,
         *extra_paths,
     )
 

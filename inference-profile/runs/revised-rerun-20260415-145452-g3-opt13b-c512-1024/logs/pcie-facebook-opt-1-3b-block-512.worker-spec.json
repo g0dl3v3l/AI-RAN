@@ -1,0 +1,22 @@
+{
+  "block_size": 512,
+  "cache_root": null,
+  "callable_path": "inference_profile.profile_orchestrator._run_pcie_point_worker",
+  "experiment_type": "ran-dgxspark-v1",
+  "gpu_id": 3,
+  "model_id": "facebook/opt-1.3b",
+  "point_id": "pcie-facebook-opt-1-3b-block-512",
+  "raw_fieldnames": [
+    "model_id",
+    "block_size",
+    "kv_block_bytes",
+    "transfer_only_us",
+    "overlap_total_us",
+    "dummy_compute_us",
+    "exposed_transfer_us",
+    "timed_iteration"
+  ],
+  "raw_output_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-145452-g3-opt13b-c512-1024/raw/points/pcie/pcie-facebook-opt-1-3b-block-512.csv",
+  "timed_iterations": 5,
+  "warmup_iterations": 3
+}

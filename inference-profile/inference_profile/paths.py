@@ -4,12 +4,15 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from inference_profile import experiments
+
 RUNS_DIRNAME = "runs"
 LOGS_DIRNAME = "logs"
 RAW_DIRNAME = "raw"
 DERIVED_DIRNAME = "derived"
 PLOTS_DIRNAME = "plots"
 CHECKSUMS_DIRNAME = "checksums"
+REPORTS_DIRNAME = "report"
 
 RUN_MANIFEST_FILENAME = "run_manifest.json"
 ENVIRONMENT_FILENAME = "environment.json"
@@ -122,6 +125,20 @@ def init_run_bundle(
     return bundle_paths
 
 
+def init_experiment_run_bundle(
+    output_root: Path,
+    *,
+    experiment_type: str | None,
+    run_id: str | None = None,
+    now: datetime | None = None,
+) -> RunBundlePaths:
+    resolved_run_id = run_id or experiments.default_run_id_for_experiment(
+        experiment_type,
+        now=now,
+    )
+    return init_run_bundle(output_root, resolved_run_id, now=now)
+
+
 def _normalize_timestamp(value: datetime) -> datetime:
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
@@ -146,8 +163,10 @@ __all__ = [
     "CHECKSUM_MANIFEST_RELATIVE_PATH",
     "DERIVED_DIRNAME",
     "ENVIRONMENT_FILENAME",
+    "init_experiment_run_bundle",
     "LOGS_DIRNAME",
     "PLOTS_DIRNAME",
+    "REPORTS_DIRNAME",
     "RAW_DIRNAME",
     "REPORT_FILENAME",
     "RUNS_DIRNAME",

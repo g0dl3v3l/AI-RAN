@@ -1,0 +1,4 @@
+[2026-04-14T01:01:45Z] prefill-facebook-opt-125m-chunk-64-sm-8 status=success raw_rows=35 failure_kind=-
+[2026-04-14T01:01:48Z] prefill-facebook-opt-125m-chunk-64-sm-16 status=success raw_rows=35 failure_kind=-
+[2026-04-14T01:01:51Z] prefill-facebook-opt-125m-chunk-64-sm-24 status=success raw_rows=35 failure_kind=-
+[2026-04-14T01:01:53Z] prefill-facebook-opt-125m-chunk-64-sm-32 status=success raw_rows=35 failure_kind=-

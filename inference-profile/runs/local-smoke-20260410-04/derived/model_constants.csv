@@ -1,0 +1,2 @@
+model_id,num_hidden_layers,hidden_size,num_attention_heads,ffn_dim,layer_index,layer_weight_bytes,total_weight_bytes_fp16,vram_ceiling_bytes
+facebook/opt-125m,12,768,12,3072,5,14175744,250478592,15170115993

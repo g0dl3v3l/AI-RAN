@@ -1,0 +1,89 @@
+experiment_id: v0_env_probe
+version: v0
+runtime: vllm
+model: Qwen/Qwen2-0.5B-Instruct
+arm: env_probe
+workload:
+  prompt: Respond with the exact text 'smoke ok'.
+  temperature: 0.0
+  max_tokens: 64
+  timeout_s: 30.0
+  post_restore_probe_enabled: true
+  post_restore_readiness_timeout_s: 120.0
+  post_restore_readiness_poll_interval_s: 1.0
+preemption_policy:
+  mode: auto
+  response_replayed: false
+resource_delta: {}
+telemetry: {}
+output_dir: /tmp/ai-edge-v0-vllm-real-20260612-002318/artifacts
+seed: 0
+dry_run: false
+run_id: artifacts
+runtime_options:
+  llama_cpp:
+    external_server:
+      enabled: false
+      base_url: null
+    docker_server:
+      enabled: false
+      image: ghcr.io/ggml-org/llama.cpp:server
+      port: 8080
+      container_name: null
+      extra_args: []
+      image_pull_timeout_s: 900.0
+      host_model_dir: null
+      container_model_dir: /models
+      model_file: Qwen/Qwen2-0.5B-Instruct
+      threads: 4
+      ctx_size: 2048
+      n_gpu_layers: 0
+      network_mode: host
+  vllm:
+    external_server:
+      enabled: false
+      base_url: null
+    docker_server:
+      enabled: true
+      image: vllm/vllm-openai:latest
+      port: 8000
+      container_name: null
+      extra_args: []
+      image_pull_timeout_s: 1800.0
+      model: Qwen/Qwen2-0.5B-Instruct
+      network_mode: null
+      gpu_mode: gpus_flag
+      gpu_device: nvidia.com/gpu=all
+probe_options:
+  hardware:
+    timeout_s: 5.0
+  docker:
+    timeout_s: 5.0
+  criu:
+    timeout_s: 10.0
+  docker_criu_integration:
+    timeout_s: 60.0
+    checkpoint_name: ai-edge-v0-criu-checkpoint
+    checkpoint_dir: /mnt/ckpt-ram/ai-edge-v0-vllm-real-20260612-002318
+    smoke_image: busybox:1.36
+    smoke_runtime: runc
+    network_mode: host
+    post_checkpoint_delay_s: 5.0
+  cuda:
+    timeout_s: 120.0
+    image: nvidia/cuda:12.4.1-base-ubuntu22.04
+  mps:
+    timeout_s: 5.0
+    allow_start_stop: false
+    control_binary: nvidia-cuda-mps-control
+    control_pipe_path: /tmp/nvidia-mps/control
+  runtime:
+    timeout_s: 180.0
+  preemption:
+    timeout_s: 180.0
+    checkpoint_name: ai-edge-v0-criu-checkpoint
+    checkpoint_dir: /mnt/ckpt-ram/ai-edge-v0-vllm-real-20260612-002318
+    capture_memory_telemetry: true
+    criu_config_mode: cdi_restore_compat
+    criu_config_allow_sudo: true
+config_path: /tmp/ai-edge-v0-vllm-real-20260612-002318/v0_effective.yaml

@@ -1,0 +1,44 @@
+{
+  "bundle_layout": {
+    "checksum_manifest": "checksums/sha256sums.txt",
+    "checksums": "checksums",
+    "derived": "derived",
+    "environment": "environment.json",
+    "logs": "logs",
+    "plots": "plots",
+    "raw": "raw",
+    "report": "ran_inference_profiling_report.md",
+    "run_manifest": "run_manifest.json"
+  },
+  "chunk_sizes": [
+    64
+  ],
+  "created_at": "2026-04-14T08:06:23Z",
+  "decode_modes": [
+    "vram",
+    "pcie_async"
+  ],
+  "experiment_type": "ran-dgxspark-v1",
+  "final_status": null,
+  "final_status_history": [],
+  "l_out": 1024,
+  "models": [
+    "facebook/opt-125m"
+  ],
+  "run_id": "review-dryrun-smoke",
+  "scheduler": "envelope_v1",
+  "schema_version": "ran_dgxspark_v1",
+  "sequence_lengths": [
+    1024
+  ],
+  "sm_ai_cap": 32,
+  "sm_ai_partitions": [
+    8,
+    16,
+    24,
+    32
+  ],
+  "stages": {},
+  "telemetry_tier": "baseline_nvml_pt",
+  "updated_at": "2026-04-14T08:06:23Z"
+}

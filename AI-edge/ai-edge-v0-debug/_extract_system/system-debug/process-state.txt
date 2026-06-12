@@ -1,0 +1,18 @@
+===== process-state =====
+SCRIPT: ps -eo pid,ppid,stat,comm,args | grep -E 'containerd-shim|runc|criu|dockerd|cri-dockerd' | grep -v grep || true
+SINCE: 2 hours ago
+TIME: 2026-06-12T01:25:14+01:00
+  29066       1 Sl   containerd-shim /var/lib/k0s/bin/containerd-shim-runc-v2 -namespace k8s.io -id b07e75c79844dc9bda374b4c5f8145bd1149cf96805f1acb84c2fb4670e5491a -address /run/k0s/containerd.sock
+  29069       1 Sl   containerd-shim /var/lib/k0s/bin/containerd-shim-runc-v2 -namespace k8s.io -id 8fde9a454b3853c177b72afcebd746fa8a0bfbd5c643f7645e832f24a5030809 -address /run/k0s/containerd.sock
+  29074       1 Sl   containerd-shim /var/lib/k0s/bin/containerd-shim-runc-v2 -namespace k8s.io -id ff354e083a05abc2873874f80dcf1cf0e135c1dcd815d500f822e0c2e164bcb8 -address /run/k0s/containerd.sock
+  29792       1 Sl   containerd-shim /var/lib/k0s/bin/containerd-shim-runc-v2 -namespace k8s.io -id 11db6af15a535275f3b205e42169d232a6332c68e1cb91b93b2c42b612d07276 -address /run/k0s/containerd.sock
+  29793       1 Sl   containerd-shim /var/lib/k0s/bin/containerd-shim-runc-v2 -namespace k8s.io -id b9e4d50179db6878abd02d94252995c6bd3f4c6fc27f40f8ea39695d5bbe15ec -address /run/k0s/containerd.sock
+ 293981       1 Ss   tmux: server    tmux new-session -d -s criu-remove sudo apt remove -y criu
+ 293982  293981 Ssl+ fish            fish -c sudo apt remove -y criu
+ 293991  293982 S+   sudo            sudo apt remove -y criu
+ 379100       1 Ssl  dockerd         /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+ 432103       1 Sl   containerd-shim /usr/bin/containerd-shim-runc-v2 -namespace moby -id f7302ea95e47ec485dd369121b6411cb77a428f458b298326d5a441872c5c7e0 -address /run/containerd/containerd.sock
+ 511805  511671 T    bash            bash experiments/scripts/collect_criu_debug_logs.sh 2 hours ago /tmp/ai-edge-v0-vllm-real-20260612-000254/system-debug
+ 512189  512057 T    bash            bash experiments/scripts/collect_criu_debug_logs.sh 2 hours ago /tmp/ai-edge-v0-vllm-real-20260612-000332/system-debug
+ 515723  514492 S+   bash            bash experiments/scripts/collect_criu_debug_logs.sh 2 hours ago /tmp/ai-edge-v0-vllm-real-20260612-002318/system-debug
+EXIT_CODE: 0

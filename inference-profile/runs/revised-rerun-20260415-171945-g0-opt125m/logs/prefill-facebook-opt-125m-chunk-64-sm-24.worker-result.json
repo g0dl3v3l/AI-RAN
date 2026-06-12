@@ -1,0 +1,30 @@
+{
+  "cuda_cleanup": {
+    "empty_cache_attempted": true,
+    "empty_cache_error": null,
+    "raw_close_error": null,
+    "raw_flush_attempted": true,
+    "raw_flush_error": null,
+    "synchronize_attempted": true,
+    "synchronize_error": null
+  },
+  "error_class": null,
+  "error_message": null,
+  "failure_kind": null,
+  "point_id": "prefill-facebook-opt-125m-chunk-64-sm-24",
+  "raw_output_exists": true,
+  "raw_output_path": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-171945-g0-opt125m/raw/points/prefill/prefill-facebook-opt-125m-chunk-64-sm-24.csv",
+  "raw_row_count": 35,
+  "result_payload": {
+    "chunk_tokens": 64,
+    "family": "prefill",
+    "max_input_tokens": 1024,
+    "model_id": "facebook/opt-125m",
+    "row_count": 35,
+    "sm_ai_partition": 24
+  },
+  "success": true,
+  "worker_parent_pid": 3693186,
+  "worker_pid": 3695760,
+  "worker_start_method": "spawn"
+}

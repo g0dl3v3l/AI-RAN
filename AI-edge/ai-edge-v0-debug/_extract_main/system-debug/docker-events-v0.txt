@@ -1,0 +1,6 @@
+===== docker-events-v0 =====
+SCRIPT: timeout 30 docker events --since '2 hours ago' --until "2026-06-12T01:25:13+01:00" --filter label=ai-edge-experiment=v0 || true
+SINCE: 2 hours ago
+TIME: 2026-06-12T01:25:13+01:00
+failed to parse value as time or duration: "2 hours ago"
+EXIT_CODE: 0

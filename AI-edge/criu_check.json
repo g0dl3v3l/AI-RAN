@@ -1,0 +1,29 @@
+{
+  "component": "criu_check",
+  "details": {
+    "commands": {
+      "criu_version": {
+        "argv": [
+          "criu",
+          "--version"
+        ],
+        "duration_s": 0.00837781800510129,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "Version: 4.2\n",
+        "timed_out": false
+      }
+    },
+    "extracted": {
+      "criu_version": "4.2"
+    }
+  },
+  "monotonic_ns": 37628863852011,
+  "run_id": "ai-edge-v0-vllm-real",
+  "schema_version": "0.1.0",
+  "status": "ok",
+  "timestamp_utc": "2026-06-10T00:31:10.906051Z"
+}

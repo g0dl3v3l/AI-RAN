@@ -1,28 +1,37 @@
 %==========================================================
-%  Modern Informatics Research Review LaTeX Template
+%  University of Edinburgh Informatics Project Proposal
 %==========================================================
 
 \documentclass[a4paper,11pt]{article}
 
 %-------------------- Packages ----------------------------
-\usepackage[utf8]{inputenc}        % UTF-8 encoding
-\usepackage[T1]{fontenc}           % Font encoding
-\usepackage{lmodern}               % Clean, scalable fonts
-\usepackage[pdftex]{graphicx}      % Graphics support
-\usepackage{url}                   % Better URL handling
-\usepackage{datetime}               % Custom date formatting
-\usepackage{pgfgantt}               % Gantt charts
-\usepackage{xcolor}                 % Color definitions
-\usepackage{geometry}               % Page margins
-\usepackage{fancyhdr}               % Headers and footers
-\usepackage{titlesec}               % Custom section titles
-\usepackage{booktabs}               % Cleaner tables
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[pdftex]{graphicx}
+\usepackage{url}
+\usepackage{datetime}
+\usepackage{pgfgantt}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{enumitem}
+\usepackage{adjustbox}
+\usepackage{needspace}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
 
 %-------------------- Page Setup --------------------------
 \geometry{a4paper, left=25mm, right=25mm, top=25mm, bottom=25mm}
-\parindent=0pt                      % No paragraph indentation
-\parskip=6pt                        % Space between paragraphs
-\Urlmuskip=0mu plus 1mu             % Better URL line breaks
+\parindent=0pt
+\parskip=6pt
+\Urlmuskip=0mu plus 1mu
+\setlength{\emergencystretch}{2em}
 
 %-------------------- Colors -----------------------------
 \definecolor{mainblue}{RGB}{51,102,204}
@@ -47,29 +56,33 @@
 \titleformat{\subsection}{\large\bfseries\color{mainblue}}{\thesubsection.}{1em}{}
 \titleformat{\subsubsection}{\normalsize\bfseries\color{mainblue}}{\thesubsubsection.}{1em}{}
 
+%-------------------- Table Helpers -----------------------
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.12}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=2pt,topsep=3pt}
+\setlist[itemize]{leftmargin=1.5em,itemsep=2pt,topsep=3pt}
+
 %-------------------- Title Page Info ---------------------
-\newcommand{\examnumber}{Redacted for review}
-\newcommand{\field}{Unified Multi-Tenant Inference Runtime for Latency-Critical AI Services on Shared RAN Infrastructure}
-\newcommand{\tutor}{Redacted for review}
-\newcommand{\supervisor}{Redacted for review}
+\newcommand{\examnumber}{s2880330}
+\newcommand{\field}{Unified Multi-Tenant Inference Runtime for Edge AI on Latency-Critical Shared RAN Infrastructure}
+\newcommand{\tutor}{Dr. James Garforth}
+\newcommand{\supervisor}{Prof. Mahesh K. Marina}
 
 %==========================================================
 \begin{document}
+\hypersetup{pageanchor=false}
 
 %-------------------- Title Page --------------------------
 \begin{titlepage}
 	\begin{center}
 		\vspace*{2cm}
-		% \includegraphics[width=40mm]{crest.png}\\[1cm] % Uncomment if you have the university crest image
-
+		\includegraphics[width=40mm]{crest.png}\\[1cm]
 		{\Huge\bf School of Informatics}\\[1.5cm]
-
 		{\LARGE\bf Informatics Project Proposal}\\[0.5cm]
 		{\Large\bf \field}\\[2cm]
-
 		{\large \textbf{UID:} \examnumber}\\[0.5cm]
 		{\large \textbf{Date:} \monthyeardate\today}\\[2cm]
-
 		{\large \textbf{Tutor:} \tutor\\[0.2cm]
 		\textbf{Supervisor:} \supervisor}
 		\vfill
@@ -83,10 +96,8 @@
 %-------------------- Abstract & Declaration ----------------------------
 \begin{titlepage}
 	\begin{abstract}
-		The evolution toward 6G mobile networks has catalyzed the AI-RAN paradigm, envisioning a profound convergence of Radio Access Network (RAN) infrastructure and artificial intelligence workloads. Modern GPU-accelerated base stations frequently exhibit significant, temporally bursty spare compute capacity. The central challenge addressed in this research is how to safely harness this underutilized RAN edge compute for latency-critical AI inference tasks without compromising the stringent Service Level Agreements (SLAs) of primary telecommunication functions. This project proposes the design and evaluation of a cloud-native, multi-tenant inference runtime-control architecture. Adopting a strict ``RAN-first'' operational philosophy, it uses workload isolation and bounded execution control to dynamically multiplex containerized AI inference into the distributed unit (DU) while preserving network reliability.
+		As 6G and AI-enabled Radio Access Network (AI-RAN) architectures mature, the Radio Access Network (RAN) is increasingly treated not only as communications infrastructure but also as a distributed accelerator platform for edge AI services. The unresolved systems question is not whether such infrastructure occasionally exposes transient resources, but how heterogeneous inference workloads can consume bounded, revocable execution opportunities without violating strict QoS preservation for primary radio functions. To operationalize that question, the project develops a unified multi-tenant inference runtime for shared RAN infrastructure around bounded execution windows, workload-aware segmentation, context offloading, hard memory budgeting, and preemption-safe execution. Rather than treating inference as a GPU-only task, the runtime explicitly coordinates the radio uplink for input data, the accelerator compute phase, and the downlink for results so that network bottlenecks and accelerator scheduling decisions are managed together. Methodologically, the work profiles representative workload families, derives a shared runtime-control abstraction, implements the design in a bounded prototype, and evaluates whether useful goodput can be delivered while remaining subordinate to RAN-first timing constraints.
 	\end{abstract}
-
-	\vspace*{2cm}
 
 	\section*{Declaration of Own Work}
 
@@ -95,243 +106,245 @@
 	\noindent\textit{This page does not count towards the page limit.}
 \end{titlepage}
 
-%==========================================================
-% Chapter 1 -> Section 1
-\section{Motivation}
-\label{sec:motivation}
-
-\subsection{Problem Statement}
-\label{subsec:problem_statement}
-
-As telecommunications networks move toward 6G, recent AI-RAN work increasingly frames the RAN as more than a communications substrate, namely as a cloud-native, distributed platform that can host both primary Radio Access Network (RAN) functions and selected AI workloads on shared infrastructure \cite{beyond,airan,openairan}. A compelling use case within this convergence is latency-sensitive edge inference, where placing model execution close to the radio path can reduce transport delay and keep demanding AI workloads off user devices \cite{beyond,cora,slaairan}.
-
-RAN infrastructure is also provisioned for peak demand, which leaves meaningful spare capacity outside worst-case conditions \cite{beyond,airan}. Recent profiling from \textit{Weaver} makes this point concrete: even in a pessimistic four-DU peak-load setting, about 40\% spare compute remains, and production-trace replays show that spare streaming-multiprocessor (SM) capacity can still be around 85\% during peak daytime periods across six cell sites from three operators \cite{weaver}. The same study shows that this headroom is bursty within a site but complementary across sites, which makes it valuable yet difficult to harvest with static sharing policies \cite{weaver}.
-
-The central challenge, then, is safe coexistence between workloads with very different timing contracts. DU processing follows tight slot-level deadlines, while edge inference must meet service latency targets without degrading the primary radio function \cite{beyond,weaver,cora}. Existing GPU-sharing mechanisms expose the trade-off: hardware partitioning such as NVIDIA's Multi-Instance GPU (MIG) offers strong isolation and is therefore a useful hard-isolation option or comparison baseline, but static partitions are a poor fit for bursty millisecond-scale spare cycles; more elastic sharing can expose more headroom, but makes deadline protection harder to guarantee \cite{weaver,slaairan}. In this project, that tension is addressed by treating the RAN-side scheduler as an external authority and designing an inference architecture that consumes only the bursty, lease-bounded capacity it exports, rather than by modifying the RAN control stack itself.
-
-
-\subsection{Research Hypothesis and Objectives}
-\label{subsec:hypothesis_objectives}
-
-\subsubsection{Research Hypothesis}
-Recent evidence from AI-RAN platforms and device--RAN--cloud inference studies suggests that latency-critical edge inference is constrained less by accelerator presence alone than by whether heterogeneous workloads can be controlled under coupled uplink, compute, and downlink pressure, hard memory limits, and intermittent compute availability \cite{airan,beyond,cora,slaairan,chronos}. The central systems challenge is therefore to identify the shared runtime mechanisms that make diverse workload families compatible with RAN-edge operation, while preserving the distinct execution boundaries, state semantics, and memory behavior that those families expose.
-
-Therefore, the core \textbf{Research Hypothesis} of this proposal is:
-\textit{A unified multi-tenant RAN-edge inference system that combines workload-aware micro-segmentation, explicit state parking, memory-bounded admission control, and stage-aware runtime control can support heterogeneous latency-critical inference workloads without violating RAN-first service guarantees. We further hypothesize that such a design can maximize useful inference progress within bounded execution windows while remaining stable under reclaim events, strict VRAM limits, and workload-specific phase changes.}
-
-\subsubsection{Objectives}
-To test this hypothesis and realize the revised project scope, this research will pursue five tightly scoped objectives.
-
-\begin{enumerate}
-	\item \textbf{Extract a workload-property baseline for RAN-edge inference:}
-	      derive a profiling baseline from CORA-style workload classes and recent edge inference evidence, explicitly identifying the natural execution unit, dominant uplink/compute/downlink pressure, persistent state, and safe interruption boundary for representative one-shot and streaming workloads \cite{cora,slaairan}.
-
-	\item \textbf{Identify the shared mechanisms and workload-specific adapters required for unification:}
-	      determine which mechanisms must be shared across workloads---for example admission control, micro-segmentation, state parking, memory budgeting, and isolation---and which adapters must remain specific to activation-heavy vision, stateful streaming, or rendering workloads \cite{beyond,cora,slaairan}.
-
-	\item \textbf{Define a unifying runtime control abstraction and architecture:}
-	      specify how a multi-tenant RAN-edge inference system should represent bounded execution windows, runtime state, memory budgets, and reclaim behavior inside a container-level control and data plane that treats telecom traffic as the first-class tenant \cite{beyond,paradrop,slaairan}.
-
-	\item \textbf{Incorporate radio-resource coupling into runtime decisions and evaluation:}
-	      translate the workload baseline into a control logic that reacts to uplink/compute/downlink pressure, intermittent compute availability, and workload-specific phase changes, so that useful work is maximized without breaking RAN timing priorities \cite{cora,chronos,slaairan}.
-
-	\item \textbf{Prototype and evaluate the unified architecture in an edge-oriented environment:}
-	      implement the proposed mechanisms using a containerized inference stack and quantify whether the resulting system preserves RAN-first guarantees, remains stable under hard VRAM limits and reclaim events, and delivers acceptable latency across heterogeneous edge inference services \cite{beyond,chronos,slaairan}.
-\end{enumerate}
-
-
-\subsection{Timeliness, Novelty, and Significance}
-\label{subsec:timeliness_novelty}
-
-\subsubsection{Timeliness}
-The timing is favorable because AI-RAN is moving from broad vision to concrete, cloud-native architectural proposals and deployment workflows \cite{beyond,airan,openairan}. At the same time, large-scale RAN experimentation and latency-critical cellular inference are becoming more concrete through public-cloud emulation platforms such as \textit{CHRONOS} and end-to-end coordination frameworks such as \textit{CORA} \cite{chronos,cora}. Recent device-RAN-cloud inference work further suggests that SLA-aware placement is becoming a practical systems question rather than a purely conceptual one \cite{slaairan}.
-
-\subsubsection{Novelty and Relation to Prior Work}
-Prior work addresses important pieces of this problem, but not the full combination required here. \textit{Beyond Connectivity} and related AI-RAN architecture efforts describe the orchestration substrate for shared AI and RAN infrastructure \cite{beyond,airan,openairan}. \textit{Paradrop} demonstrates lightweight multi-tenancy at the extreme edge \cite{paradrop}. \textit{CORA} coordinates uplink, compute, and downlink for latency-critical inference \cite{cora}. \textit{Weaver} shows how to expose RAN-safe spare GPU capacity, but its target workload is foundation model training rather than latency-critical inference \cite{weaver}. \textit{SLA-Aware Distributed LLM Inference Across Device-RAN-Cloud} further suggests that strict SLAs may require hard isolation or carefully selected model variants, which makes MIG a useful comparison point rather than a universal answer \cite{slaairan}.
-
-The novelty of this research lies in combining these strands into one runtime-control problem: determining which inference workloads can share DU-adjacent compute, under what isolation policy, and with what end-to-end latency budget. The project therefore focuses on phase-aware inference profiling, DU-local coexistence control, and multi-tenant orchestration that joins spare-compute harvesting, end-to-end latency coordination, and edge lifecycle management into one unified RAN-edge inference design \cite{weaver,cora,paradrop}.
-
-\subsubsection{Significance}
-If successful, this research could clarify whether multi-tenant edge inference can be executed natively on RAN infrastructure without degrading network reliability. For network operators, that would provide a blueprint for monetizing otherwise idle GPU cycles without deploying new hardware. For end-users and device manufacturers, it would strengthen the case for low-latency edge support for lightweight, battery-efficient mobile devices. More broadly, the project would contribute a technical foundation for treating AI services as a native component of 6G networks.
-
-\subsection{Feasibility}
-\label{subsec:Feasibility}
-This proposal is feasible because the dissertation scope is deliberately constrained to the inference runtime layer rather than to a full RAN-stack redesign. The project begins from an existing report-derived workload baseline, reuses public AI-RAN and device--RAN--cloud evidence for its design assumptions, and targets a containerized prototype with controlled replay inputs instead of a production deployment. That keeps the implementation burden focused on profiling, control logic, runtime mechanisms, and evaluation artifacts that are realistic within the dissertation timescale.
-
-\subsection{Beneficiaries}
-\label{subsec:Beneficiaries}
-The primary beneficiaries are AI-RAN and edge-systems researchers who need a clearer account of which inference workloads can safely coexist with RAN functions under strict timing constraints. Network operators and platform engineers would also benefit from a concrete runtime-control blueprint for converting bursty DU-adjacent headroom into bounded AI service capacity without weakening telecom-first protection. A secondary beneficiary group is device and application designers, because a credible RAN-edge inference substrate would broaden the range of low-latency AI services that can be offloaded from resource-constrained endpoints.
-
+\hypersetup{pageanchor=true}
+\setcounter{page}{1}
 
 %==========================================================
-% Chapter 2 -> Section 2
-\section{Background and Related Work}
-\label{sec:background_related_work}
+\section{Introduction}
 
-This section provides the foundational context necessary to understand the proposed RAN-edge inference runtime. It first outlines the evolution of cloud-native telecommunications and edge AI, before critically reviewing the existing literature on GPU sharing, edge multi-tenancy, and RAN-aware coexistence control to highlight the specific gaps this research will address.
+\subsection{Problem}
 
-\subsection{Background}
-\label{subsec:background}
+AI-RAN and Open RAN research increasingly suggest that compute deployed near the Radio Access Network (RAN) -- the distributed edge infrastructure of cell sites, base stations, and associated control software that connects user devices to the core network -- need not serve radio processing alone; under the right conditions, it can also host selected edge AI services \cite{beyond,airan,openairan}. At the same time, the literature already treats exported RAN-edge capacity as transient rather than guaranteed: capacity can appear outside periods of peak radio demand and then disappear again as radio load rises.
 
-\subsubsection{Cloud-Native O-RAN Architecture}
-Historically, cellular network deployments relied on monolithic, proprietary hardware appliances, which reinforced vendor lock-in and rigid operational models. Open RAN (O-RAN) marks a shift toward disaggregated baseband functions and standardized open interfaces \cite{openairan,beyond,airan}. A central part of this design is the functional split, especially Split 7.2, which separates lower-PHY processing at the Radio Unit (O-RU) from the more computationally intensive upper-PHY operations at the Distributed Unit (O-DU) \cite{openairan,beyond,airan}.
+The central systems consequence is that inference cannot be designed as if execution will continue uninterrupted once admitted. Because the radio stack may reclaim resources at any millisecond, an inference runtime operating on RAN-edge hardware must assume that execution is inherently volatile. Any service placed on such infrastructure must therefore make progress in bounded, interruptible units rather than depend on long, continuous accelerator ownership. That requirement is especially difficult because edge inference is not a single workload class. A stateless vision inference service, for example, typically consumes one image, executes one forward pass, and returns one result. A streaming large language model (LLM) service, by contrast, generates output token by token and must preserve context across successive decoding steps. Sequence-to-sequence translation sits between those extremes: it preserves encoder-decoder state across sentence-level generation, but still exposes clearer completion units than open-ended language generation. Automatic Speech Recognition (ASR) introduces another execution regime because the system ingests streaming audio chunks and must reconcile partial hypotheses under tight end-to-end delay budgets. What counts as an execution unit, how much state must survive preemption, and where useful work is lost therefore differ substantially across workloads. In this setting, the key question is not simply whether transient resources exist, but how to use revocable compute safely without weakening strict QoS preservation for primary radio processing.
 
-This shift also moves RAN execution away from fixed-function telecommunications equipment toward a cloud-native operating model \cite{openairan,beyond,airan}. In virtualized RAN (vRAN) deployments, network functions are decoupled from specific hardware and run as containerized microservices on Commercial Off-The-Shelf (COTS) servers that collectively form the O-Cloud \cite{openairan,beyond}. The Service Management and Orchestration (SMO) framework then applies standard cloud-orchestration principles to lifecycle management, scaling, and deployment across that substrate, while supporting multi-vendor interoperability and programmatic control \cite{beyond,airan}. AI/ML-driven automation extends this model further by coordinating both computational and communication resources \cite{airan,beyond}.
+\subsection{Idea}
 
-However, realizing this cloud-native flexibility introduces severe execution challenges, primarily due to the stringent, deterministic nature of cellular telecommunications. RAN functions demand substantial compute and network resources. The network operates in a strict time-slotted fashion, with slot durations ranging from hundreds of microseconds to just one millisecond \cite{chronos}. During a single slot, the system must execute radio resource allocation in the control plane and process user packets in the data plane (e.g., segmentation, header attachment, and retransmissions) \cite{chronos}.
+The proposal rests on a simple systems principle: if RAN-edge accelerators are transient resources, the inference stack needs an explicit contract that allows those resources to be borrowed safely and returned immediately when the radio requires them. The objective is not to redesign radio scheduling, nor to treat the RAN as a generic edge cloud. Instead, the design makes inference execution compatible with a volatile environment in which radio resources and compute resources are coupled, and in which revocation is a normal operating condition rather than an exception.
 
-Executing these slot-level tasks on standard cloud infrastructure is demanding. CHRONOS shows that VM interruption and network latency can consume a large share of the slot budget, so faithful cloud execution depends on tight release synchrony and careful control of timing jitter \cite{chronos}. This timing pressure helps explain why recent O-RAN and AI-RAN work places disaggregated DU/CU software, O-Cloud resources, and accelerator support within a common cloud-native operating model, rather than treating real-time RAN functions as fixed-purpose appliances \cite{openairan,beyond,airan}.
+To operationalize that principle, the proposal introduces \texttt{ComputeLease}, an inference-side contract that specifies the duration of a bounded execution window, the permitted share of accelerator capacity, the memory limit, the radio-side budget or stage-pressure assumptions under which execution remains admissible, and the preemption behaviour that applies when the RAN takes resources back. The reason such a contract is necessary is that workload diversity translates directly into control complexity: a runtime must reason about the execution unit that can be scheduled or preempted, the persistent state that must be retained to resume correctly, the safest interruption boundary, and the accelerator pressure imposed by the workload while it runs. Those issues are lightweight for stateless vision inference, but they are central for streaming services whose useful work depends on preserving context across successive decoding steps. In effect, \texttt{ComputeLease} defines the conditions under which a workload can consume transient compute resources while remaining subordinate to strict QoS preservation for the radio stack.
 
+The hypothesis is that heterogeneous inference services can coexist safely on shared RAN infrastructure if the runtime is designed around that contract from the outset. Under this view, compatibility depends not only on raw accelerator demand, but also on whether a workload can execute in bounded windows, whether its context can be preserved efficiently through context offloading across preemption, and whether useful goodput can still be delivered under revocable execution. At the level of the introduction, the core idea is that volatile RAN-edge compute requires contract-based, preemption-aware inference control rather than unstructured opportunistic sharing.
 
-\subsubsection{The AI-RAN Paradigm}
-As cellular systems move toward 6G, the RAN is increasingly framed as both a communications system and a distributed compute platform. The AI-RAN literature describes this convergence as a joint evolution of infrastructure, control, and services, with AI capabilities embedded into the RAN stack and coordinated across edge and cloud resources \cite{beyond,airan,openairan}.
+\subsection{Importance}
 
-Recent literature commonly organizes this convergence into three closely related pillars \cite{airan,openairan}:
-\begin{itemize}
-	\item \textbf{AI-for-RAN (Network Optimization):} This pillar applies AI to improve internal network functions, including scheduling, beam management, traffic steering, energy saving, and anomaly handling \cite{airan,openairan}. Here, AI remains subordinate to the primary telecommunications service.
-	\item \textbf{AI-on-RAN (Native AI Services):} This pillar treats the RAN and its edge compute continuum as a native platform for AI services, especially distributed learning and low-latency inference placed close to DU/CU resources \cite{airan}.
-	\item \textbf{AI-and-RAN (Infrastructure Multiplexing):} This pillar asks when spare O-Cloud or AI-RAN compute can host secondary AI workloads without breaking primary radio deadlines \cite{airan,weaver,beyond}.
-\end{itemize}
-
-This research proposal focuses strictly on the \textbf{AI-and-RAN} pillar. Relative to the broader AI-for-RAN literature, it remains at an earlier stage of system design and validation, even though it offers a clear economic reason to reuse AI-RAN infrastructure beyond peak radio demand periods \cite{airan,weaver,beyond}.
-
-In practice, that reuse depends on turning spare DU or O-Cloud compute into a controlled edge-service substrate while preserving the primacy of RAN timing and reliability requirements \cite{beyond,weaver,chronos}. The central systems question is therefore not whether AI workloads can be injected in the abstract, but how to admit and coordinate only those workloads that remain compatible with underlying radio deadlines \cite{airan,weaver}.
+This problem matters for three connected reasons: (i) at the infrastructure level, it addresses a live AI-RAN question now visible across the Open RAN and AI-RAN literature, namely whether operators can convert transient resources near the Distributed Unit (DU) into a safe substrate for native AI services rather than leaving that capacity idle \cite{beyond,airan}; (ii) at the workload level, edge inference is not one homogeneous class, because stateless vision inference, streaming language generation, sequence-to-sequence translation, Automatic Speech Recognition (ASR), and rendering-oriented services differ in execution unit, persistent state, safe interruption boundary, and accelerator pressure \cite{cora,slaairan,pagedattention,distserve}; and (iii) at the systems level, a workable solution would strengthen the case for low-latency AI support on constrained endpoints while providing operators with a more credible route to infrastructure reuse.
 
 
-\subsubsection{The Anatomy of Latency-Critical Inference Workloads}
-Latency-critical edge inference is not a single workload class but a family of execution patterns whose feasibility depends on how uplink, compute, and downlink pressure interact across the end-to-end service path \cite{cora,slaairan}. CORA is useful here because it frames inference as a resource-coupled pipeline rather than as a GPU-only problem. For a RAN-edge system, the relevant question is therefore not simply whether an accelerator is present, but what execution unit, persistent state, dominant stage pressure, and interruption boundary each workload family exposes.
+\subsection{Approach}
 
-One-shot vision workloads such as image segmentation and pose estimation become compute-dominant once inputs have arrived over the uplink; their execution unit is the full inference or a coarse tile, their persistent state is limited to transient activation tensors, and their safest interruption boundary is between inferences or coarse tiles \cite{cora}. Super-resolution is similarly compute-dominant but more memory-stressed because large activation maps and upsampling buffers inflate its live state; its practical execution unit is therefore again the full frame or a coarse tile, with no useful persistent state beyond activations that usually must be drained rather than parked mid-pass. Volume-rendering workloads such as NeRF are also compute-dominant, but their natural execution unit is a ray batch and their persistent state is the compact scene or radiance representation, which makes ray-batch boundaries the least disruptive stop point.
+Methodologically, the project follows a systems-oriented workflow. It begins by profiling representative workload families from the literature and identifying their execution units, persistent-state requirements, and resource sensitivities. It then maps those workload properties to serving patterns already described in the systems corpus and uses that mapping to derive a common runtime-control abstraction. The next step is to implement that abstraction in a bounded prototype and evaluate whether the resulting design can preserve strict QoS while still delivering useful goodput inside revocable execution windows. In consequence, the project remains dissertation-scale while still producing concrete design artefacts, a working prototype, and evidence-based evaluation.
 
-Streaming language workloads are phase-split. Prompt ingress creates an uplink/compute-coupled prefill stage. Autoregressive decoding is compute/downlink-coupled and advances one token step at a time, so the execution unit is the token step and the persistent state is the KV cache \cite{slaairan,pagedattention,distserve}. Seq2seq translation likewise has an uplink/compute-coupled encoder pass followed by a compute/downlink-coupled decoder phase, so the useful execution unit is the decoder step after an encoder pass and the persistent state is the encoder output plus decoder state. These families therefore differ not only in latency target but in the pressure that dominates them, the state that must survive reclaim, and the boundary at which useful work can be paused. A unified RAN-edge inference system must intersect coarse-boundary one-shot execution, stateful streaming control, hard memory budgeting, and workload-specific stop points within one common runtime framework \cite{cora,slaairan}.
+\subsection{Plan}
 
+To keep the work thematically aligned, the dissertation is organised around four work packages that map directly onto the argument of the proposal. WP1 establishes the workload and design baseline; WP2 defines the unified runtime-control abstraction and the shared mechanism set; WP3 implements the prototype and workload adapters; and WP4 evaluates the system while consolidating the dissertation text and preserving contingency for integration and revision. Each stage exists to answer a specific research question with an explicit artefact and evaluation target.
 
-\subsubsection{Strict RAN Service Level Agreements (SLAs) vs. IT Workloads}
-Sharing this cloud-native hardware introduces a real clash of scheduling objectives. In standard IT clouds, schedulers can chase fairness or average utilization. In the RAN, CHRONOS shows that VM interruption and network latency can already consume a large fraction of the slot budget, so release synchrony and timing jitter are first-order constraints rather than implementation details \cite{chronos}. Any coexistence policy for DU-adjacent GPUs therefore has to preserve a strict ``RAN-first'' priority model instead of a best-effort cloud policy \cite{chronos,weaver}.
+\subsection{Success}
 
+With respect to workload compatibility, the project succeeds if it can formalise a defensible baseline for representative workload families and answer \textbf{RQ1}: which edge inference workloads are technically compatible with shared RAN infrastructure, and why? The first objective is therefore to identify execution units, persistent state, dominant pressure points, and safe interruption boundaries for each representative family \cite{cora,slaairan}. The associated evaluation criterion is that the workload matrix must separate compatible from incompatible families using explicit evidence rather than intuition.
 
-\subsubsection{The Hardware Dichotomy: Training vs. Inference}
-Within the AI domain, the workload type matters as much as the accelerator itself. Prior RAN-edge sharing studies suggest that foundation-model training is the friendlier co-located case: LDPC-heavy RAN processing is largely bandwidth-dominated, while training is more compute-heavy and elastic, so spare SM envelopes can be harvested for secondary work without assuming the same resource profile as the radio path \cite{weaver}. By contrast, CORA and recent device, RAN, and cloud measurements frame inference as an interactive end-to-end service whose feasibility depends on model variant, placement, channel quality, and deadline budget rather than on GPU presence alone \cite{cora,slaairan}. Mechanisms that are adequate for elastic training therefore cannot be transferred directly to latency-critical inference \cite{weaver,cora,slaairan}.
+At the runtime-design stage, success requires an answer to \textbf{RQ2}: what runtime-control abstraction and shared mechanism set are needed to manage those workloads under bounded, revocable execution? The second objective is to specify the common mechanism set and the workload-specific adapters needed for a unified design. The associated evaluation criterion is that the runtime architecture must map every major control decision --- admission, segmentation, context offloading, tiered resource isolation, that is, progressively stricter separation among competing workloads, memory budgeting, and revocation handling --- back to a workload property established in the baseline.
 
+For end-to-end system validation, success requires an answer to \textbf{RQ3}: can a prototype built around that abstraction preserve strict QoS while still delivering useful goodput under bounded execution windows, hard memory caps, and heterogeneous workload mixes? Implementation and evaluation therefore serve as the third and fourth objectives under controlled preemption pressure. Success at that stage means the runtime yields cleanly to resource revocation, remains stable under hard memory budgets, and demonstrates measurable useful goodput within bounded execution windows. The final written dissertation must then tie those results back to the argument of the proposal in a coherent architectural account.
 
-\subsection{Related Work}
-\label{subsec:related_work}
+%-------------------- State of the Art --------------------------
+\section{State of the Art}
 
-\subsubsection{Hardware-Level GPU Sharing Mechanisms}
-To realize AI-and-RAN, the GPU must be shared between the RAN DU and the inference stack, but the available mechanism choices mostly expose a trade-off rather than a complete answer. Spatial partitioning such as MIG offers strong isolation and is therefore a useful baseline when strict SLA classes need dedicated slices, yet static partitions are a poor fit for bursty spare compute and can strand capacity that arrives at slot timescales \cite{weaver,slaairan}. More elastic temporal sharing can expose more headroom, but existing RAN-aware sharing studies also show that mechanism overhead and sharing jitter remain central concerns for safe reuse \cite{weaver}. These primitives matter, but they do not by themselves provide an inference-aware runtime-control policy for a shared DU GPU \cite{weaver,slaairan}.
+The state of the art is best understood as four connected themes rather than as a paper-by-paper catalogue. Taken together, these themes define the opportunity, isolate the systems constraints, and motivate the precise gap addressed by this dissertation.
 
-\subsubsection{Edge Multi-Tenancy and Orchestration}
-Providing AI inference as a multi-tenant service also requires a slow-timescale orchestration layer. Paradrop is a useful precedent here because it shows that lightweight, containerized services can be deployed at the network's extreme edge with backend orchestration and explicit resource controls \cite{paradrop}. That said, Paradrop targets lightweight edge services on constrained nodes, while AI-RAN proposals extend orchestration toward the O-Cloud and SMO stack for joint RAN and AI resource management \cite{paradrop,beyond}. The orchestration lesson is valuable, but it still has to be paired with a fast local execution policy for shared accelerators.
+\subsection{Theme 1: AI-RAN turns shared RAN infrastructure into a hosting substrate}
 
-\subsubsection{End-to-End Latency Coordination}
-Inference latency spans uplink transport, edge execution, and downlink return, and CORA is the strongest direct template in this corpus for coordinating those stages \cite{cora}. CORA explicitly budgets latency across uplink, compute, and downlink, derives RB demand from I/O size and channel quality, derives SM demand from a speedup model, and performs pre-admission costing with lightweight planner overhead of about 0.18 ms and roughly 112 B of metadata per request \cite{cora}. This is strong evidence that end-to-end latency budgeting is feasible, but CORA still treats compute as a schedulable stage budget rather than as a shared RAN-GPU runtime-control problem \cite{cora,slaairan}.
+At the architectural level, Open RAN and AI-RAN work establishes the conditions under which RAN infrastructure can become a shared substrate for AI services. Disaggregated distributed-unit and central-unit software (DU/CU), O-Cloud resources --- the shared cloud-computing substrate attached to the RAN --- and service-management-and-orchestration (SMO) control collectively move the RAN away from monolithic telecom appliances and toward a cloud-native control model \cite{openairan,beyond,airan}. Because that shift exposes programmable and accelerated infrastructure at the edge, it makes AI services viable as native tenants of the same physical system.
 
-\subsubsection{RAN-Aware Co-scheduling}
-Recent RAN-aware sharing studies come closest to the local coexistence problem by showing that DU-adjacent GPU headroom can be exported in bursty, slot-bounded envelopes for secondary AI work \cite{weaver}. Their profiling is concrete: even a pessimistic four-DU peak-load setup still leaves about 40\% spare SM capacity, and production-trace replays show spare capacity can remain around 85\% during peak daytime periods, although that headroom is bursty within sites and complementary across sites \cite{weaver}. However, the evaluated secondary workload is foundation-model training rather than interactive inference, and the same evidence base warns that LLM decoding is also bandwidth-heavy, which makes it a weaker sharing match with LDPC than training is \cite{weaver,slaairan}.
+At the same time, however, the same literature makes clear that timing remains the governing obligation. CHRONOS shows that jitter, interruption, and network delay already consume a substantial fraction of slot-level budgets, that is, sub-millisecond deadlines tied to radio transmission slots \cite{chronos}. Unlike data-centre environments where accelerators are dedicated, shared RAN compute must therefore be designed under hard timing constraints from the start. Many sharing proposals fail because they ignore that timing dominance: any AI-on-shared-RAN design must treat strict QoS preservation as a primary requirement rather than as a tunable optimisation target.
 
+\subsection{Theme 2: Latency-critical inference is heterogeneous and phase-sensitive}
 
-\subsection{Summary of Research Gap}
-\label{subsec:research_gap}
-Taken together, the literature covers the surrounding layers but not the core inference-sharing problem. CHRONOS explains why slot-realistic timing leaves little slack for interference, while Paradrop supplies a pattern for multi-tenant edge orchestration \cite{chronos,paradrop}. CORA supplies end-to-end latency budgeting, and RAN-aware sharing studies show how compatible secondary workloads can harvest spare RAN GPU capacity \cite{cora,weaver}. What is still missing is an inference-specific runtime-control layer for shared RAN GPUs, one that reasons about phase-sensitive inference behavior and admits only those requests whose latency and resource profile remain compatible with slot-level DU deadlines \cite{weaver,cora,slaairan}.
+At the workload level, CORA is especially valuable because it models inference as a coupled uplink, compute, and downlink pipeline rather than as a GPU-only task \cite{cora}. That perspective matters because compatibility depends not only on accelerator pressure, but also on the radio path, namely the uplink and downlink transport path that carries inputs to the RAN edge and returns outputs to the device. Recent device--RAN--cloud studies reinforce that point by showing that model variant, service-level objective, and stage coupling jointly determine whether edge placement remains worthwhile under tight RAN-edge budgets \cite{slaairan}.
 
+To reason about that heterogeneity systematically, the project treats workload families as joint application/model classes with recurring execution structure. Stateless vision inference families, for example, often rely on convolutional or hybrid convolutional-transformer models for segmentation, pose estimation, or super-resolution; operationally, they consume a bounded input, execute one forward pass, and return one result. Streaming language families, by contrast, often rely on auto-regressive or encoder--decoder transformer models; operationally, they are phase-split into prompt prefill and token-by-token decoding, while preserving large key-value state across successive decode steps \cite{pagedattention,distserve,orca}. Automatic Speech Recognition (ASR) introduces another streaming regime in which audio arrives incrementally, partial hypotheses must be updated over time, and safe interruption boundaries depend on how much acoustic and linguistic context has already been accumulated. Rendering-oriented families introduce yet another regime in which useful goodput is measured in ray batches or rendering tiles rather than one completed request.
 
-%==========================================================
-% Chapter 3 -> Section 3
-\section{Methodology}
-\label{sec:methodology}
+The central implication is that compatibility with shared RAN infrastructure depends on (i) execution boundaries, (ii) persistent-state semantics, and (iii) the extent to which accelerator occupancy can be bounded and reclaimed at runtime. In this proposal, bounded accelerator control means placing explicit caps on accelerator width, memory residency, and uninterrupted execution time so that preemption can occur before radio deadlines are endangered. What fails under RAN-first control is not inference in general, but the assumption that all inference workloads expose the same interruption boundary, state behaviour, and scheduler-visible unit of progress.
 
-This dissertation adopts a report-driven systems methodology targeted at the inference runtime layer of AI-RAN rather than at radio scheduling itself. The methodological problem is to determine how a unified multi-tenant inference system should operate under bounded execution windows, hard memory budgets, and reclaim events while preserving a strict RAN-first priority model. In the later design phases this bounded execution interface is formalized as a \texttt{ComputeLease}, but the methodological logic begins from workload properties, control decisions, and implementation artifacts rather than from the contract term alone.
+\subsection{Theme 3: The relevant control mechanisms already exist, but not as one runtime}
+
+At the systems level, the literature already provides many of the mechanisms this dissertation needs, but those mechanisms appear as local solutions rather than as one integrated runtime for bounded RAN-edge execution. For stateless vision inference or pipeline-style services, systems such as \textit{USHER}, \textit{Orion}, \textit{PPipe}, and \textit{OctopInf} show that interference-aware consolidation, operator scheduling, portion planning, and memory-feasibility checks can determine when a request should be admitted, how much accelerator width it can safely consume, and whether concurrent execution remains stable \cite{usher,orion,ppipe,octopinf}. For streaming services, \textit{PagedAttention}/vLLM, \textit{DistServe}, \textit{Orca}, \textit{CacheGen}, and \textit{DeepSpeed-Inference} show how key--value paging, iteration-level scheduling, phase disaggregation, context offloading, and parameter offload can preserve responsiveness when progress is stateful and iterative \cite{pagedattention,distserve,orca,cachegen,deepspeedinfer}.
+
+To address the challenge of revocable edge execution, these mechanisms are directly relevant to the proposed runtime. Key--value paging and context offloading become ways to preserve resumable progress under preemption. Memory-feasibility checks become admission constraints under bounded lease budgets. Fine-grained scheduling becomes the control lever that determines whether a workload can continue under a fixed execution window. The difficulty is therefore not the absence of mechanisms, but the absence of a unifying runtime contract that composes those mechanisms under revocable RAN-edge conditions.
+
+Fragmentation means that these systems generally assume stable data-centre GPU ownership, whereas the present setting must tolerate sudden millisecond-level, RAN-first resource revocation. The literature therefore supplies the pieces, but not the integrated control plane required when transient resources must remain subordinate to radio timing at every moment.
+
+\subsection{Theme 4: Empirical RAN studies and edge systems still stop short of inference-specific control}
+
+While Paradrop achieves lightweight edge deployment through explicit CPU, memory, network, and storage quotas together with practical lifecycle automation, it does not solve bounded accelerator control for heterogeneous inference \cite{paradrop}. While empirical studies of RAN deployments demonstrate that spare Streaming Multiprocessor (SM) headroom can emerge in bursty envelopes for secondary AI work, the literature still does not provide an inference-runtime contract for revocable shared GPU use. While CORA achieves a compelling end-to-end latency-budgeting model spanning uplink, compute, and downlink for edge inference, it does not specify the runtime-control layer that consumes those budgets under multi-tenant revocation pressure \cite{cora}. Consequently, the literature supplies the surrounding ingredients, but not the inference-specific runtime required for shared RAN infrastructure.
+
+\subsection{Gap statement}
+
+What remains missing is an inference-specific runtime-control architecture for shared RAN infrastructure. More precisely, the literature does not yet offer a unified design that combines (i) workload-family compatibility analysis, (ii) bounded execution windows, (iii) preemption-safe execution through context offloading, (iv) hard memory budgeting, (v) multi-tenant lifecycle control, and (vi) end-to-end latency awareness under a strict RAN-first operating model \cite{cora,slaairan,paradrop}. That integrated runtime gap is the one this dissertation addresses.
+
+\section{Implementation}
 
 \subsection{Methodology or Approach}
 
-\paragraph{Phase 1: Profiling and workload-property extraction.}
-The methodological inputs are the CORA workload taxonomy, the report-derived mechanism synthesis, and the RAN-edge timing constraints established earlier in this proposal \cite{cora,slaairan,chronos}. The first phase builds a profiling baseline that names, for each workload family, the dominant uplink/compute/downlink pressure, the natural \textbf{execution unit}, the persistent \textbf{state} that survives across useful work, and the safest cooperative interruption boundary. Concretely, this phase distinguishes coarse one-shot boundaries for activation-heavy vision and super-resolution, token-step or decoder-step boundaries for streaming transformers, and ray-batch boundaries for rendering workloads. The primary artifact is therefore not a generic survey but a workload-property matrix that records execution unit, state model, stage pressure, and preemptibility in a form that can drive later implementation decisions.
+The project is organised as a phased systems study that maps directly to the three research questions.
 
-\paragraph{Phase 2: Shared-mechanism synthesis and control-abstraction design.}
-The second phase turns the profiling matrix into a set of shared runtime mechanisms. Guided by the report synthesis, the methodology treats lease-aware admission control, micro-segmentation selection, state parking, memory budgeting, isolation policy, and telemetry as the common mechanism set that must span all workloads, while keeping room for workload-specific execution adapters \cite{beyond,cora,slaairan}. Here the key research task is to define the unifying control abstraction: what bounded execution windows mean operationally, what information must be observable at runtime, and which \textbf{decision variables} the controller may change when conditions deteriorate. The explicit deliverable is an architecture specification that names the control plane, data plane, unit-of-control semantics, reclaim behavior, and the artifact interfaces between them.
+Profiling establishes the workload baseline required for \textbf{RQ1}. Here, workload families are treated as recurrent execution classes of the kind distinguished in CORA-style categorisations: for example, stateless vision inference families such as image segmentation, pose estimation, super-resolution, or volume rendering; streaming language families such as auto-regressive language processing, sequence-to-sequence translation, and ASR pipelines \cite{cora,slaairan}. The profiling output is a structured matrix that records, for each representative family, the natural execution unit, dominant uplink/compute/downlink pressure, persistent-state profile, memory behaviour, safest interruption boundary, exact execution time per inference unit, Streaming Multiprocessor (SM) utilization, and radio resource blocks (PRBs) required for uplink and downlink streaming. It also profiles how those workloads physically perturb RAN-facing parameters, including slot-level deadline hit rates, PRB contention, and related control-channel pressure, so that later runtime decisions are grounded in measurable interaction with the primary telecom workload. This phase therefore establishes the evidential baseline on which later control decisions are justified.
 
-\paragraph{Phase 3: Workload-specific adapters and CORA-coupled policy construction.}
-The third phase designs the workload-specific branches that sit underneath the shared control plane. Streaming workloads require adapter logic for KV-cache or encoder/decoder state, pause-at-step boundaries, and state parking under reclaim; one-shot workloads require coarse tiling or per-inference draining policies because their activations make mid-execution interruption expensive; rendering workloads require ray-batch sizing and explicit handling of compact scene state. CORA enters this phase as a real control model rather than as background context: the controller will use stage-aware uplink, compute, and downlink pressure together with runtime \textbf{observables} such as per-work-unit runtime, VRAM headroom, time-to-first-token, and recovery latency to make placement, admission, execution-window sizing, degradation, and parking decisions \cite{cora,slaairan}. This is the point at which the proposal makes the intersection logic explicit: the runtime is unified at the level of shared mechanisms, but each workload family keeps its own adapter and stop-point policy.
+Architecturally, the second phase converts that baseline into a runtime architecture that answers \textbf{RQ2}. The working design term is \texttt{ComputeLease}, used here to formalise bounded execution windows with duration, effective accelerator width, available memory headroom, radio resource blocks (PRBs) for uplink and downlink streaming, and revocation semantics \cite{cora,slaairan}. Around that interface, the project specifies the shared runtime primitives required across workload families: admission control; segmentation into preemption-safe execution units; context offloading for resumable execution; memory budgeting; tiered resource isolation, that is, progressively stricter separation among competing workloads as contention rises; and telemetry for control decisions. Unlike a new radio scheduler, this layer remains strictly inference-side. At the systems level, rather than treating inference as a GPU-only task, the runtime explicitly orchestrates the mandatory radio uplink for input data, the accelerator compute phase, and the downlink for results so that network bottlenecks and accelerator scheduling decisions are managed together.
 
-\paragraph{Phase 4: Prototype implementation, artifact ladder, and evaluation bundle.}
-The fourth phase operationalizes the design through a containerized prototype runtime implemented with PyTorch-based inference components and reproducible edge-oriented experiments. The implementation artifact ladder is explicit: (i) the profiling matrix and workload-property baseline, (ii) the unified architecture and control-abstraction specification, (iii) workload-specific adapter designs, (iv) a prototype runtime with admission, parking, memory-budgeting, and telemetry paths, and (v) an evaluation bundle containing traces, configurations, and results. This phase treats the external resource allocator as an assumed provider of bounded execution windows, not as a subsystem to redesign, so the prototype can be exercised under replayed lease traces, synthetic reclaim events, and heterogeneous workload mixes while remaining faithful to the intended RAN-edge operating conditions \cite{beyond,chronos}.
+Implementation then provides the executable artefact needed for \textbf{RQ3} through a containerised prototype in two steps. It first runs in an emulated RAN-edge interface built from a lightweight Kubernetes-based testbed with a simple synthetic RAN layer that replays trace-like envelopes to simulate bounded radio-resource dynamics, preemption events, and timing pressure in a controlled setting. That step is intended to show that the runtime architecture responds correctly to RAN-facing constraints before any deployment on a richer external platform. It then moves to brief integration on the Campus5G environment, treated here as the later edge-oriented Open RAN target rather than the first implementation step \cite{campus5g}. Across both steps, the prototype carries the shared runtime-control path plus a deliberately small set of workload adapters chosen to span heterogeneous execution styles, for example an object-detection service as stateless vision inference and a stateful streaming LLM decoder as a revocation-sensitive language workload. Operationally, a quota-aware lifecycle substrate inspired by Paradrop manages the slow path around the accelerator runtime so that non-GPU budgets, start-up cost, and auxiliary services are handled explicitly rather than implicitly \cite{paradrop}.
+
+Evaluation finally makes that prototype observable under revocation pressure through controlled experiments with bounded execution windows. Experiments will use replayed execution windows, synthetic resource variation, preemption events, hard memory caps, and heterogeneous workload mixes. The evaluation is organised around three linked questions: (i) whether the system preserves strict QoS by yielding cleanly to preemption without radio-stack redesign; (ii) whether it remains stable under coupled memory and revocation pressure, particularly for stateful workloads; and (iii) whether it converts bounded execution windows into sufficient useful goodput to justify the added control complexity.
 
 \subsection{Expected Outcomes}
 
-The first expected outcome is a profiling and analysis baseline that formalizes which workload classes are plausible at the RAN edge, what their execution units and state semantics are, and how stage pressure shifts across uplink, compute, and downlink. This baseline is valuable because it converts a broad AI-and-RAN motivation into an auditable design input for implementation.
+At the systems level, the project produces (i) a workload-property baseline that makes compatibility claims explicit, (ii) a runtime architecture specification that defines the shared control path, (iii) a containerised prototype that exercises the architecture under bounded execution, and (iv) an evaluation bundle containing repeatable experiments, plots, and analysis notes.
 
-The second expected outcome is a concrete architecture for a unified multi-tenant RAN-edge inference runtime. That architecture will define the shared mechanism set, the workload-specific adapters, the control/data-plane split, the runtime observables, and the decision variables used to keep inference compatible with RAN-first constraints.
-
-The third expected outcome is an executable prototype and evaluation bundle showing how the proposed runtime behaves under reclaim, strict VRAM limits, and heterogeneous workload mixes. Together, these artifacts should provide both a dissertation-scale research contribution and a practical engineering blueprint for future AI-and-RAN deployments.
+Scientifically, the project contributes a coherent account of how bounded, revocable RAN-edge execution can be converted into a useful substrate for edge inference without weakening strict QoS preservation. The goal is not to claim production readiness. Instead, the project demonstrates that the unified-runtime design is technically defensible, operationally bounded, and evaluable at dissertation scale.
 
 \subsection{Evaluation Criteria}
 
-Evaluation will first test \textbf{telecom-safe execution}. A configuration will only be considered viable if inference work yields cleanly to reclaim events, respects strict priority for telecommunications traffic, and does not depend on redesigning the external scheduler. For streaming workloads, core metrics include time-to-first-token, per-step service time, and recovery latency under interruption; for one-shot workloads, the primary metric is completion latency relative to the granted execution window \cite{cora,slaairan}.
+Accordingly, the thresholds below are operational targets for dissertation success rather than claimed outcomes. For telecom-safe execution, the prototype must exhibit zero intentional cases in which inference continues after a preemption signal or lease expiry in the controlled experiments. To show that primary radio functions are not degraded, the evaluation tracks RAN workload parameters, including PRB utilization interference, control-channel degradation, and slot-level deadline violations for the primary telecom workloads. For inference service quality, the evaluation reports end-to-end latency, tail quantiles (p50/p95/p99), and deadline hit-rate for each workload family. For streaming language-model workloads, it additionally reports time-to-first-token (TTFT) and token throughput, because elevated TTFT is a useful proxy for queueing and prefill stalls under strict budgets \cite{slaairan}. Where language-model workloads are exercised, the experiments use explicit strict and medium latency targets aligned with that study and report how model variant or quantization changes feasibility under bounded resources.
 
-The second evaluation group targets \textbf{resource survival under coupled edge constraints}. Here the methodology will measure whether live memory remains below the configured budget, whether parked state can be restored without destabilizing latency, and whether fragmentation or transient-buffer growth causes failure under repeated reclaim. CORA-coupled reasoning is explicit in this stage: when uplink pressure dominates, the system must avoid overcommitting one-shot workloads whose useful progress is input-gated; when compute or downlink pressure dominates, the controller must adapt execution-window sizing, parking aggressiveness, or degradation policy rather than treating all workloads as equivalent \cite{cora,slaairan}.
+For model fidelity, the evaluation also tracks workload-appropriate quality measures under tight resource constraints --- for example, task accuracy for vision workloads and answer-quality or token-level correctness proxies for generative workloads --- and reports any degradation relative to isolated baselines alongside the resource setting that caused it. For memory control, live memory must remain within configured budgets and context restoration must succeed for the workloads that rely on context offloading. For execution efficiency, the system must demonstrate that a substantial proportion of each bounded execution window is converted into useful goodput rather than scheduling overhead alone. The evaluation criteria therefore make the success conditions measurable while still leaving room for workload-specific analysis.
 
-The final evaluation group measures \textbf{execution efficiency and control quality}. The key metrics are micro-segmentation overhead, admission precision, useful work completed per execution window, and the stability of runtime decisions under changing channel and resource conditions. These evaluation outputs are intended to show not only that the architecture is safe, but that the unified control logic remains worthwhile once real workload diversity, reclaim volatility, and stage-aware coupling are taken into account.
+These same criteria structure the answers to the research questions. \textbf{RQ1} is answered if the workload matrix clearly separates compatible and incompatible workload families. \textbf{RQ2} is answered if the runtime-control design can be justified from those workload properties and mapped to implementable shared primitives. \textbf{RQ3} is answered if the prototype and experiments show bounded, preemption-safe execution under the target execution model.
 
+\Needspace{14\baselineskip}
+\subsection{Risk Assessment and Mitigations}
 
-%==========================================================
-% Chapter 4 -> Section 4
-\section{Project Plan and Timeline}
-\label{sec:project_plan}
+The project risk profile is manageable because the design scope is bounded to the inference-runtime layer rather than a full RAN-stack redesign. The primary risks are therefore methodological and engineering risks rather than deployment or regulatory risks. Accordingly, the mitigation strategy is staged and evidence-led: produce design artefacts early, freeze the workload baseline before implementation, and preserve contingency for integration and writing late in the schedule.
 
-\textit{This section does not count towards the page limit.}
+\begin{table}[H]
+\tiny
+\centering
+\caption{Risk profile and mitigation matrix.}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lllllll@{}}
+\toprule
+\makecell[l]{\textbf{Activity}} & \makecell[l]{\textbf{Risk Description}} & \makecell[l]{\textbf{Affects}} & \makecell[c]{\textbf{Likelihood}\\\textbf{(H/M/L)}} & \makecell[c]{\textbf{Severity}\\\textbf{(H/M/L)}} & \makecell[l]{\textbf{Mitigation}} & \makecell[l]{\textbf{Overall}\\\textbf{Category}} \\
+\midrule
+\makecell[l]{Workload\\baseline} & \makecell[l]{Workload families prove too broad\\for dissertation-scale coverage.} & \makecell[l]{Scope and\\analysis depth} & Medium & Medium & \makecell[l]{Freeze representative workloads in WP1;\\prefer depth over breadth;\\document exclusions explicitly.} & Medium \\
+\makecell[l]{Runtime\\design} & \makecell[l]{The unified control abstraction\\becomes too ambitious or underspecified.} & \makecell[l]{Architecture\\quality} & Medium & High & \makecell[l]{Keep the design strictly at the inference-runtime boundary.\\Mitigate implementation overhead by refactoring and extending\\existing, extensible inference frameworks rather than engineering\\a new serving engine from scratch.} & \makecell[l]{Medium--\\High} \\
+\makecell[l]{Prototype\\integration} & \makecell[l]{Adapter and telemetry work\\take longer than expected.} & \makecell[l]{Prototype\\completion} & Medium & High & \makecell[l]{Implement the shared runtime skeleton first. Adopt an iterative\\approach by initially building adapters for simpler, easily\\integrated workload classes (e.g., stateless vision inference)\\before targeting complex stateful systems. Reserve a buffer\\in Weeks 11--12.} & \makecell[l]{Medium--\\High} \\
+Evaluation & \makecell[l]{Controlled experiments do not produce\\sufficiently stable or interpretable results.} & \makecell[l]{Evidence\\quality} & Medium & Medium & \makecell[l]{Use replayable workloads, isolated baselines,\\fixed metrics, and incremental experiment scripts.} & Medium \\
+Facilities & \makecell[l]{Access to suitable GPU hardware\\is limited or intermittent.} & \makecell[l]{Prototype and\\evaluation} & Low & Medium & \makecell[l]{Use a portable container stack; emulate bounded\\execution windows if DU-adjacent hardware is unavailable.} & \makecell[l]{Low--\\Medium} \\
+\makecell[l]{Writing\\schedule} & \makecell[l]{Implementation overruns reduce\\dissertation writing time.} & \makecell[l]{Submission\\quality} & Medium & High & \makecell[l]{Start writing from Week 9, maintain chapter skeletons\\earlier, and protect a dedicated revision buffer.} & \makecell[l]{Medium--\\High} \\
+\makecell[l]{Responsible\\research} & \makecell[l]{Logging or traces inadvertently include\\sensitive operational detail.} & \makecell[l]{Ethics and\\data handling} & Low & Medium & \makecell[l]{Use synthetic or sanitised traces, minimise retention,\\and exclude subscriber or operator-identifiable data.} & Low \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
 
-The project is structured as a twelve-week dissertation plan that mirrors the revised methodology. Report-driven profiling and workload-property extraction are completed first so that the rest of the study is grounded in an explicit baseline of execution units, state semantics, and stage pressure rather than in informal assumptions. Architecture synthesis and workload-adapter design then lead into prototype construction, after which CORA-coupled control integration and evaluation are used to validate the runtime under reclaim, hard memory limits, and heterogeneous workload mixes. Dissertation writing begins before the final experiments conclude so that schedule risk is absorbed through continuous integration of results rather than through a single late write-up phase. If the later control logic proves harder than expected, the dissertation still retains value through the profiling baseline, the unified architecture specification, the adapter/policy design, and the experimentally validated prototype runtime.
+\Needspace{8\baselineskip}
+\subsection{Responsible Research Including Ethics}
 
-\begin{figure}[!htbp]
-	\centering
-	\begin{ganttchart}[
-			y unit title=0.45cm,
-			y unit chart=0.55cm,
-			vgrid,hgrid,
-			x unit=0.60cm,
-			title/.append style={draw=none, fill=accentblue},
-			title label font=\sffamily\bfseries\color{white},
-			bar/.append style={draw=none, fill=mainblue},
-			group/.append style={draw=none, fill=accentblue},
-			group label font=\bfseries,
-			milestone/.append style={fill=mainblue},
-			milestone label font=\small\bfseries,
-			bar height=.6,
-			bar label font=\small\color{black!80}
-		]{1}{12}
-		\gantttitle{Project Weeks}{12}\\
-		\gantttitlelist{1,...,12}{1}\\
-		\ganttgroup{Profiling \& Baseline}{1}{2} \\
-		\ganttbar{Build workload-property matrix}{1}{2} \\
-		\ganttmilestone{M1: Baseline frozen}{2} \\
-		\ganttgroup{Architecture Synthesis}{2}{4} \\
-		\ganttbar{Shared mechanisms \& control abstraction}{2}{4} \\
-		\ganttmilestone{M2: Architecture spec complete}{4} \\
-		\ganttgroup{Adapter \& Policy Design}{4}{7} \\
-		\ganttbar{Design adapters and CORA-coupled policy}{4}{7} \\
-		\ganttmilestone{M3: Adapter/policy design complete}{7} \\
-		\ganttgroup{Prototype \& Setup}{7}{9} \\
-		\ganttbar{Implement runtime prototype \& replay harness}{7}{9} \\
-		\ganttmilestone{M4: Prototype runnable}{9} \\
-		\ganttgroup{Evaluation}{9}{10} \\
-		\ganttbar{Run reclaim, VRAM, and stage-pressure tests}{9}{10} \\
-		\ganttmilestone{M5: Evaluation bundle complete}{10} \\
-		\ganttgroup{Writing \& Integration}{8}{12} \\
-		\ganttbar{Draft, integrate, and revise dissertation chapters}{8}{12} \\
-		\ganttmilestone{Final dissertation submission}{12}
-	\end{ganttchart}
-	\caption{Twelve-week project plan aligned with the report-driven methodology.}
-	\label{fig:gantt}
-\end{figure}
+The project is a systems dissertation centred on controlled experimental infrastructure rather than live service deployment. Its main institutional risk is accidental misuse of traces, logs, or configuration artefacts, which will be controlled by using synthetic, replayed, or explicitly sanitised inputs and by retaining only the minimum material needed to explain and reproduce the experiments.
+
+Some evaluated workloads may involve generative models or large language models (LLMs) at the edge. The relevant risk is unsafe or misleading model behaviour even when the runtime behaves correctly, so such workloads will be restricted to research-grade evaluation settings with bounded generation lengths, task-appropriate prompt restrictions, and lightweight output-side safety checks or refusal logging where available.
+
+The project will not publish sensitive operator configuration, credentials, or deployment-ready hostile-use instructions. Third-party code and ideas will be cited explicitly, licence conditions will be checked before reuse, and experiment scripts, container configurations, and analysis notebooks will be kept under version control to preserve reproducibility. No personal data is expected in scope.
 
 \clearpage
+\section{Research Plan, Milestones, and Deliverables}
+\textit{This section does not count towards the page limit.}
+
+Overall, the work is structured as four work packages so that the project plan matches the research logic. Each work package produces a concrete artefact, depends on the outputs of earlier stages, and contributes directly to the final dissertation.
+
+\Needspace{14\baselineskip}
+\subsection{Work packages}
+
+\begin{table}[H]
+\tiny
+\centering
+\caption{Work-package structure and dependencies.}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{WP} & \textbf{Focus} & \textbf{Tasks} & \textbf{Depends on} & \makecell[l]{\textbf{Deliverable}\\\textbf{/ milestone}} \\
+\midrule
+WP1 & \makecell[l]{Baseline and\\scope control} & \makecell[l]{Consolidate literature; derive workload-property matrix;\\identify execution units, state, and interruption boundaries;\\freeze evaluation scope.} & None & \makecell[l]{D1: workload baseline;\\M1: scope frozen} \\
+WP2 & \makecell[l]{Unified runtime\\design} & \makecell[l]{Specify \texttt{ComputeLease}; define admission, segmentation,\\context offloading, tiered resource isolation, and memory-budget\\primitives; map mechanisms to workload families.} & WP1 & \makecell[l]{D2: architecture specification;\\M2: control design fixed} \\
+WP3 & \makecell[l]{Prototype and\\adapters} & \makecell[l]{Implement shared runtime skeleton; add workload adapters;\\add reclaim handling and telemetry; exercise the design\\in bounded execution experiments.} & WP2 & \makecell[l]{D3: runnable prototype;\\M3: integration complete} \\
+WP4 & \makecell[l]{Evaluation, writing,\\and contingency} & \makecell[l]{Run experiments; analyse results;\\write dissertation chapters;\\reserve buffer for integration slippage and revision.} & WP1--WP3 & \makecell[l]{D4: evaluation bundle;\\D5: dissertation draft/final;\\M4: submission-ready\\package} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Resources, facilities, and dependencies}
+
+The project depends on access to a GPU-capable development environment, container tooling, and a reproducible experiment workflow. It also depends on access to the Campus5G network at the University of Edinburgh. It does not depend on live subscriber data. If DU-adjacent hardware is unavailable at a given stage, the dissertation remains valid because bounded execution can be studied through controlled replay and emulation before richer deployment assumptions are introduced. The project also depends on the availability of cited public systems evidence and the workload baseline derived from that evidence. These dependencies are manageable and do not require any change in scientific direction.
+
+\subsection{Deliverables and milestones}
+
+\begin{table}[H]
+\small
+\sloppy
+\centering
+\setlength{\tabcolsep}{5pt}
+\caption{Deliverables, timing, and dissertation use.}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{@{}P{1.10cm}P{7.20cm}P{1.70cm}P{3.20cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Deliverable} & \textbf{Timing} & \makecell[l]{\textbf{Use in}\\\textbf{dissertation}} \\
+\midrule
+D1 & Workload-property matrix and compatibility baseline & Weeks 1--2 & Grounds RQ1 and narrows evaluation scope \\
+D2 & Unified runtime-control specification & Weeks 3--5 & Answers the design component of RQ2 \\
+D3 & Containerised prototype with workload adapters & Weeks 6--8 & Enables controlled experiments for RQ3 \\
+D4 & Evaluation bundle, plots, and analysis notes & Weeks 9--10 & Supports claims about safety, stability, and useful goodput \\
+D5 & Full dissertation draft, revisions, and final submission package & Weeks 9--12 & Final integrated research output \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+\fussy
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{%
+\begin{ganttchart}[
+    y unit title=0.38cm,
+    y unit chart=0.46cm,
+    x unit=0.54cm,
+    vgrid,hgrid,
+    title/.append style={draw=none, fill=accentblue},
+    title label font=\sffamily\bfseries\color{white},
+    bar/.append style={draw=none, fill=mainblue},
+    group/.append style={draw=none, fill=accentblue},
+    group label font=\bfseries,
+    milestone/.append style={fill=mainblue},
+    milestone label font=\scriptsize\bfseries,
+    bar height=.58,
+    bar label font=\scriptsize\color{black!80}
+]{1}{12}
+\gantttitle{Project Weeks}{12}\\
+\gantttitlelist{1,...,12}{1}\\
+\ganttgroup{WP1: Baseline}{1}{2}\\
+\ganttbar{Profiling and workload matrix}{1}{2}\\
+\ganttmilestone{M1}{2}\\
+\ganttgroup{WP2: Runtime design}{3}{5}\\
+\ganttbar{Lease contract and shared primitives}{3}{5}\\
+\ganttmilestone{M2}{5}\\
+\ganttgroup{WP3: Prototype}{6}{8}\\
+\ganttbar{Prototype, adapters, telemetry}{6}{8}\\
+\ganttmilestone{M3}{8}\\
+\ganttgroup{WP4: Evaluation and writing}{9}{12}\\
+\ganttbar{Experiments and analysis}{9}{10}\\
+\ganttbar{Writing, revision, and integration}{9}{12}\\
+\ganttbar{Contingency buffer}{11}{12}\\
+\ganttmilestone{M4}{12}
+\end{ganttchart}%
+}
+\caption{Twelve-week dissertation plan aligned with the work-package structure.}
+\end{figure}
 
 %-------------------- References -------------------------
-\bibliographystyle{unsrt}
+\clearpage
+\bibliographystyle{unsrturl}
 
 {\small
 	\bibliography{main}
-	\textit{This section does not count towards the page limit.}
 }
 
 \end{document}

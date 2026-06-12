@@ -1,0 +1,169 @@
+{
+  "component": "docker_criu_integration",
+  "details": {
+    "commands": {
+      "docker_checkpoint_create": {
+        "argv": [
+          "docker",
+          "checkpoint",
+          "create",
+          "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8",
+          "ai-edge-v0-criu-checkpoint"
+        ],
+        "duration_s": 0.6434432179958094,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "ai-edge-v0-criu-checkpoint\n",
+        "timed_out": false
+      },
+      "docker_checkpoint_help": {
+        "argv": [
+          "docker",
+          "checkpoint",
+          "--help"
+        ],
+        "duration_s": 0.046640281994768884,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "Usage:  docker checkpoint COMMAND\n\nManage checkpoints\n\nCommands:\n  create      Create a checkpoint from a running container\n  ls          List checkpoints for a container\n  rm          Remove a checkpoint\n\nRun 'docker checkpoint COMMAND --help' for more information on a command.\n",
+        "timed_out": false
+      },
+      "docker_inspect_labels": {
+        "argv": [
+          "docker",
+          "inspect",
+          "--format",
+          "{{json .Config.Labels}}",
+          "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8"
+        ],
+        "duration_s": 0.028370458996505477,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "{\"ai-edge-component\":\"docker-criu\",\"ai-edge-experiment\":\"v0\",\"ai-edge-run-id\":\"ai-edge-v0-vllm-real\"}\n",
+        "timed_out": false
+      },
+      "docker_inspect_state": {
+        "argv": [
+          "docker",
+          "inspect",
+          "--format",
+          "{{.State.Status}}",
+          "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8"
+        ],
+        "duration_s": 0.03175569100130815,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "running\n",
+        "timed_out": false
+      },
+      "docker_rm_force": {
+        "argv": [
+          "docker",
+          "rm",
+          "-f",
+          "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8"
+        ],
+        "duration_s": 0.13306984899827512,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8\n",
+        "timed_out": false
+      },
+      "docker_run": {
+        "argv": [
+          "docker",
+          "run",
+          "-d",
+          "--runtime",
+          "runc",
+          "--network",
+          "host",
+          "--name",
+          "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8",
+          "--label",
+          "ai-edge-experiment=v0",
+          "--label",
+          "ai-edge-component=docker-criu",
+          "--label",
+          "ai-edge-run-id=ai-edge-v0-vllm-real",
+          "busybox:1.36",
+          "sh",
+          "-c",
+          "while true; do sleep 1; done"
+        ],
+        "duration_s": 0.268534221999289,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "7c7aad6dc94a309b0a981cd9ee43734aab427ee504b27d290273be13194b8a45\n",
+        "timed_out": false
+      },
+      "docker_start_checkpoint": {
+        "argv": [
+          "docker",
+          "start",
+          "--checkpoint",
+          "ai-edge-v0-criu-checkpoint",
+          "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8"
+        ],
+        "duration_s": 0.4103628020020551,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "",
+        "timed_out": false
+      },
+      "post_checkpoint_delay": {
+        "duration_s": 5.0,
+        "status": "ok"
+      }
+    },
+    "container": {
+      "checkpoint_name": "ai-edge-v0-criu-checkpoint",
+      "image": "busybox:1.36",
+      "inspected_labels": {
+        "ai-edge-component": "docker-criu",
+        "ai-edge-experiment": "v0",
+        "ai-edge-run-id": "ai-edge-v0-vllm-real"
+      },
+      "name": "ai-edge-v0-criu-ai-edge-v0-vllm-real-372c2ae8",
+      "network_mode": "host",
+      "post_checkpoint_delay_s": 5.0,
+      "runtime": "runc"
+    },
+    "extracted": {
+      "container_state": "running"
+    },
+    "prerequisites": {
+      "criu_status": "ok"
+    },
+    "smoke": {
+      "attempted": true,
+      "container_id": "7c7aad6dc94a309b0a981cd9ee43734aab427ee504b27d290273be13194b8a45"
+    }
+  },
+  "monotonic_ns": 37635426979489,
+  "run_id": "ai-edge-v0-vllm-real",
+  "schema_version": "0.1.0",
+  "status": "ok",
+  "timestamp_utc": "2026-06-10T00:31:17.469171Z"
+}

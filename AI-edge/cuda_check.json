@@ -1,0 +1,35 @@
+{
+  "component": "cuda_check",
+  "details": {
+    "commands": {
+      "docker_run_nvidia_smi": {
+        "argv": [
+          "docker",
+          "run",
+          "--gpus",
+          "all",
+          "--rm",
+          "nvidia/cuda:12.4.1-base-ubuntu22.04",
+          "nvidia-smi"
+        ],
+        "duration_s": 0.8718803049996495,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "Wed Jun 10 00:31:17 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.43.02              KMD Version: 610.43.02     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA L40S                    On  |   00000000:03:00.0 Off |                    0 |\n| N/A   43C    P8             35W /  350W |      14MiB /  46068MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|  No running processes found                                                             |\n+-----------------------------------------------------------------------------------------+\n",
+        "timed_out": false
+      }
+    },
+    "container": {
+      "image": "nvidia/cuda:12.4.1-base-ubuntu22.04"
+    },
+    "extracted": {}
+  },
+  "monotonic_ns": 37636299144388,
+  "run_id": "ai-edge-v0-vllm-real",
+  "schema_version": "0.1.0",
+  "status": "ok",
+  "timestamp_utc": "2026-06-10T00:31:18.341334Z"
+}

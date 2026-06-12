@@ -33,6 +33,10 @@ _UNSUPPORTED_MARKERS = (
     "no such file or directory",
     "checkpoint support",
 )
+_CUSTOM_CHECKPOINTDIR_UNSUPPORTED_MARKERS = (
+    "custom checkpointdir is not supported",
+    "custom checkpoint dir is not supported",
+)
 
 CommandRunner = Callable[..., CommandResult]
 DebugCaptureHook = Callable[[dict[str, Any]], None]
@@ -79,6 +83,10 @@ def _classify_result(
     ):
         return ProbeStatus.UNSUPPORTED, f"unsupported capability: {command_label}"
     return ProbeStatus.ERROR, f"command failure(s): {command_label}"
+
+
+def _is_custom_checkpointdir_unsupported(result: CommandResult) -> bool:
+    return any(marker in _combined_text(result) for marker in _CUSTOM_CHECKPOINTDIR_UNSUPPORTED_MARKERS)
 
 
 def _extract_criu_version(stdout: str) -> str | None:
@@ -401,6 +409,84 @@ def collect_docker_criu_integration(
         command_label="docker start --checkpoint",
         capability_sensitive=True,
     )
+
+    if (
+        start_status != ProbeStatus.OK
+        and checkpoint_dir
+        and start_status == ProbeStatus.UNSUPPORTED
+        and _is_custom_checkpointdir_unsupported(start_result)
+    ):
+        fallback = details.setdefault("fallback", {})
+        fallback["reason"] = (
+            "docker start does not support custom checkpointdir on this host; "
+            "retrying with default checkpoint storage"
+        )
+        fallback["original_checkpoint_dir"] = checkpoint_dir
+
+        recover_start_result = runner(
+            ["docker", "start", resolved_container_name],
+            timeout_s=timeout_s,
+        )
+        details["commands"]["docker_start_recover_after_checkpointdir_failure"] = (
+            _command_details(recover_start_result)
+        )
+        recover_start_status, recover_start_reason = _classify_result(
+            recover_start_result,
+            command_label="docker start",
+            capability_sensitive=True,
+        )
+        if recover_start_status == ProbeStatus.OK:
+            fallback_checkpoint_name = f"{checkpoint_name}-default-fallback"
+            fallback["checkpoint_name"] = fallback_checkpoint_name
+            fallback_checkpoint_result = runner(
+                [
+                    "docker",
+                    "checkpoint",
+                    "create",
+                    resolved_container_name,
+                    fallback_checkpoint_name,
+                ],
+                timeout_s=timeout_s,
+            )
+            details["commands"]["docker_checkpoint_create_fallback"] = _command_details(
+                fallback_checkpoint_result
+            )
+            fallback_checkpoint_status, fallback_checkpoint_reason = _classify_result(
+                fallback_checkpoint_result,
+                command_label="docker checkpoint create (fallback)",
+                capability_sensitive=True,
+            )
+            if fallback_checkpoint_status == ProbeStatus.OK:
+                fallback_start_result = runner(
+                    [
+                        "docker",
+                        "start",
+                        "--checkpoint",
+                        fallback_checkpoint_name,
+                        resolved_container_name,
+                    ],
+                    timeout_s=timeout_s,
+                )
+                details["commands"]["docker_start_checkpoint_fallback"] = _command_details(
+                    fallback_start_result
+                )
+                fallback_start_status, fallback_start_reason = _classify_result(
+                    fallback_start_result,
+                    command_label="docker start --checkpoint (fallback)",
+                    capability_sensitive=True,
+                )
+                start_status = fallback_start_status
+                start_reason = fallback_start_reason
+                if fallback_start_status == ProbeStatus.OK:
+                    fallback["used"] = True
+                    fallback["status"] = ProbeStatus.OK.value
+            else:
+                start_status = fallback_checkpoint_status
+                start_reason = fallback_checkpoint_reason
+        else:
+            start_status = recover_start_status
+            start_reason = recover_start_reason
+
     if start_status != ProbeStatus.OK:
         _run_debug_capture_hook(
             debug_capture_hook=debug_capture_hook,

@@ -50,18 +50,21 @@ def test_validate_trace_contract_normalizes_schema_b_fixture(tmp_path: Path) -> 
             "sm_utilization": "0",
             "slot_duration_ms": "1.5",
             "source_schema": trace_contract.SOURCE_SCHEMA_B,
+            "sm_count": "0",
         },
         {
             "time_ms": "2.5",
             "sm_utilization": "100",
             "slot_duration_ms": "1",
             "source_schema": trace_contract.SOURCE_SCHEMA_B,
+            "sm_count": "3",
         },
         {
             "time_ms": "3.5",
             "sm_utilization": "0",
             "slot_duration_ms": "1.25",
             "source_schema": trace_contract.SOURCE_SCHEMA_B,
+            "sm_count": "0",
         },
     ]
 
@@ -103,18 +106,82 @@ def test_normalize_primary_trace_supports_schema_a(tmp_path: Path) -> None:
             "sm_utilization": 20.0,
             "slot_duration_ms": 1.0,
             "source_schema": trace_contract.SOURCE_SCHEMA_A,
+            "sm_count": "",
         },
         {
             "time_ms": 1.0,
             "sm_utilization": 60.0,
             "slot_duration_ms": 2.0,
             "source_schema": trace_contract.SOURCE_SCHEMA_A,
+            "sm_count": "",
         },
         {
             "time_ms": 3.0,
             "sm_utilization": 0.0,
             "slot_duration_ms": 1.5,
             "source_schema": trace_contract.SOURCE_SCHEMA_A,
+            "sm_count": "",
+        },
+    ]
+
+
+def test_normalize_primary_trace_supports_schema_b_with_extra_columns(
+    tmp_path: Path,
+) -> None:
+    trace_path = tmp_path / "ldpc_trace_schema_b_superset.csv"
+    trace_path.write_text(
+        (
+            "frame,slot,time_slot_sched_ns,time_decode_start_actual_ns,sm_count,target_sm\n"
+            "570,19,1000000,1200000,8,8\n"
+            "572,18,2500000,2700000,16,8\n"
+            "573,8,3500000,3600000,8,8\n"
+        ),
+        encoding="utf-8",
+    )
+
+    normalized_rows, inspection, issues = trace_contract.normalize_primary_trace(
+        trace_path
+    )
+
+    assert issues == ()
+    assert inspection["schema_detected"] == trace_contract.SOURCE_SCHEMA_B
+    assert inspection["usable"] is True
+    assert inspection["header"] == [
+        "frame",
+        "slot",
+        "time_slot_sched_ns",
+        "time_decode_start_actual_ns",
+        "sm_count",
+        "target_sm",
+    ]
+    assert inspection["monotonicity"] == {
+        "checked_column": "time_slot_sched_ns",
+        "is_non_decreasing": True,
+        "negative_delta_count": 0,
+        "zero_delta_count": 0,
+        "positive_delta_count": 2,
+    }
+    assert normalized_rows == [
+        {
+            "time_ms": 1.0,
+            "sm_utilization": 0.0,
+            "slot_duration_ms": 1.5,
+            "source_schema": trace_contract.SOURCE_SCHEMA_B,
+            "sm_count": 8,
+        },
+        {
+            "time_ms": 2.5,
+            "sm_utilization": 100.0,
+            "slot_duration_ms": 1.0,
+            "source_schema": trace_contract.SOURCE_SCHEMA_B,
+            "sm_count": 16,
+        },
+        {
+            "time_ms": 3.5,
+            "sm_utilization": 0.0,
+            "slot_duration_ms": 1.25,
+            "source_schema": trace_contract.SOURCE_SCHEMA_B,
+            "sm_count": 8,
         },
     ]
 
@@ -149,8 +216,8 @@ def test_validate_trace_contract_fails_closed_on_missing_column_fixture(
             "trace_name": "ldpc_trace.csv",
             "error_code": "unsupported_schema",
             "message": (
-                "Primary ldpc_trace.csv must use exactly one of the supported "
-                "headers: time_ms,sm_utilization or time_slot_sched_ns,sm_count"
+                "Primary ldpc_trace.csv must include one of the supported "
+                "column pairs: time_ms,sm_utilization or time_slot_sched_ns,sm_count"
             ),
         }
     ]

@@ -8,8 +8,9 @@ from typing import Any
 
 from huggingface_hub import hf_hub_download
 import torch
+import torch.nn.functional as torch_functional
 
-from inference_profile import opt_assets
+from inference_profile import experiments, opt_assets
 from inference_profile.constants import PREFILL_CHUNK_SIZES
 from inference_profile.worker_profile_point import RawCsvWriter
 
@@ -24,10 +25,15 @@ PREFILL_OP_NAMES = (
     "fc1",
     "fc2",
 )
+PREFILL_GEMM_OP_TYPE = "gemm"
+PREFILL_ATTENTION_OP_TYPE = "attention"
+PREFILL_ATTENTION_OP_NAME = "attention"
 PREFILL_EVENT_FIELDNAMES = (
     "model_id",
     "chunk_tokens",
+    "op_type",
     "op_name",
+    "sm_ai_partition",
     "timed_iteration",
     "duration_us",
     "baseline_vram_bytes",
@@ -53,6 +59,7 @@ class PrefillProfileResult:
     raw_output_path: Path
     row_count: int
     parked_activation_bytes_by_chunk: dict[int, int]
+    max_input_tokens: int
 
 
 def resolve_prefill_output_path(
@@ -139,6 +146,14 @@ def largest_prefill_activation_op(
     return max(PREFILL_OP_NAMES, key=lambda op_name: output_bytes_by_op[op_name])
 
 
+def calculate_max_input_tokens(
+    config: opt_assets.OptConfig,
+    *,
+    output_tokens: int = experiments.RAN_DGXSPARK_V1_L_OUT,
+) -> int:
+    return max(0, int(config.max_position_embeddings) - int(output_tokens))
+
+
 def profile_prefill_sweep(
     *,
     model_id: str,
@@ -148,6 +163,7 @@ def profile_prefill_sweep(
     warmup_iterations: int = 3,
     timed_iterations: int = 5,
     gpu_id: int = 0,
+    sm_ai_partition: int = 100,
     config_payload: Mapping[str, Any] | opt_assets.OptConfig | None = None,
     cache_root: str | Path | None = None,
 ) -> PrefillProfileResult:
@@ -164,6 +180,7 @@ def profile_prefill_sweep(
             warmup_iterations=warmup_iterations,
             timed_iterations=timed_iterations,
             gpu_id=gpu_id,
+            sm_ai_partition=sm_ai_partition,
             config_payload=config_payload,
             cache_root=cache_root,
         )
@@ -180,6 +197,7 @@ def profile_prefill_with_writer(
     warmup_iterations: int = 3,
     timed_iterations: int = 5,
     gpu_id: int = 0,
+    sm_ai_partition: int = 100,
     config_payload: Mapping[str, Any] | opt_assets.OptConfig | None = None,
     cache_root: str | Path | None = None,
 ) -> PrefillProfileResult:
@@ -194,11 +212,13 @@ def profile_prefill_with_writer(
         config_payload=config_payload,
         cache_root=cache_root,
     )
+    resolved_sm_ai_partition = _normalize_sm_ai_partition(sm_ai_partition)
     device = _require_cuda_device(gpu_id)
     torch_dtype = getattr(torch, PREFILL_DTYPE_NAME)
     torch.cuda.set_device(device)
 
     ops = _build_prefill_linear_ops(config, device=device, dtype=torch_dtype)
+    ops_by_name = {op.op_name: op for op in ops}
     parked_activation_bytes_by_chunk: dict[int, int] = {}
 
     with torch.inference_mode():
@@ -215,10 +235,26 @@ def profile_prefill_with_writer(
                     chunk,
                 )
             )
+            query, key, value = _build_prefill_attention_inputs(
+                config,
+                q_proj_module=ops_by_name["q_proj"].module,
+                k_proj_module=ops_by_name["k_proj"].module,
+                v_proj_module=ops_by_name["v_proj"].module,
+                hidden_input=input_tensors["q_proj"],
+            )
             for op in ops:
                 input_tensor = input_tensors[op.op_name]
                 _run_warmup(op.module, input_tensor, warmup_iterations, device=device)
-                for iteration in range(timed_iterations):
+            _run_attention_warmup(
+                query,
+                key,
+                value,
+                warmup_iterations,
+                device=device,
+            )
+            for iteration in range(timed_iterations):
+                for op in ops:
+                    input_tensor = input_tensors[op.op_name]
                     row = _time_linear_op(
                         model_id=config.model_id,
                         chunk_tokens=chunk,
@@ -227,8 +263,21 @@ def profile_prefill_with_writer(
                         module=op.module,
                         input_tensor=input_tensor,
                         device=device,
+                        sm_ai_partition=resolved_sm_ai_partition,
                     )
                     raw_writer.write_row(row)
+                raw_writer.write_row(
+                    _time_attention_op(
+                        model_id=config.model_id,
+                        chunk_tokens=chunk,
+                        timed_iteration=iteration,
+                        query=query,
+                        key=key,
+                        value=value,
+                        device=device,
+                        sm_ai_partition=resolved_sm_ai_partition,
+                    )
+                )
 
     return PrefillProfileResult(
         model_id=config.model_id,
@@ -237,6 +286,7 @@ def profile_prefill_with_writer(
         else Path(),
         row_count=raw_writer.row_count,
         parked_activation_bytes_by_chunk=parked_activation_bytes_by_chunk,
+        max_input_tokens=calculate_max_input_tokens(config),
     )
 
 
@@ -392,6 +442,20 @@ def _run_warmup(
     torch.cuda.synchronize(device)
 
 
+def _run_attention_warmup(
+    query: torch.Tensor,
+    key: torch.Tensor,
+    value: torch.Tensor,
+    warmup_iterations: int,
+    *,
+    device: torch.device,
+) -> None:
+    for _ in range(warmup_iterations):
+        output = torch_functional.scaled_dot_product_attention(query, key, value)
+        del output
+    torch.cuda.synchronize(device)
+
+
 def _time_linear_op(
     *,
     model_id: str,
@@ -401,6 +465,7 @@ def _time_linear_op(
     module: Any,
     input_tensor: torch.Tensor,
     device: torch.device,
+    sm_ai_partition: int,
 ) -> dict[str, int | float | str]:
     torch.cuda.synchronize(device)
     torch.cuda.reset_peak_memory_stats(device)
@@ -421,7 +486,9 @@ def _time_linear_op(
     return {
         "model_id": model_id,
         "chunk_tokens": int(chunk_tokens),
+        "op_type": PREFILL_GEMM_OP_TYPE,
         "op_name": op_name,
+        "sm_ai_partition": int(sm_ai_partition),
         "timed_iteration": int(timed_iteration),
         "duration_us": duration_us,
         "baseline_vram_bytes": baseline_vram_bytes,
@@ -431,14 +498,94 @@ def _time_linear_op(
     }
 
 
+def _build_prefill_attention_inputs(
+    config: opt_assets.OptConfig,
+    *,
+    q_proj_module: Any,
+    k_proj_module: Any,
+    v_proj_module: Any,
+    hidden_input: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    query = _reshape_prefill_hidden_to_heads(q_proj_module(hidden_input), config)
+    key = _reshape_prefill_hidden_to_heads(k_proj_module(hidden_input), config)
+    value = _reshape_prefill_hidden_to_heads(v_proj_module(hidden_input), config)
+    return query, key, value
+
+
+def _reshape_prefill_hidden_to_heads(
+    hidden_tensor: torch.Tensor,
+    config: opt_assets.OptConfig,
+) -> torch.Tensor:
+    batch_size, sequence_length, _ = hidden_tensor.shape
+    return hidden_tensor.reshape(
+        batch_size,
+        sequence_length,
+        config.num_attention_heads,
+        config.head_dim,
+    ).permute(0, 2, 1, 3)
+
+
+def _time_attention_op(
+    *,
+    model_id: str,
+    chunk_tokens: int,
+    timed_iteration: int,
+    query: torch.Tensor,
+    key: torch.Tensor,
+    value: torch.Tensor,
+    device: torch.device,
+    sm_ai_partition: int,
+) -> dict[str, int | float | str]:
+    torch.cuda.synchronize(device)
+    torch.cuda.reset_peak_memory_stats(device)
+    baseline_vram_bytes = int(torch.cuda.memory_allocated(device))
+
+    start_event = torch.cuda.Event(enable_timing=True)
+    end_event = torch.cuda.Event(enable_timing=True)
+    start_event.record()
+    output = torch_functional.scaled_dot_product_attention(query, key, value)
+    end_event.record()
+
+    torch.cuda.synchronize(device)
+    duration_us = float(start_event.elapsed_time(end_event) * 1_000.0)
+    peak_vram_bytes = int(torch.cuda.max_memory_allocated(device))
+    output_bytes = int(output.numel() * output.element_size())
+    del output
+
+    return {
+        "model_id": model_id,
+        "chunk_tokens": int(chunk_tokens),
+        "op_type": PREFILL_ATTENTION_OP_TYPE,
+        "op_name": PREFILL_ATTENTION_OP_NAME,
+        "sm_ai_partition": int(sm_ai_partition),
+        "timed_iteration": int(timed_iteration),
+        "duration_us": duration_us,
+        "baseline_vram_bytes": baseline_vram_bytes,
+        "peak_vram_bytes": peak_vram_bytes,
+        "dynamic_workspace_bytes": peak_vram_bytes - baseline_vram_bytes,
+        "output_bytes": output_bytes,
+    }
+
+
+def _normalize_sm_ai_partition(sm_ai_partition: int) -> int:
+    resolved = int(sm_ai_partition)
+    if resolved <= 0 or resolved > 100:
+        raise ValueError("sm_ai_partition must be between 1 and 100")
+    return resolved
+
+
 __all__ = [
     "PREFILL_BATCH_SIZE",
+    "PREFILL_GEMM_OP_TYPE",
+    "PREFILL_ATTENTION_OP_NAME",
+    "PREFILL_ATTENTION_OP_TYPE",
     "PREFILL_DTYPE_NAME",
     "PREFILL_EVENT_FIELDNAMES",
     "PREFILL_EVENTS_FILENAME",
     "PREFILL_OP_NAMES",
     "PrefillProfileResult",
     "build_prefill_output_byte_map",
+    "calculate_max_input_tokens",
     "estimate_prefill_parked_activation_bytes",
     "largest_prefill_activation_op",
     "profile_prefill_sweep",

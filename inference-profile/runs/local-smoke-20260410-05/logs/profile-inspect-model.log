@@ -1,0 +1,4 @@
+[2026-04-10T13:59:02Z] Ensuring inspect-model prerequisites for facebook/opt-125m at /mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-05/inspect-model/facebook-opt-125m
+[2026-04-10T13:59:02Z] Inspect-model complete for facebook/opt-125m: asset_source=synthetic_fallback model_constants=/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-05/inspect-model/facebook-opt-125m/raw/model_constants.json
+[2026-04-10T18:34:56Z] Ensuring inspect-model prerequisites for facebook/opt-125m at /mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-05/inspect-model/facebook-opt-125m
+[2026-04-10T18:34:57Z] Inspect-model complete for facebook/opt-125m: asset_source=synthetic_fallback model_constants=/mnt/data/dheeraj/dicertation/inference-profile/runs/local-smoke-20260410-05/inspect-model/facebook-opt-125m/raw/model_constants.json

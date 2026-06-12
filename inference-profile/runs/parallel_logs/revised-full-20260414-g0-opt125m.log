@@ -1,0 +1,62 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/cli.py", line 498, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/cli.py", line 465, in main
+    return int(args.func(args) or 0)
+               ^^^^^^^^^^^^^^^
+  File "/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/cli.py", line 432, in _handle_run_all
+    manifest = run_orchestrator(
+               ^^^^^^^^^^^^^^^^^
+  File "/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/run_orchestrator.py", line 135, in run_orchestrator
+    stage_result = _run_stage(
+                   ^^^^^^^^^^^
+  File "/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/run_orchestrator.py", line 233, in _run_stage
+    return _run_report_stage(run_root=run_root)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/run_orchestrator.py", line 420, in _run_report_stage
+    from inference_profile.plots import generate_profiling_plots
+  File "/mnt/data/dheeraj/dicertation/inference-profile/inference_profile/plots.py", line 14, in <module>
+    import matplotlib.pyplot as plt
+ModuleNotFoundError: No module named 'matplotlib'
+ERROR conda.cli.main_run:execute(142): `conda run python -m inference_profile.cli run-all --experiment-type ran-dgxspark-v1 --run-root /mnt/data/dheeraj/dicertation/inference-profile/runs/revised-full-20260414-g0-opt125m --ldpc-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv --ran-ctrl-trace /mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv --gpu-id 0 --models facebook/opt-125m --chunk-sizes 64 128 256 512 1024 --sequence-lengths 1024 2048 4096 8192` failed. (See above for error)
+INFO: activate-binutils_linux-64.sh made the following environmental changes:
++ADDR2LINE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-addr2line
++AR=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ar
++AS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-as
++CXXFILT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-c++filt
++ELFEDIT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-elfedit
++GPROF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-gprof
++HOST=x86_64-conda_cos6-linux-gnu
++LD_GOLD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld.gold
++LD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld
++NM=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-nm
++OBJCOPY=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objcopy
++OBJDUMP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objdump
++RANLIB=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ranlib
++READELF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-readelf
++SIZE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-size
++STRINGS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strings
++STRIP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strip
+INFO: deactivate-binutils_linux-64.sh made the following environmental changes:
+-ADDR2LINE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-addr2line
+-AR=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ar
+-AS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-as
+-CXXFILT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-c++filt
+-ELFEDIT=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-elfedit
+-GPROF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-gprof
+-HOST=x86_64-conda_cos6-linux-gnu
++HOST=x86_64-conda-linux-gnu
+-LD_GOLD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld.gold
+-LD=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ld
+-NM=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-nm
+-OBJCOPY=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objcopy
+-OBJDUMP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-objdump
+-RANLIB=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-ranlib
+-READELF=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-readelf
+-SIZE=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-size
+-STRINGS=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strings
+-STRIP=/home/dheeraj/miniconda3/envs/mls/bin/x86_64-conda_cos6-linux-gnu-strip

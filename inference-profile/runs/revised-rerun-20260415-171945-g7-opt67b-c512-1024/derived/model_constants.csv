@@ -1,0 +1,2 @@
+model_id,sm_ai_partition,num_hidden_layers,hidden_size,num_attention_heads,ffn_dim,layer_index,layer_weight_bytes,total_weight_bytes_fp16,vram_ceiling_bytes
+facebook/opt-6.7b,100,32,4096,32,16384,15,402759680,13316947968,15170115993

@@ -1,0 +1,50 @@
+{
+  "cache_root": null,
+  "captured_at": "2026-04-15T13:51:11Z",
+  "chunk_sizes": [
+    64,
+    128,
+    256,
+    512,
+    1024
+  ],
+  "cuda_available": true,
+  "cuda_device_count": 8,
+  "cwd": "/mnt/data/dheeraj/dicertation/inference-profile",
+  "decode_modes": [
+    "vram",
+    "pcie_async"
+  ],
+  "experiment_type": "ran-dgxspark-v1",
+  "gpu_id": 1,
+  "l_out": 1024,
+  "models": [
+    "facebook/opt-350m"
+  ],
+  "platform": "Linux-6.8.0-106-generic-x86_64-with-glibc2.35",
+  "python_executable": "/home/dheeraj/miniconda3/envs/mls/bin/python",
+  "python_version": "3.11.14",
+  "run_root": "/mnt/data/dheeraj/dicertation/inference-profile/runs/revised-rerun-20260415-145100-g1-opt350m",
+  "scheduler": "envelope_v1",
+  "schema_version": "ran_dgxspark_v1",
+  "sequence_lengths": [
+    1024,
+    2048,
+    4096,
+    8192
+  ],
+  "sm_ai_cap": 32,
+  "sm_ai_partition": 100,
+  "sm_ai_partitions": [
+    8,
+    16,
+    24,
+    32
+  ],
+  "stage": "profile",
+  "telemetry_tier": "baseline_nvml_pt",
+  "timed_iterations": 5,
+  "torch_available": true,
+  "torch_version": "2.10.0+cu128",
+  "warmup_iterations": 3
+}

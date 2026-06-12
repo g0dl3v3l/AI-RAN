@@ -1,0 +1,23 @@
+{
+  "component": "mps_check",
+  "details": {
+    "commands": {},
+    "daemon": {
+      "binary_path": "/usr/bin/nvidia-cuda-mps-control",
+      "control_binary": "nvidia-cuda-mps-control",
+      "control_pipe_exists": false,
+      "control_pipe_path": "/tmp/nvidia-mps/control"
+    },
+    "mode": "read_only",
+    "start_stop": {
+      "allowed": false,
+      "attempted": false,
+      "started_by_probe": false
+    }
+  },
+  "monotonic_ns": 298098763772658,
+  "run_id": "artifacts",
+  "schema_version": "0.1.0",
+  "status": "ok",
+  "timestamp_utc": "2026-06-12T00:23:26.582758Z"
+}

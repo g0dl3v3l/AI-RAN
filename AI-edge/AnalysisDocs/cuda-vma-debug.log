@@ -1,0 +1,186 @@
+Wed Jun 10 14:05:26 UTC 2026
+== log path ==
+/tmp/ai-edge-v0-vllm-real/criu_logs/smoke_preemption/01-criu-dump.log
+
+== grep address 7c828ee62000 ==
+2385-(00.099483) Handling VMA with the following smaps entry: 7c828ee22000-7c828ee32000 r-xp 00003000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2386-(00.099487) vma 7c828ee22000 borrows vfi from previous 7c828ee1f000
+2387-(00.099491) Handling VMA with the following smaps entry: 7c828ee32000-7c828ee36000 r--p 00013000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2388-(00.099496) vma 7c828ee32000 borrows vfi from previous 7c828ee22000
+2389-(00.099519) Handling VMA with the following smaps entry: 7c828ee36000-7c828ee37000 r--p 00016000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2390-(00.099523) vma 7c828ee36000 borrows vfi from previous 7c828ee32000
+2391-(00.099526) Handling VMA with the following smaps entry: 7c828ee37000-7c828ee38000 rw-p 00017000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2392-(00.099530) vma 7c828ee37000 borrows vfi from previous 7c828ee36000
+2393-(00.099533) Handling VMA with the following smaps entry: 7c828ee38000-7c828ee3a000 r--p 00000000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2394-(00.099544) Found regular file mapping, OK
+2395-(00.099555) Dumping path for -3 fd via self 14 [/usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so]
+2396-(00.099582) Handling VMA with the following smaps entry: 7c828ee3a000-7c828ee3d000 r-xp 00002000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2397-(00.099590) vma 7c828ee3a000 borrows vfi from previous 7c828ee38000
+2398-(00.099609) Handling VMA with the following smaps entry: 7c828ee3d000-7c828ee3f000 r--p 00005000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2399-(00.099614) vma 7c828ee3d000 borrows vfi from previous 7c828ee3a000
+2400-(00.099617) Handling VMA with the following smaps entry: 7c828ee3f000-7c828ee40000 r--p 00006000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2401-(00.099621) vma 7c828ee3f000 borrows vfi from previous 7c828ee3d000
+2402-(00.099627) Handling VMA with the following smaps entry: 7c828ee40000-7c828ee41000 rw-p 00007000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2403-(00.099631) vma 7c828ee40000 borrows vfi from previous 7c828ee3f000
+2404-(00.099635) Handling VMA with the following smaps entry: 7c828ee41000-7c828ee47000 r--p 00000000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2405-(00.099645) Found regular file mapping, OK
+2406-(00.099663) Dumping path for -3 fd via self 14 [/usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so]
+2407-(00.099687) Handling VMA with the following smaps entry: 7c828ee47000-7c828ee53000 r-xp 00006000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2408-(00.099692) vma 7c828ee47000 borrows vfi from previous 7c828ee41000
+2409-(00.099718) Handling VMA with the following smaps entry: 7c828ee53000-7c828ee5e000 r--p 00012000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2410-(00.099724) vma 7c828ee53000 borrows vfi from previous 7c828ee47000
+2411-(00.099727) Handling VMA with the following smaps entry: 7c828ee5e000-7c828ee5f000 r--p 0001c000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2412-(00.099731) vma 7c828ee5e000 borrows vfi from previous 7c828ee53000
+2413-(00.099734) Handling VMA with the following smaps entry: 7c828ee5f000-7c828ee61000 rw-p 0001d000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2414-(00.099738) vma 7c828ee5f000 borrows vfi from previous 7c828ee5e000
+2415:(00.099742) Handling VMA with the following smaps entry: 7c828ee61000-7c828ee62000 rw-p 00000000 00:00 0 
+2416:(00.099750) Handling VMA with the following smaps entry: 7c828ee62000-7c828ee72000 -w-s 00000000 00:05 801                        /dev/nvidia0
+2417-(00.099783) Error (criu/proc_parse.c:118): handle_device_vma plugin failed: No such file or directory
+2418:(00.099791) Error (criu/proc_parse.c:663): Can't handle non-regular mapping on 380578's map 7c828ee62000
+2419-(00.099801) Error (criu/cr-dump.c:1587): Collect mappings (pid: 380578) failed with -1
+2420-(00.099885) net: Unlock network
+2421-(00.099888) Running network-unlock scripts
+2422-(00.099890) 	RPC
+2423-(00.194073) Unfreezing tasks into 1
+2424-(00.194118) 	Unseizing 380578 into 1
+2425-(00.195307) 	Unseizing 381015 into 1
+2426-(00.195328) 	Unseizing 381016 into 1
+2427-(00.198413) Error (criu/cr-dump.c:2128): Dumping FAILED.
+
+== grep handle_device_vma plugin failed ==
+2357-(00.099231) vma 7c82854c0000 borrows vfi from previous 7c8285422000
+2358-(00.099234) Handling VMA with the following smaps entry: 7c82854f3000-7c82854f8000 r--p 000de000 00:46 63876846                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2359-(00.099238) vma 7c82854f3000 borrows vfi from previous 7c82854c0000
+2360-(00.099241) Handling VMA with the following smaps entry: 7c82854f8000-7c82854fa000 rw-p 000e3000 00:46 63876846                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2361-(00.099245) vma 7c82854f8000 borrows vfi from previous 7c82854f3000
+2362-(00.099249) Handling VMA with the following smaps entry: 7c82854fa000-7c82855fd000 rw-p 00000000 00:00 0 
+2363-(00.099257) Handling VMA with the following smaps entry: 7c82855fd000-7c82855fe000 ---p 00000000 00:00 0 
+2364-(00.099282) Handling VMA with the following smaps entry: 7c82855fe000-7c8285dfe000 rw-p 00000000 00:00 0 
+2365-(00.099287) Handling VMA with the following smaps entry: 7c8285dfe000-7c8285dff000 ---p 00000000 00:00 0 
+2366-(00.099292) Handling VMA with the following smaps entry: 7c8285dff000-7c82865ff000 rw-p 00000000 00:00 0 
+2367-(00.099299) Handling VMA with the following smaps entry: 7c82865ff000-7c8286600000 ---p 00000000 00:00 0 
+2368-(00.099305) Handling VMA with the following smaps entry: 7c8286600000-7c8286e00000 rw-p 00000000 00:00 0 
+2369-(00.099331) Handling VMA with the following smaps entry: 7c8286e00000-7c828ee00000 rw-p 00000000 00:00 0 
+2370-(00.099337) Handling VMA with the following smaps entry: 7c828ee00000-7c828ee03000 r--p 00000000 00:46 63877221                   /usr/local/lib/python3.12/dist-packages/cuda/tile/_cext.cpython-312-x86_64-linux-gnu.so
+2371-(00.099346) Found regular file mapping, OK
+2372-(00.099358) Dumping path for -3 fd via self 14 [/usr/local/lib/python3.12/dist-packages/cuda/tile/_cext.cpython-312-x86_64-linux-gnu.so]
+2373-(00.099381) Handling VMA with the following smaps entry: 7c828ee03000-7c828ee17000 r-xp 00003000 00:46 63877221                   /usr/local/lib/python3.12/dist-packages/cuda/tile/_cext.cpython-312-x86_64-linux-gnu.so
+2374-(00.099385) vma 7c828ee03000 borrows vfi from previous 7c828ee00000
+2375-(00.099389) Handling VMA with the following smaps entry: 7c828ee17000-7c828ee1c000 r--p 00017000 00:46 63877221                   /usr/local/lib/python3.12/dist-packages/cuda/tile/_cext.cpython-312-x86_64-linux-gnu.so
+2376-(00.099393) vma 7c828ee17000 borrows vfi from previous 7c828ee03000
+2377-(00.099396) Handling VMA with the following smaps entry: 7c828ee1c000-7c828ee1d000 r--p 0001b000 00:46 63877221                   /usr/local/lib/python3.12/dist-packages/cuda/tile/_cext.cpython-312-x86_64-linux-gnu.so
+2378-(00.099400) vma 7c828ee1c000 borrows vfi from previous 7c828ee17000
+2379-(00.099423) Handling VMA with the following smaps entry: 7c828ee1d000-7c828ee1e000 rw-p 0001c000 00:46 63877221                   /usr/local/lib/python3.12/dist-packages/cuda/tile/_cext.cpython-312-x86_64-linux-gnu.so
+2380-(00.099427) vma 7c828ee1d000 borrows vfi from previous 7c828ee1c000
+2381-(00.099432) Handling VMA with the following smaps entry: 7c828ee1e000-7c828ee1f000 rw-p 00000000 00:00 0 
+2382-(00.099441) Handling VMA with the following smaps entry: 7c828ee1f000-7c828ee22000 r--p 00000000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2383-(00.099449) Found regular file mapping, OK
+2384-(00.099462) Dumping path for -3 fd via self 14 [/usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so]
+2385-(00.099483) Handling VMA with the following smaps entry: 7c828ee22000-7c828ee32000 r-xp 00003000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2386-(00.099487) vma 7c828ee22000 borrows vfi from previous 7c828ee1f000
+2387-(00.099491) Handling VMA with the following smaps entry: 7c828ee32000-7c828ee36000 r--p 00013000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2388-(00.099496) vma 7c828ee32000 borrows vfi from previous 7c828ee22000
+2389-(00.099519) Handling VMA with the following smaps entry: 7c828ee36000-7c828ee37000 r--p 00016000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2390-(00.099523) vma 7c828ee36000 borrows vfi from previous 7c828ee32000
+2391-(00.099526) Handling VMA with the following smaps entry: 7c828ee37000-7c828ee38000 rw-p 00017000 00:46 63876870                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/_internal/nvrtc.cpython-312-x86_64-linux-gnu.so
+2392-(00.099530) vma 7c828ee37000 borrows vfi from previous 7c828ee36000
+2393-(00.099533) Handling VMA with the following smaps entry: 7c828ee38000-7c828ee3a000 r--p 00000000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2394-(00.099544) Found regular file mapping, OK
+2395-(00.099555) Dumping path for -3 fd via self 14 [/usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so]
+2396-(00.099582) Handling VMA with the following smaps entry: 7c828ee3a000-7c828ee3d000 r-xp 00002000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2397-(00.099590) vma 7c828ee3a000 borrows vfi from previous 7c828ee38000
+2398-(00.099609) Handling VMA with the following smaps entry: 7c828ee3d000-7c828ee3f000 r--p 00005000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2399-(00.099614) vma 7c828ee3d000 borrows vfi from previous 7c828ee3a000
+2400-(00.099617) Handling VMA with the following smaps entry: 7c828ee3f000-7c828ee40000 r--p 00006000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2401-(00.099621) vma 7c828ee3f000 borrows vfi from previous 7c828ee3d000
+2402-(00.099627) Handling VMA with the following smaps entry: 7c828ee40000-7c828ee41000 rw-p 00007000 00:46 63876909                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cynvrtc.cpython-312-x86_64-linux-gnu.so
+2403-(00.099631) vma 7c828ee40000 borrows vfi from previous 7c828ee3f000
+2404-(00.099635) Handling VMA with the following smaps entry: 7c828ee41000-7c828ee47000 r--p 00000000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2405-(00.099645) Found regular file mapping, OK
+2406-(00.099663) Dumping path for -3 fd via self 14 [/usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so]
+2407-(00.099687) Handling VMA with the following smaps entry: 7c828ee47000-7c828ee53000 r-xp 00006000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2408-(00.099692) vma 7c828ee47000 borrows vfi from previous 7c828ee41000
+2409-(00.099718) Handling VMA with the following smaps entry: 7c828ee53000-7c828ee5e000 r--p 00012000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2410-(00.099724) vma 7c828ee53000 borrows vfi from previous 7c828ee47000
+2411-(00.099727) Handling VMA with the following smaps entry: 7c828ee5e000-7c828ee5f000 r--p 0001c000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2412-(00.099731) vma 7c828ee5e000 borrows vfi from previous 7c828ee53000
+2413-(00.099734) Handling VMA with the following smaps entry: 7c828ee5f000-7c828ee61000 rw-p 0001d000 00:46 63876913                   /usr/local/lib/python3.12/dist-packages/cuda/bindings/cyruntime.cpython-312-x86_64-linux-gnu.so
+2414-(00.099738) vma 7c828ee5f000 borrows vfi from previous 7c828ee5e000
+2415-(00.099742) Handling VMA with the following smaps entry: 7c828ee61000-7c828ee62000 rw-p 00000000 00:00 0 
+2416-(00.099750) Handling VMA with the following smaps entry: 7c828ee62000-7c828ee72000 -w-s 00000000 00:05 801                        /dev/nvidia0
+2417:(00.099783) Error (criu/proc_parse.c:118): handle_device_vma plugin failed: No such file or directory
+2418-(00.099791) Error (criu/proc_parse.c:663): Can't handle non-regular mapping on 380578's map 7c828ee62000
+2419-(00.099801) Error (criu/cr-dump.c:1587): Collect mappings (pid: 380578) failed with -1
+2420-(00.099885) net: Unlock network
+2421-(00.099888) Running network-unlock scripts
+2422-(00.099890) 	RPC
+2423-(00.194073) Unfreezing tasks into 1
+2424-(00.194118) 	Unseizing 380578 into 1
+2425-(00.195307) 	Unseizing 381015 into 1
+2426-(00.195328) 	Unseizing 381016 into 1
+2427-(00.198413) Error (criu/cr-dump.c:2128): Dumping FAILED.
+
+== grep cuda_plugin ==
+
+== which cuda-checkpoint ==
+/usr/local/bin/cuda-checkpoint
+
+== cuda-checkpoint help ==
+CUDA checkpoint and restore utility.
+Version 590.48.01. Copyright (C) 2025 NVIDIA Corporation. All rights reserved.
+
+Operations:
+--get-state --pid <pid>
+	Prints the current checkpoint state of the process specified by <pid>
+
+--action lock | checkpoint | restore | unlock --pid <pid> [--timeout <ms>] [--device-map <uuids>]
+	Performs the specified action on <pid>.
+	For the lock action a timeout can be provided, the lock operation will wait up to <ms> milliseconds for the operation to succeed.
+	For the restore action a device map can be provided in the format oldUuid=newUuid,oldUuid=newUuid,... which will be used to remap old devices to new devices.
+
+--toggle --pid <pid>
+	Toggles the CUDA state in the specified process between the running and checkpointed states
+
+--get-restore-tid --pid <pid>
+	Retrieves the CUDA restore thread ID of the process specified by <pid>
+
+Options:
+--pid|-p <pid>
+	The pid upon which to perform the operation
+
+--timeout|-t <timeout>
+	Optional timeout that can be specified for the lock action in milliseconds
+
+--device-map|-d <deviceUuids>
+	Optional device map used during the restore action to manually remap old devices onto new ones.
+	<deviceUuids> is a comma delimited list in the format oldUuid1=newUuid1,oldUuid2=newUuid2,...
+	Must contain all checkpointed devices if specified.
+
+--launch-job|-j <program> [<arg1> ... [<argn>]]
+	Initialize a memfd to become a job file, set CUDA_CHECKPOINT_JOB_FILE to point to that memfd
+	and launch the specified command.
+
+--help|-h
+	Print this help message
+
+== nvidia-smi ==
+Wed Jun 10 15:05:26 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:03:00.0 Off |                    0 |
+| N/A   40C    P8             36W /  350W |      14MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1834      G   /usr/lib/xorg/Xorg                        4MiB |
++-----------------------------------------------------------------------------------------+

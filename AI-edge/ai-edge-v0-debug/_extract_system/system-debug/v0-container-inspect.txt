@@ -1,0 +1,17 @@
+===== v0-container-inspect =====
+SCRIPT: 
+  count=0
+  for c in $(docker ps -aq --filter label=ai-edge-experiment=v0); do
+    count=$((count + 1))
+    if [ $count -gt 12 ]; then
+      echo 'container inspection capped at 12'
+      break
+    fi
+    echo "===== ${c} ====="
+    timeout 3 docker inspect "$c" || echo "inspect timed out for ${c}"
+    echo
+  done
+
+SINCE: 2 hours ago
+TIME: 2026-06-12T01:25:14+01:00
+EXIT_CODE: 0

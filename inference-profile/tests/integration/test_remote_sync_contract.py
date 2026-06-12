@@ -13,13 +13,20 @@ def test_sync_preserves_runs_directory():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "sync",
-            "--run-id", "test-sync",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
+            "--stage",
+            "sync",
+            "--run-id",
+            "test-sync",
+            "--models",
+            "opt-125m",
+            "--chunk-sizes",
+            "32",
+            "--sequence-lengths",
+            "128",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
             "--dry-run",
         ],
         capture_output=True,
@@ -27,16 +34,23 @@ def test_sync_preserves_runs_directory():
     )
     assert result.returncode == 0
     output = result.stdout + result.stderr
-    
+
     # Verify sync stage is executed
     assert "Starting sync stage" in output
-    
+    assert output.count("netsys@192.168.1.20") == 2
+
     # Check that remote cleanup command is shown (redacted)
-    assert "rm -rf pyproject.toml README.md inference_profile/ scripts/ tests/" in output
-    
+    assert (
+        "rm -rf pyproject.toml README.md inference_profile/ scripts/ tests/" in output
+    )
+
     # Crucially: runs/ should NOT be in the cleanup command
     assert "rm -rf" in output  # cleanup happens
-    assert "runs/" not in output or "preserve" in output.lower() or "excluding" in output.lower()
+    assert (
+        "runs/" not in output
+        or "preserve" in output.lower()
+        or "excluding" in output.lower()
+    )
 
 
 def test_sync_tar_excludes_directories():
@@ -45,13 +59,20 @@ def test_sync_tar_excludes_directories():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "sync",
-            "--run-id", "test-tar",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
+            "--stage",
+            "sync",
+            "--run-id",
+            "test-tar",
+            "--models",
+            "opt-125m",
+            "--chunk-sizes",
+            "32",
+            "--sequence-lengths",
+            "128",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
             "--dry-run",
         ],
         capture_output=True,
@@ -59,7 +80,7 @@ def test_sync_tar_excludes_directories():
     )
     assert result.returncode == 0
     output = result.stdout + result.stderr
-    
+
     # Check for tar exclusions
     assert "--exclude=runs" in output
     assert "--exclude=.git" in output
@@ -73,13 +94,20 @@ def test_sync_stage_creates_remote_directory():
         [
             "bash",
             str(SCRIPT_PATH),
-            "--stage", "sync",
-            "--run-id", "test-mkdir",
-            "--models", "opt-125m",
-            "--chunk-sizes", "32",
-            "--sequence-lengths", "128",
-            "--ldpc-trace", "/tmp/ldpc.csv",
-            "--ran-ctrl-trace", "/tmp/ran.csv",
+            "--stage",
+            "sync",
+            "--run-id",
+            "test-mkdir",
+            "--models",
+            "opt-125m",
+            "--chunk-sizes",
+            "32",
+            "--sequence-lengths",
+            "128",
+            "--ldpc-trace",
+            "/tmp/ldpc.csv",
+            "--ran-ctrl-trace",
+            "/tmp/ran.csv",
             "--dry-run",
         ],
         capture_output=True,
@@ -87,11 +115,13 @@ def test_sync_stage_creates_remote_directory():
     )
     assert result.returncode == 0
     output = result.stdout + result.stderr
-    
+
     # Check mkdir command in remote cleanup
     assert "mkdir -p" in output
+    assert "bash -lc" in output
 
 
 if __name__ == "__main__":
     import pytest
+
     pytest.main([__file__, "-v"])

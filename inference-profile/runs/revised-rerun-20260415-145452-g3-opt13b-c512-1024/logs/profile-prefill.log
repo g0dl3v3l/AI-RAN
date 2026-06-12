@@ -1,0 +1,8 @@
+[2026-04-15T13:55:08Z] prefill-facebook-opt-1-3b-chunk-512-sm-8 status=success raw_rows=35 failure_kind=-
+[2026-04-15T13:55:14Z] prefill-facebook-opt-1-3b-chunk-512-sm-16 status=success raw_rows=35 failure_kind=-
+[2026-04-15T13:55:19Z] prefill-facebook-opt-1-3b-chunk-512-sm-24 status=success raw_rows=35 failure_kind=-
+[2026-04-15T13:55:25Z] prefill-facebook-opt-1-3b-chunk-512-sm-32 status=success raw_rows=35 failure_kind=-
+[2026-04-15T13:55:31Z] prefill-facebook-opt-1-3b-chunk-1024-sm-8 status=success raw_rows=35 failure_kind=-
+[2026-04-15T13:55:38Z] prefill-facebook-opt-1-3b-chunk-1024-sm-16 status=success raw_rows=35 failure_kind=-
+[2026-04-15T13:55:44Z] prefill-facebook-opt-1-3b-chunk-1024-sm-24 status=success raw_rows=35 failure_kind=-
+[2026-04-15T13:55:51Z] prefill-facebook-opt-1-3b-chunk-1024-sm-32 status=success raw_rows=35 failure_kind=-

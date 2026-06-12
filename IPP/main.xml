@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pdf2xml SYSTEM "pdf2xml.dtd">
+
+<pdf2xml producer="poppler" version="22.02.0">
+<page number="13" position="absolute" top="0" left="0" height="1262" width="892">
+	<fontspec id="0" size="16" family="TNSYNV+LMRoman10" color="#000000"/>
+	<fontspec id="1" size="16" family="SFRYQI+LMRoman10" color="#000000"/>
+	<fontspec id="2" size="21" family="FILHGU+LMRoman12" color="#3366cc"/>
+	<fontspec id="3" size="14" family="SFRYQI+LMRoman10" color="#000000"/>
+	<fontspec id="4" size="14" family="CTYSKF+LMRoman10" color="#000000"/>
+	<fontspec id="5" size="14" family="MYBFRO+LMMono10" color="#000000"/>
+<text top="54" left="106" width="264" height="15" font="0"><b>Informatics Project Proposal 20</b></text>
+<text top="55" left="770" width="16" height="14" font="1">11</text>
+<text top="113" left="106" width="113" height="19" font="2"><b>References</b></text>
+<text top="164" left="114" width="673" height="13" font="3">[1] Michele Polese, Niloofar Mohamadi, Salvatore D’Oro, Leonardo Bonati, and Tommaso Melodia.</text>
+<text top="182" left="138" width="538" height="13" font="3">Beyond Connectivity: An Open Architecture for AI-RAN Convergence in 6G.</text>
+<text top="182" left="690" width="96" height="13" font="4"><i>arXiv preprint</i></text>
+<text top="200" left="138" width="114" height="13" font="4"><i>arXiv:2507.06911</i></text>
+<text top="200" left="252" width="43" height="13" font="3">, 2025.</text>
+<text top="201" left="302" width="228" height="12" font="5"><a href="https://doi.org/10.48550/arXiv.2507.06911">doi:10.48550/arXiv.2507.06911</a></text>
+<text top="200" left="529" width="4" height="13" font="3"><a href="https://doi.org/10.48550/arXiv.2507.06911">.</a></text>
+<text top="226" left="114" width="673" height="13" font="3">[2] Chenyuan Feng, Howard H. Yang, Kun Guo, Wenchao Xia, Chenxi Liu, and Tony Q. S. Quek. AI-</text>
+<text top="244" left="138" width="311" height="13" font="3">RAN: The pathway to future wireless networks.</text>
+<text top="244" left="455" width="258" height="13" font="4"><i>Journal of Information and Intelligence</i></text>
+<text top="244" left="713" width="74" height="13" font="3">, 4(1):5–22,</text>
+<text top="262" left="138" width="34" height="13" font="3">2026.</text>
+<text top="263" left="178" width="243" height="12" font="5"><a href="https://doi.org/10.1016/j.jiixd.2025.12.013">doi:10.1016/j.jiixd.2025.12.013</a></text>
+<text top="262" left="422" width="4" height="13" font="3"><a href="https://doi.org/10.1016/j.jiixd.2025.12.013">.</a></text>
+<text top="288" left="114" width="63" height="13" font="3">[3] ACM.</text>
+<text top="288" left="183" width="433" height="13" font="4"><i>Proceedings of the 2025 2nd ACM Workshop on Open and AI RAN</i></text>
+<text top="288" left="615" width="172" height="13" font="3">, Hong Kong, China, 2025.</text>
+<text top="306" left="138" width="402" height="13" font="3">Association for Computing Machinery. Part of MobiCom ’25.</text>
+<text top="307" left="547" width="149" height="12" font="5"><a href="https://doi.org/10.1145/3737900">doi:10.1145/3737900</a></text>
+<text top="306" left="696" width="4" height="13" font="3"><a href="https://doi.org/10.1145/3737900">.</a></text>
+<text top="332" left="114" width="673" height="13" font="3">[4] Sunghyun Jin, Serae Kim, Sangtae Ha, and Kyunghan Lee. End-to-End Coordination of RAN and</text>
+<text top="350" left="138" width="487" height="13" font="3">Edge Server for Latency-Critical Inference Serving over Cellular Networks.</text>
+<text top="350" left="631" width="156" height="13" font="4"><i>Proceedings of the ACM</i></text>
+<text top="368" left="138" width="95" height="13" font="4"><i>on Networking</i></text>
+<text top="368" left="233" width="250" height="13" font="3">, 3(CoNEXT4):1–23, 2025. Article 40.</text>
+<text top="369" left="489" width="149" height="12" font="5"><a href="https://doi.org/10.1145/3768987">doi:10.1145/3768987</a></text>
+<text top="368" left="638" width="4" height="13" font="3"><a href="https://doi.org/10.1145/3768987">.</a></text>
+<text top="394" left="114" width="673" height="13" font="3">[5] Hariz Yet, Nguyen Thanh Tam, Mao V. Ngo, Lim Yi Shen, Lin Wei, Jihong Park, Binbin Chen,</text>
+<text top="412" left="138" width="608" height="13" font="3">and Tony Q. S. Quek. SLA-Aware Distributed LLM Inference Across Device-RAN-Cloud. In</text>
+<text top="412" left="750" width="36" height="13" font="4"><i>IEEE</i></text>
+<text top="430" left="138" width="325" height="13" font="4"><i>INFOCOM Workshops 2026 (6G AI-RAN 2026)</i></text>
+<text top="430" left="463" width="256" height="13" font="3">, 2026. Preprint on arXiv:2602.23722.</text>
+<text top="431" left="730" width="56" height="12" font="5"><a href="https://doi.org/10.48550/arXiv.2602.23722">doi:10.</a></text>
+<text top="449" left="138" width="173" height="12" font="5"><a href="https://doi.org/10.48550/arXiv.2602.23722">48550/arXiv.2602.23722</a></text>
+<text top="448" left="310" width="4" height="13" font="3"><a href="https://doi.org/10.48550/arXiv.2602.23722">.</a></text>
+<text top="474" left="114" width="673" height="13" font="3">[6] Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody Hao Yu, Joseph E.</text>
+<text top="492" left="138" width="649" height="13" font="3">Gonzalez, Hao Zhang, and Ion Stoica. Efficient Memory Management for Large Language Model</text>
+<text top="510" left="138" width="194" height="13" font="3">Serving with PagedAttention.</text>
+<text top="510" left="338" width="213" height="13" font="4"><i>arXiv preprint arXiv:2309.06180</i></text>
+<text top="510" left="551" width="127" height="13" font="3">, 2023. SOSP 2023.</text>
+<text top="511" left="685" width="102" height="12" font="5"><a href="https://doi.org/10.48550/arXiv.2309.06180">doi:10.48550/</a></text>
+<text top="529" left="138" width="126" height="12" font="5"><a href="https://doi.org/10.48550/arXiv.2309.06180">arXiv.2309.06180</a></text>
+<text top="528" left="263" width="4" height="13" font="3"><a href="https://doi.org/10.48550/arXiv.2309.06180">.</a></text>
+<text top="554" left="114" width="673" height="13" font="3">[7] Yinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu, Yibo Zhu, Xuanzhe Liu, Xin Jin, and Hao</text>
+<text top="572" left="138" width="649" height="13" font="3">Zhang. DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language</text>
+<text top="590" left="138" width="126" height="13" font="3">Model Serving. In</text>
+<text top="590" left="271" width="516" height="13" font="4"><i>18th USENIX Symposium on Operating Systems Design and Implementation</i></text>
+<text top="608" left="138" width="71" height="13" font="4"><i>(OSDI 24)</i></text>
+<text top="608" left="209" width="473" height="13" font="3">, pages 193–210, Santa Clara, CA, 2024. USENIX Association. URL:</text>
+<text top="609" left="689" width="97" height="12" font="5"><a href="https://www.usenix.org/conference/osdi24/presentation/zhong-yinmin">https://www.</a></text>
+<text top="627" left="138" width="424" height="12" font="5"><a href="https://www.usenix.org/conference/osdi24/presentation/zhong-yinmin">usenix.org/conference/osdi24/presentation/zhong-yinmin</a></text>
+<text top="625" left="562" width="4" height="13" font="3"><a href="https://www.usenix.org/conference/osdi24/presentation/zhong-yinmin">.</a></text>
+<text top="652" left="114" width="673" height="13" font="3">[8] Ujjwal Pawar, Andrew E. Ferguson, Yuto Takano, Jon Larrea, Xenofon Foukas, Mahesh K. Marina,</text>
+<text top="670" left="138" width="649" height="13" font="3">and Bozidar Radunovic. Towards Scalable and Cost-Effective RAN Emulation Leveraging the Pub-</text>
+<text top="687" left="138" width="88" height="13" font="3">lic Cloud. In</text>
+<text top="687" left="232" width="554" height="13" font="4"><i>Proceedings of the 26th International Workshop on Mobile Computing Systems and</i></text>
+<text top="705" left="138" width="80" height="13" font="4"><i>Applications</i></text>
+<text top="705" left="217" width="233" height="13" font="3">, HotMobile ’25, pages 43–48, 2025.</text>
+<text top="707" left="457" width="212" height="12" font="5"><a href="https://doi.org/10.1145/3708468.3711895">doi:10.1145/3708468.3711895</a></text>
+<text top="705" left="668" width="4" height="13" font="3"><a href="https://doi.org/10.1145/3708468.3711895">.</a></text>
+<text top="732" left="114" width="673" height="13" font="3">[9] Gyeong-In Yu, Joo Seong Jeong, Geon-Woo Kim, Soojeong Kim, and Byung-Gon Chun. Orca: A</text>
+<text top="750" left="138" width="477" height="13" font="3">Distributed Serving System for Transformer-Based Generative Models. In</text>
+<text top="750" left="619" width="168" height="13" font="4"><i>16th USENIX Symposium</i></text>
+<text top="767" left="138" width="410" height="13" font="4"><i>on Operating Systems Design and Implementation (OSDI 22)</i></text>
+<text top="767" left="548" width="239" height="13" font="3">. USENIX Association, 2022. URL:</text>
+<text top="787" left="138" width="385" height="12" font="5"><a href="https://www.usenix.org/system/files/osdi22-yu.pdf">https://www.usenix.org/system/files/osdi22-yu.pdf</a></text>
+<text top="785" left="523" width="4" height="13" font="3"><a href="https://www.usenix.org/system/files/osdi22-yu.pdf">.</a></text>
+<text top="812" left="106" width="680" height="13" font="3">[10] Sudipta Saha Shubha, Haiying Shen, and Anand Iyer. USHER: Holistic Interference Avoidance for</text>
+<text top="829" left="138" width="248" height="13" font="3">Resource Optimized ML Inference. In</text>
+<text top="829" left="391" width="396" height="13" font="4"><i>18th USENIX Symposium on Operating Systems Design and</i></text>
+<text top="847" left="138" width="177" height="13" font="4"><i>Implementation (OSDI 24)</i></text>
+<text top="847" left="315" width="232" height="13" font="3">. USENIX Association, 2024. URL:</text>
+<text top="849" left="551" width="235" height="12" font="5"><a href="https://www.usenix.org/system/files/osdi24-shubha.pdf">https://www.usenix.org/system/</a></text>
+<text top="867" left="138" width="181" height="12" font="5"><a href="https://www.usenix.org/system/files/osdi24-shubha.pdf">files/osdi24-shubha.pdf</a></text>
+<text top="865" left="319" width="4" height="13" font="3"><a href="https://www.usenix.org/system/files/osdi24-shubha.pdf">.</a></text>
+<text top="891" left="106" width="680" height="13" font="3">[11] Foteini Strati, Xianzhe Ma, and Ana Klimovic. Orion: Interference-aware, Fine-grained GPU Sharing</text>
+<text top="909" left="138" width="158" height="13" font="3">for ML Applications. In</text>
+<text top="909" left="301" width="485" height="13" font="4"><i>Proceedings of the Nineteenth European Conference on Computer Systems</i></text>
+<text top="927" left="138" width="91" height="13" font="4"><i>(EuroSys ’24)</i></text>
+<text top="927" left="228" width="43" height="13" font="3">, 2024.</text>
+<text top="929" left="278" width="212" height="12" font="5"><a href="https://doi.org/10.1145/3627703.3629578">doi:10.1145/3627703.3629578</a></text>
+<text top="927" left="490" width="4" height="13" font="3"><a href="https://doi.org/10.1145/3627703.3629578">.</a></text>
+<text top="953" left="106" width="680" height="13" font="3">[12] Z. Jonny Kong, Qiang Xu, and Y. Charlie Hu. PPipe: Efficient Video Analytics Serving on Het-</text>
+<text top="971" left="138" width="431" height="13" font="3">erogeneous GPU Clusters via Pool-Based Pipeline Parallelism. In</text>
+<text top="971" left="574" width="212" height="13" font="4"><i>2025 USENIX Annual Technical</i></text>
+<text top="989" left="138" width="138" height="13" font="4"><i>Conference (ATC 25)</i></text>
+<text top="989" left="276" width="225" height="13" font="3">. USENIX Association, 2025. URL:</text>
+<text top="991" left="504" width="282" height="12" font="5"><a href="https://www.usenix.org/system/files/atc25-kong.pdf">https://www.usenix.org/system/files/</a></text>
+<text top="1009" left="138" width="111" height="12" font="5"><a href="https://www.usenix.org/system/files/atc25-kong.pdf">atc25-kong.pdf</a></text>
+<text top="1007" left="248" width="4" height="13" font="3"><a href="https://www.usenix.org/system/files/atc25-kong.pdf">.</a></text>
+<text top="1033" left="106" width="680" height="13" font="3">[13] Thanh-Tung Nguyen, Lucas Liebe, Nhat-Quang Tau, Yuheng Wu, Jinghan Cheng, and Dongman</text>
+<text top="1051" left="138" width="541" height="13" font="3">Lee. OCTOPINF: Workload-Aware Inference Serving for Edge Video Analytics.</text>
+<text top="1051" left="691" width="95" height="13" font="4"><i>arXiv preprint</i></text>
+<text top="1069" left="138" width="114" height="13" font="4"><i>arXiv:2502.01277</i></text>
+<text top="1069" left="252" width="43" height="13" font="3">, 2025.</text>
+<text top="1071" left="302" width="228" height="12" font="5"><a href="https://doi.org/10.48550/arXiv.2502.01277">doi:10.48550/arXiv.2502.01277</a></text>
+<text top="1069" left="529" width="4" height="13" font="3"><a href="https://doi.org/10.48550/arXiv.2502.01277">.</a></text>
+<text top="1095" left="106" width="680" height="13" font="3">[14] Yuhan Liu, Hanchen Li, Yihua Cheng, Siddhant Ray, Yuyang Huang, Qizheng Zhang, Kuntai Du,</text>
+<text top="1113" left="138" width="649" height="13" font="3">Jiayi Yao, Shan Lu, Ganesh Ananthanarayanan, Michael Maire, Henry Hoffmann, Ari Holtzman,</text>
+<text top="1131" left="138" width="649" height="13" font="3">and Junchen Jiang. CacheGen: KV Cache Compression and Streaming for Fast Large Language</text>
+<text top="1149" left="138" width="119" height="13" font="3">Model Serving. In</text>
+<text top="1149" left="261" width="228" height="13" font="4"><i>ACM SIGCOMM 2024 Conference</i></text>
+<text top="1149" left="489" width="43" height="13" font="3">, 2024.</text>
+<text top="1151" left="539" width="212" height="12" font="5"><a href="https://doi.org/10.1145/3651890.3672274">doi:10.1145/3651890.3672274</a></text>
+<text top="1149" left="751" width="4" height="13" font="3"><a href="https://doi.org/10.1145/3651890.3672274">.</a></text>
+<text top="1194" left="106" width="138" height="13" font="3">School of Informatics</text>
+<text top="1193" left="712" width="75" height="14" font="1">April 2026</text>
+</page>
+<page number="14" position="absolute" top="0" left="0" height="1262" width="892">
+<text top="54" left="106" width="264" height="15" font="0"><b>Informatics Project Proposal 20</b></text>
+<text top="55" left="770" width="16" height="14" font="1">12</text>
+<text top="115" left="106" width="680" height="13" font="3">[15] Reza Yazdani Aminabadi, Samyam Rajbhandari, Ammar Ahmad Awan, Chao Li, Dacheng Li, Erwin</text>
+<text top="133" left="138" width="649" height="13" font="3">Zheng, Olatunji Ruwase, Shaden Smith, Mengzhou Zhang, Jeff Rasley, and Yuxiong He. DeepSpeed-</text>
+<text top="151" left="138" width="604" height="13" font="3">Inference: Enabling Efficient Inference of Transformer Models at Unprecedented Scale. In</text>
+<text top="151" left="748" width="39" height="13" font="4"><i>SC22:</i></text>
+<text top="169" left="138" width="607" height="13" font="4"><i>International Conference for High Performance Computing, Networking, Storage and Analysis</i></text>
+<text top="169" left="744" width="42" height="13" font="3">, 2022.</text>
+<text top="189" left="138" width="235" height="12" font="5"><a href="https://doi.org/10.1109/SC41404.2022.00051">doi:10.1109/SC41404.2022.00051</a></text>
+<text top="187" left="373" width="4" height="13" font="3"><a href="https://doi.org/10.1109/SC41404.2022.00051">.</a></text>
+<text top="214" left="106" width="680" height="13" font="3">[16] Peng Liu, Dale Willis, and Suman Banerjee. Paradrop: Enabling Lightweight Multi-tenancy at the</text>
+<text top="232" left="138" width="186" height="13" font="3">Network’s Extreme Edge. In</text>
+<text top="232" left="328" width="337" height="13" font="4"><i>IEEE/ACM Symposium on Edge Computing (SEC)</i></text>
+<text top="232" left="665" width="122" height="13" font="3">, pages 1–13, 2016.</text>
+<text top="251" left="138" width="180" height="12" font="5"><a href="https://doi.org/10.1109/SEC.2016.39">doi:10.1109/SEC.2016.39</a></text>
+<text top="250" left="318" width="4" height="13" font="3"><a href="https://doi.org/10.1109/SEC.2016.39">.</a></text>
+<text top="277" left="106" width="468" height="13" font="3">[17] Campus5G: A Campus Scale Private 5G Open RAN Testbed.</text>
+<text top="277" left="592" width="194" height="13" font="3">Local paper in research pa-</text>
+<text top="295" left="138" width="131" height="13" font="3">per/Campus5G.pdf.</text>
+<text top="296" left="275" width="212" height="12" font="5"><a href="https://doi.org/10.1145/3787927.3787930">doi:10.1145/3787927.3787930</a></text>
+<text top="295" left="487" width="4" height="13" font="3"><a href="https://doi.org/10.1145/3787927.3787930">.</a></text>
+<text top="1194" left="106" width="138" height="13" font="3">School of Informatics</text>
+<text top="1193" left="712" width="75" height="14" font="1">April 2026</text>
+</page>
+<outline>
+<item page="3">Introduction</item>
+<outline>
+<item page="3">Problem</item>
+<item page="3">Idea</item>
+<item page="4">Importance</item>
+<item page="4">Approach</item>
+<item page="4">Plan</item>
+<item page="4">Success</item>
+</outline>
+<item page="5">State of the Art</item>
+<outline>
+<item page="5">Theme 1: AI-RAN turns shared RAN infrastructure into a hosting substrate</item>
+<item page="5">Theme 2: Latency-critical inference is heterogeneous and phase-sensitive</item>
+<item page="6">Theme 3: The relevant control mechanisms already exist, but not as one runtime</item>
+<item page="7">Theme 4: Empirical RAN studies and edge systems still stop short of inference-specific control</item>
+<item page="7">Gap statement</item>
+</outline>
+<item page="7">Implementation</item>
+<outline>
+<item page="7">Methodology or Approach</item>
+<item page="8">Expected Outcomes</item>
+<item page="8">Evaluation Criteria</item>
+<item page="9">Risk Assessment and Mitigations</item>
+<item page="10">Responsible Research Including Ethics</item>
+</outline>
+<item page="11">Research Plan, Milestones, and Deliverables</item>
+<outline>
+<item page="11">Work packages</item>
+<item page="11">Resources, facilities, and dependencies</item>
+<item page="11">Deliverables and milestones</item>
+</outline>
+</outline>
+</pdf2xml>

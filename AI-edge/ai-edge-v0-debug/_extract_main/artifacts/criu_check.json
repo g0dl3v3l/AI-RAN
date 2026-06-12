@@ -1,0 +1,29 @@
+{
+  "component": "criu_check",
+  "details": {
+    "commands": {
+      "criu_version": {
+        "argv": [
+          "criu",
+          "--version"
+        ],
+        "duration_s": 0.011252771015278995,
+        "error_message": null,
+        "error_type": null,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": "",
+        "stdout": "Version: 4.2\nGitID: v4.2\n",
+        "timed_out": false
+      }
+    },
+    "extracted": {
+      "criu_version": "4.2"
+    }
+  },
+  "monotonic_ns": 298092011475099,
+  "run_id": "artifacts",
+  "schema_version": "0.1.0",
+  "status": "ok",
+  "timestamp_utc": "2026-06-12T00:23:19.830434Z"
+}

@@ -1,0 +1,2 @@
+trace_name,error_code,message
+ldpc_trace.csv,unsupported_schema,"Primary ldpc_trace.csv must use exactly one of the supported headers: time_ms,sm_utilization or time_slot_sched_ns,sm_count"

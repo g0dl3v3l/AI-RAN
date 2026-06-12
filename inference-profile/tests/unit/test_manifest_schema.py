@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from inference_profile import manifests, paths
+from inference_profile import experiments, manifests, paths
 
 
 EXPECTED_FINAL_STATUSES = (
@@ -56,6 +56,25 @@ def test_initialize_run_manifest_writes_minimal_honest_schema(tmp_path) -> None:
         "report": "ran_inference_profiling_report.md",
         "checksum_manifest": "checksums/sha256sums.txt",
     }
+
+
+def test_initialize_run_manifest_accepts_revised_schema_and_metadata(tmp_path) -> None:
+    bundle_paths = paths.init_run_bundle(tmp_path, run_id="revised-run-001")
+
+    manifest = manifests.initialize_run_manifest(
+        bundle_paths,
+        schema_version=experiments.RAN_DGXSPARK_V1_SCHEMA_VERSION,
+        metadata={
+            "experiment_type": experiments.RAN_DGXSPARK_V1_EXPERIMENT_TYPE,
+            "telemetry_tier": experiments.RAN_DGXSPARK_V1_TELEMETRY_TIER,
+            "scheduler": experiments.RAN_DGXSPARK_V1_SCHEDULER,
+        },
+    )
+
+    assert manifest["schema_version"] == experiments.RAN_DGXSPARK_V1_SCHEMA_VERSION
+    assert manifest["experiment_type"] == experiments.RAN_DGXSPARK_V1_EXPERIMENT_TYPE
+    assert manifest["telemetry_tier"] == experiments.RAN_DGXSPARK_V1_TELEMETRY_TIER
+    assert manifest["scheduler"] == experiments.RAN_DGXSPARK_V1_SCHEDULER
 
 
 def test_update_stage_status_appends_stage_history_without_clobbering_prior_entries(

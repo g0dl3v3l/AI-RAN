@@ -1,0 +1,242 @@
+(.venv) ubuntu@ubuntu-2404-desktop-template:~/AI-RAN$ sed -n '1,240p' /tmp/ai-edge-v0-vllm-real/criu_logs/smoke_preemption/01-criu-dump.log
+(00.000000) Unable to get $HOME directory, local configuration file will not be used.
+(00.000000) CRIU run id = 3a52b6ae-f2c6-4a5d-8419-3adb071af032
+(00.000000) CRIU run id = 74714c3d-33e1-451c-977d-eed0aad9e004
+(00.000000) Would overwrite RPC settings with values from /etc/criu/runc.conf
+(00.000114) Version: 4.2 (gitid 0)
+(00.000122) Running on ubuntu-2404-desktop-template Linux 6.17.0-35-generic #35~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 19:30:42 UTC 2 x86_64
+(00.000153) Loaded kdat cache from /run/criu.kdat
+(00.000204) Hugetlb size 2 Mb is supported but cannot get dev's number
+(00.000221) Hugetlb size 1024 Mb is supported but cannot get dev's number
+(00.001501) cpu: x86_family 6 x86_vendor_id GenuineIntel x86_model_id Intel(R) Xeon(R) Gold 6438Y+
+(00.001571) cpu: fpu: xfeatures_mask 0x2e5 xsave_size 11008 xsave_size_max 11008 xsaves_size 10752
+(00.001630) cpu: fpu: x87 floating point registers     xstate_offsets      0 / 0      xstate_sizes    160 / 160   
+(00.001637) cpu: fpu: AVX registers                    xstate_offsets    576 / 576    xstate_sizes    256 / 256   
+(00.001641) cpu: fpu: AVX-512 opmask                   xstate_offsets   1088 / 832    xstate_sizes     64 / 64    
+(00.001644) cpu: fpu: AVX-512 Hi256                    xstate_offsets   1152 / 896    xstate_sizes    512 / 512   
+(00.001647) cpu: fpu: AVX-512 ZMM_Hi256                xstate_offsets   1664 / 1408   xstate_sizes   1024 / 1024  
+(00.001650) cpu: fpu: Protection Keys User registers   xstate_offsets   2688 / 2432   xstate_sizes      8 / 8     
+(00.001691) ========================================
+(00.001739) Dumping processes (pid: 52469 comm: vllm)
+(00.001743) ========================================
+(00.001749) rlimit: RLIMIT_NOFILE unlimited for self
+(00.001761) Running pre-dump scripts
+(00.001764) 	RPC
+(00.002258) Plugin "cuda_plugin" (version 512 hooks 13)
+(00.002280) 	   9 -> 0x7672b185dd79
+(00.002284) 	  10 -> 0x7672b185d789
+(00.002287) 	  11 -> 0x7672b185d4d9
+(00.006484) cuda_plugin: initialized: cuda_plugin stage 0
+(00.006505) irmap: Searching irmap cache in work dir
+(00.006519) No irmap-cache image
+(00.006521) irmap: Searching irmap cache in parent
+(00.006529) No parent images directory provided
+(00.006530) irmap: No irmap cache
+(00.006532) cpu: fpu:1 fxsr:1 xsave:1 xsaveopt:1 xsavec:1 xgetbv1:1 xsaves:1
+(00.006678) cg-prop: Parsing controller "cpu"
+(00.006680) cg-prop: 	Strategy "replace"
+(00.006682) cg-prop: 	Property "cpu.shares"
+(00.006683) cg-prop: 	Property "cpu.cfs_period_us"
+(00.006684) cg-prop: 	Property "cpu.cfs_quota_us"
+(00.006686) cg-prop: 	Property "cpu.rt_period_us"
+(00.006687) cg-prop: 	Property "cpu.rt_runtime_us"
+(00.006688) cg-prop: Parsing controller "memory"
+(00.006689) cg-prop: 	Strategy "replace"
+(00.006690) cg-prop: 	Property "memory.limit_in_bytes"
+(00.006691) cg-prop: 	Property "memory.memsw.limit_in_bytes"
+(00.006692) cg-prop: 	Property "memory.swappiness"
+(00.006693) cg-prop: 	Property "memory.soft_limit_in_bytes"
+(00.006694) cg-prop: 	Property "memory.move_charge_at_immigrate"
+(00.006695) cg-prop: 	Property "memory.oom_control"
+(00.006696) cg-prop: 	Property "memory.use_hierarchy"
+(00.006698) cg-prop: 	Property "memory.kmem.limit_in_bytes"
+(00.006699) cg-prop: 	Property "memory.kmem.tcp.limit_in_bytes"
+(00.006702) cg-prop: Parsing controller "cpuset"
+(00.006703) cg-prop: 	Strategy "replace"
+(00.006704) cg-prop: 	Property "cpuset.cpus"
+(00.006705) cg-prop: 	Property "cpuset.mems"
+(00.006706) cg-prop: 	Property "cpuset.memory_migrate"
+(00.006707) cg-prop: 	Property "cpuset.cpu_exclusive"
+(00.006708) cg-prop: 	Property "cpuset.mem_exclusive"
+(00.006709) cg-prop: 	Property "cpuset.mem_hardwall"
+(00.006710) cg-prop: 	Property "cpuset.memory_spread_page"
+(00.006711) cg-prop: 	Property "cpuset.memory_spread_slab"
+(00.006712) cg-prop: 	Property "cpuset.sched_load_balance"
+(00.006713) cg-prop: 	Property "cpuset.sched_relax_domain_level"
+(00.006714) cg-prop: Parsing controller "blkio"
+(00.006715) cg-prop: 	Strategy "replace"
+(00.006717) cg-prop: 	Property "blkio.weight"
+(00.006718) cg-prop: Parsing controller "freezer"
+(00.006726) cg-prop: 	Strategy "replace"
+(00.006729) cg-prop: Parsing controller "perf_event"
+(00.006730) cg-prop: 	Strategy "replace"
+(00.006731) cg-prop: Parsing controller "net_cls"
+(00.006732) cg-prop: 	Strategy "replace"
+(00.006733) cg-prop: 	Property "net_cls.classid"
+(00.006734) cg-prop: Parsing controller "net_prio"
+(00.006736) cg-prop: 	Strategy "replace"
+(00.006738) cg-prop: 	Property "net_prio.ifpriomap"
+(00.006739) cg-prop: Parsing controller "pids"
+(00.006740) cg-prop: 	Strategy "replace"
+(00.006741) cg-prop: 	Property "pids.max"
+(00.006742) cg-prop: Parsing controller "devices"
+(00.006743) cg-prop: 	Strategy "replace"
+(00.006744) cg-prop: 	Property "devices.list"
+(00.006766) Preparing image inventory (version 1)
+(00.006787) Add pid ns 1 pid 53231
+(00.006794) Add net ns 2 pid 53231
+(00.006799) Add ipc ns 3 pid 53231
+(00.006805) Add uts ns 4 pid 53231
+(00.006810) Add time ns 5 pid 53231
+(00.006820) Add mnt ns 6 pid 53231
+(00.006825) Add user ns 7 pid 53231
+(00.006830) Add cgroup ns 8 pid 53231
+(00.006832) cg: Dumping cgroups for thread 53231
+(00.006845) cg:  `- New css ID 1
+(00.006846) cg:     `- [] -> [/system.slice/containerd.service] [0]
+(00.006847) cg: Set 1 is criu one
+(00.006863) Detected cgroup V2 freezer
+(00.006872) cgroup.freeze=1
+(00.006885) Warn  (criu/seize.c:531): unfreezing cgroup for plugin compatibility
+(00.008372) plugin: `cuda_plugin' hook 10 -> 0x7672b185d789
+(00.058939) cuda_plugin: pausing devices on pid 52469
+(00.087285) Seized task 52469, state 1
+(00.087311) seccomp: Collected tid_real 52469 mode 0x2
+(00.087479) 	Seizing 52469's 52524 thread
+(00.087772) seccomp: Collected tid_real 52524 mode 0x2
+(00.087776) 	Seizing 52469's 52525 thread
+(00.088031) seccomp: Collected tid_real 52525 mode 0x2
+(00.088035) 	Seizing 52469's 52526 thread
+(00.088326) seccomp: Collected tid_real 52526 mode 0x2
+(00.088332) 	Seizing 52469's 52527 thread
+(00.088607) seccomp: Collected tid_real 52527 mode 0x2
+(00.088611) 	Seizing 52469's 52528 thread
+(00.088923) seccomp: Collected tid_real 52528 mode 0x2
+(00.088926) 	Seizing 52469's 52529 thread
+(00.089118) seccomp: Collected tid_real 52529 mode 0x2
+(00.089124) 	Seizing 52469's 52530 thread
+(00.089448) seccomp: Collected tid_real 52530 mode 0x2
+(00.089451) 	Seizing 52469's 52531 thread
+(00.089709) seccomp: Collected tid_real 52531 mode 0x2
+(00.089712) 	Seizing 52469's 52532 thread
+(00.089954) seccomp: Collected tid_real 52532 mode 0x2
+(00.089957) 	Seizing 52469's 52533 thread
+(00.090177) seccomp: Collected tid_real 52533 mode 0x2
+(00.090183) 	Seizing 52469's 52534 thread
+(00.091179) seccomp: Collected tid_real 52534 mode 0x2
+(00.091184) 	Seizing 52469's 52535 thread
+(00.094328) seccomp: Collected tid_real 52535 mode 0x2
+(00.094350) 	Seizing 52469's 52536 thread
+(00.094632) seccomp: Collected tid_real 52536 mode 0x2
+(00.094636) 	Seizing 52469's 52537 thread
+(00.094774) seccomp: Collected tid_real 52537 mode 0x2
+(00.094778) 	Seizing 52469's 52538 thread
+(00.095035) seccomp: Collected tid_real 52538 mode 0x2
+(00.095039) 	Seizing 52469's 52539 thread
+(00.095233) seccomp: Collected tid_real 52539 mode 0x2
+(00.095238) 	Seizing 52469's 52540 thread
+(00.095408) seccomp: Collected tid_real 52540 mode 0x2
+(00.095412) 	Seizing 52469's 52541 thread
+(00.095559) seccomp: Collected tid_real 52541 mode 0x2
+(00.095563) 	Seizing 52469's 52542 thread
+(00.095878) seccomp: Collected tid_real 52542 mode 0x2
+(00.095882) 	Seizing 52469's 52543 thread
+(00.096029) seccomp: Collected tid_real 52543 mode 0x2
+(00.096032) 	Seizing 52469's 52544 thread
+(00.096175) seccomp: Collected tid_real 52544 mode 0x2
+(00.096181) 	Seizing 52469's 52545 thread
+(00.096303) seccomp: Collected tid_real 52545 mode 0x2
+(00.096307) 	Seizing 52469's 52546 thread
+(00.096484) seccomp: Collected tid_real 52546 mode 0x2
+(00.096487) 	Seizing 52469's 52547 thread
+(00.096614) seccomp: Collected tid_real 52547 mode 0x2
+(00.096617) 	Seizing 52469's 52548 thread
+(00.096792) seccomp: Collected tid_real 52548 mode 0x2
+(00.096795) 	Seizing 52469's 52549 thread
+(00.096923) seccomp: Collected tid_real 52549 mode 0x2
+(00.096926) 	Seizing 52469's 52550 thread
+(00.097138) seccomp: Collected tid_real 52550 mode 0x2
+(00.097145) 	Seizing 52469's 52551 thread
+(00.097304) seccomp: Collected tid_real 52551 mode 0x2
+(00.097308) 	Seizing 52469's 52552 thread
+(00.097459) seccomp: Collected tid_real 52552 mode 0x2
+(00.097463) 	Seizing 52469's 52553 thread
+(00.097638) seccomp: Collected tid_real 52553 mode 0x2
+(00.097642) 	Seizing 52469's 52554 thread
+(00.097812) seccomp: Collected tid_real 52554 mode 0x2
+(00.097815) 	Seizing 52469's 52567 thread
+(00.097952) seccomp: Collected tid_real 52567 mode 0x2
+(00.097956) 	Seizing 52469's 52578 thread
+(00.098139) seccomp: Collected tid_real 52578 mode 0x2
+(00.098145) 	Seizing 52469's 52579 thread
+(00.098316) seccomp: Collected tid_real 52579 mode 0x2
+(00.098319) 	Seizing 52469's 52580 thread
+(00.098497) seccomp: Collected tid_real 52580 mode 0x2
+(00.098500) 	Seizing 52469's 52581 thread
+(00.098686) seccomp: Collected tid_real 52581 mode 0x2
+(00.098689) 	Seizing 52469's 52582 thread
+(00.098858) seccomp: Collected tid_real 52582 mode 0x2
+(00.098862) 	Seizing 52469's 52583 thread
+(00.098988) seccomp: Collected tid_real 52583 mode 0x2
+(00.098991) 	Seizing 52469's 52584 thread
+(00.099111) seccomp: Collected tid_real 52584 mode 0x2
+(00.099117) 	Seizing 52469's 52585 thread
+(00.099235) seccomp: Collected tid_real 52585 mode 0x2
+(00.099239) 	Seizing 52469's 52586 thread
+(00.099394) seccomp: Collected tid_real 52586 mode 0x2
+(00.099397) 	Seizing 52469's 52587 thread
+(00.099513) seccomp: Collected tid_real 52587 mode 0x2
+(00.099517) 	Seizing 52469's 52588 thread
+(00.099634) seccomp: Collected tid_real 52588 mode 0x2
+(00.099637) 	Seizing 52469's 52589 thread
+(00.099748) seccomp: Collected tid_real 52589 mode 0x2
+(00.099752) 	Seizing 52469's 52590 thread
+(00.099865) seccomp: Collected tid_real 52590 mode 0x2
+(00.099869) 	Seizing 52469's 52591 thread
+(00.099994) seccomp: Collected tid_real 52591 mode 0x2
+(00.099998) 	Seizing 52469's 52592 thread
+(00.100132) seccomp: Collected tid_real 52592 mode 0x2
+(00.100138) 	Seizing 52469's 52593 thread
+(00.100238) seccomp: Collected tid_real 52593 mode 0x2
+(00.100242) 	Seizing 52469's 52594 thread
+(00.100382) seccomp: Collected tid_real 52594 mode 0x2
+(00.100385) 	Seizing 52469's 52595 thread
+(00.100503) seccomp: Collected tid_real 52595 mode 0x2
+(00.100507) 	Seizing 52469's 52596 thread
+(00.100634) seccomp: Collected tid_real 52596 mode 0x2
+(00.100637) 	Seizing 52469's 52597 thread
+(00.100740) seccomp: Collected tid_real 52597 mode 0x2
+(00.100743) 	Seizing 52469's 52598 thread
+(00.100862) seccomp: Collected tid_real 52598 mode 0x2
+(00.100865) 	Seizing 52469's 52599 thread
+(00.101151) seccomp: Collected tid_real 52599 mode 0x2
+(00.101157) 	Seizing 52469's 52600 thread
+(00.101278) seccomp: Collected tid_real 52600 mode 0x2
+(00.101282) 	Seizing 52469's 52601 thread
+(00.101394) seccomp: Collected tid_real 52601 mode 0x2
+(00.101397) 	Seizing 52469's 52602 thread
+(00.101546) seccomp: Collected tid_real 52602 mode 0x2
+(00.101550) 	Seizing 52469's 52603 thread
+(00.101652) seccomp: Collected tid_real 52603 mode 0x2
+(00.101656) 	Seizing 52469's 52604 thread
+(00.101780) seccomp: Collected tid_real 52604 mode 0x2
+(00.101784) 	Seizing 52469's 52605 thread
+(00.101952) seccomp: Collected tid_real 52605 mode 0x2
+(00.101956) 	Seizing 52469's 52606 thread
+(00.102082) seccomp: Collected tid_real 52606 mode 0x2
+(00.102103) 	Seizing 52469's 52607 thread
+(00.102217) seccomp: Collected tid_real 52607 mode 0x2
+(00.102220) 	Seizing 52469's 52608 thread
+(00.102338) seccomp: Collected tid_real 52608 mode 0x2
+(00.102342) 	Seizing 52469's 52623 thread
+(00.102461) seccomp: Collected tid_real 52623 mode 0x2
+(00.102465) 	Seizing 52469's 52763 thread
+(00.102581) seccomp: Collected tid_real 52763 mode 0x2
+(00.102585) 	Seizing 52469's 52764 thread
+(00.102697) seccomp: Collected tid_real 52764 mode 0x2
+(00.102700) 	Seizing 52469's 52765 thread
+(00.102838) seccomp: Collected tid_real 52765 mode 0x2
+(00.102841) 	Seizing 52469's 53151 thread
+(00.103177) seccomp: Collected tid_real 53151 mode 0x2
+(00.103182) 	Seizing 52469's 53152 thread
+(.venv) ubuntu@ubuntu-2404-desktop-template:~/AI-RAN$ 

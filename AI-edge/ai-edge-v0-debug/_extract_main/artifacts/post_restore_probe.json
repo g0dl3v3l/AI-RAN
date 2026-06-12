@@ -1,0 +1,14 @@
+{
+  "component": "post_restore_probe",
+  "details": {
+    "base_url": "http://127.0.0.1:8000/v1",
+    "preemption_outcome": "not_supported",
+    "reason": "post-restore probe skipped because preemption outcome is 'not_supported'",
+    "runtime": "vllm"
+  },
+  "monotonic_ns": 298203886112727,
+  "run_id": "artifacts",
+  "schema_version": "0.1.0",
+  "status": "skipped",
+  "timestamp_utc": "2026-06-12T00:25:11.705098Z"
+}

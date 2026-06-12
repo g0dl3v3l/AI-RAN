@@ -1,0 +1,80 @@
+{
+  "primary_trace": {
+    "errors": [],
+    "header": [
+      "frame",
+      "slot",
+      "time_slot_sched_ns",
+      "time_decode_start_est_ns",
+      "time_decode_end_est_ns",
+      "time_decode_start_actual_ns",
+      "time_decode_end_actual_ns",
+      "decode_dur_us",
+      "deadline_met",
+      "target_sm",
+      "profile_idx",
+      "sm_count",
+      "num_pusch",
+      "sum_prb",
+      "sum_tbs_bytes",
+      "max_mcs"
+    ],
+    "median_positive_delta_ms": 5.699664995074272,
+    "monotonicity": {
+      "checked_column": "time_slot_sched_ns",
+      "is_non_decreasing": true,
+      "negative_delta_count": 0,
+      "positive_delta_count": 28377,
+      "zero_delta_count": 0
+    },
+    "normalization": {
+      "last_row_duration_policy": "median_positive_forward_delta_ms",
+      "output_columns": [
+        "time_ms",
+        "sm_utilization",
+        "slot_duration_ms",
+        "source_schema",
+        "sm_count"
+      ],
+      "output_relative_path": "derived/normalized_ldpc_trace.csv"
+    },
+    "normalized_row_count": 28378,
+    "path": "/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ldpc_trace.csv",
+    "row_count": 28378,
+    "schema_detected": "schema_b",
+    "time_unit_hint": "ns",
+    "usable": true,
+    "usage_policy": "primary_only",
+    "used_for_scheduler_capacity": true
+  },
+  "secondary_trace": {
+    "errors": [
+      "ran_ctrl_trace.csv line 182958 has 9 field(s); expected 12"
+    ],
+    "header": [
+      "frame",
+      "slot",
+      "sm_available",
+      "prbs_available",
+      "prbs_allocated",
+      "w_avg_mcs_prev",
+      "w_avg_mcs_curr",
+      "slots_since_underutil",
+      "ramp_up_count",
+      "num_ue_sched",
+      "max_ue_backlog",
+      "sum_ue_backlog"
+    ],
+    "monotonicity": {
+      "checked_column": null,
+      "is_non_decreasing": null,
+      "negative_delta_count": null
+    },
+    "path": "/mnt/raid0sata2/netsys/weaver-ext/ran/traces/e2e_2026030418/e2e_20260304_182034_tractor_ran_ctrl/ran_ctrl_trace.csv",
+    "row_count": 182956,
+    "time_unit_hints": [],
+    "usable": false,
+    "usage_policy": "structural_only",
+    "used_for_scheduler_capacity": false
+  }
+}
