@@ -332,6 +332,13 @@ if not isinstance(pre, dict):
 pre["criu_config_mode"] = pre.get("criu_config_mode") or "cdi_restore_compat"
 pre["criu_config_allow_sudo"] = True
 pre["capture_memory_telemetry"] = True
+
+try:
+    pre_timeout_s = float(pre.get("timeout_s") or 0.0)
+except (TypeError, ValueError):
+    pre_timeout_s = 0.0
+pre["timeout_s"] = max(pre_timeout_s, 1200.0)
+
 if checkpoint_dir:
     pre["checkpoint_dir"] = checkpoint_dir
 else:
